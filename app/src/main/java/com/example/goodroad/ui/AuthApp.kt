@@ -84,10 +84,14 @@ private const val RECOVER_ROUTE = "recover"
 private const val USER_HOME_ROUTE = "user_home"
 private const val MODERATOR_HOME_ROUTE = "moderator_home"
 
-private val cyrillicInputRegex = Regex("^(?:(?=.*\\p{IsCyrillic})[\\p{IsCyrillic} -]*|[ -]*)$")
+private const val CYRILLIC_WARNING = "Допустимы только кириллица, пробел и -"
+private const val PHONE_CHARS_WARNING = "Допустимы только цифры. Знак + добавляется автоматически"
+private const val PHONE_FORMAT_WARNING = "Введите российский номер: 11 цифр, первая — 7 или 8"
+
+private val cyrillicInputRegex = Regex("^[\\p{IsCyrillic} -]*$")
 private val digitsInputRegex = Regex("^\\d*$")
 private val cyrillicValueRegex = Regex("^(?=.*\\p{IsCyrillic})[\\p{IsCyrillic} -]+$")
-private val digitsValueRegex = Regex("^\\d+$")
+private val russianPhoneDigitsRegex = Regex("^[78]\\d{10}$")
 
 private fun homeRoute(role: String): String {
     return if (role.startsWith("MODERATOR")) {
@@ -105,6 +109,10 @@ private fun isAllowedDigitsInput(value: String): Boolean {
     return digitsInputRegex.matches(value)
 }
 
+private fun isValidRussianPhoneDigits(value: String): Boolean {
+    return russianPhoneDigitsRegex.matches(value)
+}
+
 private fun normalizeRequiredCyrillic(value: String): String? {
     val normalized = value.trim()
     if (normalized.isEmpty()) {
@@ -113,12 +121,12 @@ private fun normalizeRequiredCyrillic(value: String): String? {
     return if (cyrillicValueRegex.matches(normalized)) normalized else null
 }
 
-private fun normalizeRequiredDigits(value: String): String? {
+private fun normalizeRequiredRussianPhone(value: String): String? {
     val normalized = value.trim()
     if (normalized.isEmpty()) {
         return null
     }
-    return if (digitsValueRegex.matches(normalized)) normalized else null
+    return if (isValidRussianPhoneDigits(normalized)) normalized else null
 }
 
 private fun formatPhoneForRequest(phoneDigits: String): String {
@@ -213,6 +221,7 @@ private fun LoginScreen(
 ) {
     var phone by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    var phoneWarning by rememberSaveable { mutableStateOf<String?>(null) }
     var errorText by rememberSaveable { mutableStateOf<String?>(null) }
     var loading by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -224,8 +233,13 @@ private fun LoginScreen(
                 text = if (loading) "Входим..." else "Войти",
                 enabled = !loading
             ) {
-                val phoneDigits = normalizeRequiredDigits(phone)
+                val phoneDigits = normalizeRequiredRussianPhone(phone)
                 if (phoneDigits == null || password.isBlank()) {
+                    phoneWarning = if (phone.isNotBlank() && !isValidRussianPhoneDigits(phone.trim())) {
+                        PHONE_FORMAT_WARNING
+                    } else {
+                        phoneWarning
+                    }
                     errorText = "Заполните телефон и пароль"
                     return@AuthButton
                 }
@@ -275,11 +289,26 @@ private fun LoginScreen(
         PhoneField(
             value = phone,
             onValueChange = { value ->
-                if (isAllowedDigitsInput(value)) {
-                    phone = value
+                when {
+                    !isAllowedDigitsInput(value) -> {
+                        phoneWarning = PHONE_CHARS_WARNING
+                    }
+                    value.length > 11 -> {
+                        phoneWarning = PHONE_FORMAT_WARNING
+                    }
+                    value.isNotEmpty() && value.first() !in listOf('7', '8') -> {
+                        phoneWarning = PHONE_FORMAT_WARNING
+                    }
+                    else -> {
+                        if (value != phone) {
+                            phone = value
+                            phoneWarning = null
+                        }
+                    }
                 }
             },
-            label = "Телефон"
+            label = "Телефон",
+            warning = phoneWarning
         )
         Spacer(Modifier.height(12.dp))
         PasswordField(
@@ -318,6 +347,9 @@ private fun RegisterScreen(
     var phone by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
+    var firstNameWarning by rememberSaveable { mutableStateOf<String?>(null) }
+    var lastNameWarning by rememberSaveable { mutableStateOf<String?>(null) }
+    var phoneWarning by rememberSaveable { mutableStateOf<String?>(null) }
     var errorText by rememberSaveable { mutableStateOf<String?>(null) }
     var loading by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -331,21 +363,25 @@ private fun RegisterScreen(
             ) {
                 val firstNameNormalized = normalizeRequiredCyrillic(firstName)
                 if (firstNameNormalized == null) {
-                    errorText = "Имя обязательно: только кириллица, пробел и -"
+                    firstNameWarning = CYRILLIC_WARNING
+                    errorText = "Имя обязательно и должно содержать только кириллицу, пробел и -"
                     return@AuthButton
                 }
 
                 val lastNameNormalized = normalizeRequiredCyrillic(lastName)
                 if (lastNameNormalized == null) {
-                    errorText = "Фамилия обязательна: только кириллица, пробел и -"
+                    lastNameWarning = CYRILLIC_WARNING
+                    errorText = "Фамилия обязательна и должна содержать только кириллицу, пробел и -"
                     return@AuthButton
                 }
 
-                val phoneDigits = normalizeRequiredDigits(phone)
+                val phoneDigits = normalizeRequiredRussianPhone(phone)
                 if (phoneDigits == null || password.isBlank()) {
+                    phoneWarning = PHONE_FORMAT_WARNING
                     errorText = "Телефон и пароль обязательны"
                     return@AuthButton
                 }
+
                 if (password != confirmPassword) {
                     errorText = "Пароли не совпадают"
                     return@AuthButton
@@ -394,8 +430,14 @@ private fun RegisterScreen(
         PlainField(
             value = firstName,
             onValueChange = { value ->
-                if (isAllowedCyrillicInput(value)) {
-                    firstName = value
+                when {
+                    !isAllowedCyrillicInput(value) -> {
+                        firstNameWarning = CYRILLIC_WARNING
+                    }
+                    value != firstName -> {
+                        firstName = value
+                        firstNameWarning = null
+                    }
                 }
             },
             label = "Имя",
@@ -405,14 +447,21 @@ private fun RegisterScreen(
                     contentDescription = null,
                     tint = UrbanBrown
                 )
-            }
+            },
+            warning = firstNameWarning
         )
         Spacer(Modifier.height(12.dp))
         PlainField(
             value = lastName,
             onValueChange = { value ->
-                if (isAllowedCyrillicInput(value)) {
-                    lastName = value
+                when {
+                    !isAllowedCyrillicInput(value) -> {
+                        lastNameWarning = CYRILLIC_WARNING
+                    }
+                    value != lastName -> {
+                        lastName = value
+                        lastNameWarning = null
+                    }
                 }
             },
             label = "Фамилия",
@@ -422,17 +471,33 @@ private fun RegisterScreen(
                     contentDescription = null,
                     tint = UrbanBrown
                 )
-            }
+            },
+            warning = lastNameWarning
         )
         Spacer(Modifier.height(12.dp))
         PhoneField(
             value = phone,
             onValueChange = { value ->
-                if (isAllowedDigitsInput(value)) {
-                    phone = value
+                when {
+                    !isAllowedDigitsInput(value) -> {
+                        phoneWarning = PHONE_CHARS_WARNING
+                    }
+                    value.length > 11 -> {
+                        phoneWarning = PHONE_FORMAT_WARNING
+                    }
+                    value.isNotEmpty() && value.first() !in listOf('7', '8') -> {
+                        phoneWarning = PHONE_FORMAT_WARNING
+                    }
+                    else -> {
+                        if (value != phone) {
+                            phone = value
+                            phoneWarning = null
+                        }
+                    }
                 }
             },
-            label = "Телефон"
+            label = "Телефон",
+            warning = phoneWarning
         )
         Spacer(Modifier.height(12.dp))
         PasswordField(
@@ -459,6 +524,9 @@ private fun RecoverPasswordScreen(
     var phone by rememberSaveable { mutableStateOf("") }
     var newPassword by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
+    var firstNameWarning by rememberSaveable { mutableStateOf<String?>(null) }
+    var lastNameWarning by rememberSaveable { mutableStateOf<String?>(null) }
+    var phoneWarning by rememberSaveable { mutableStateOf<String?>(null) }
     var errorText by rememberSaveable { mutableStateOf<String?>(null) }
     var successText by rememberSaveable { mutableStateOf<String?>(null) }
     var loading by rememberSaveable { mutableStateOf(false) }
@@ -474,24 +542,28 @@ private fun RecoverPasswordScreen(
             ) {
                 val firstNameNormalized = normalizeRequiredCyrillic(firstName)
                 if (firstNameNormalized == null) {
-                    errorText = "Имя обязательно: только кириллица, пробел и -"
+                    firstNameWarning = CYRILLIC_WARNING
+                    errorText = "Имя обязательно и должно содержать только кириллицу, пробел и -"
                     successText = null
                     return@AuthButton
                 }
 
                 val lastNameNormalized = normalizeRequiredCyrillic(lastName)
                 if (lastNameNormalized == null) {
-                    errorText = "Фамилия обязательна: только кириллица, пробел и -"
+                    lastNameWarning = CYRILLIC_WARNING
+                    errorText = "Фамилия обязательна и должна содержать только кириллицу, пробел и -"
                     successText = null
                     return@AuthButton
                 }
 
-                val phoneDigits = normalizeRequiredDigits(phone)
+                val phoneDigits = normalizeRequiredRussianPhone(phone)
                 if (phoneDigits == null || newPassword.isBlank() || confirmPassword.isBlank()) {
+                    phoneWarning = PHONE_FORMAT_WARNING
                     errorText = "Заполните все поля"
                     successText = null
                     return@AuthButton
                 }
+
                 if (newPassword != confirmPassword) {
                     errorText = "Пароли не совпадают"
                     successText = null
@@ -506,6 +578,9 @@ private fun RecoverPasswordScreen(
                     phone = ""
                     newPassword = ""
                     confirmPassword = ""
+                    firstNameWarning = null
+                    lastNameWarning = null
+                    phoneWarning = null
                     return@AuthButton
                 }
 
@@ -528,6 +603,9 @@ private fun RecoverPasswordScreen(
                         phone = ""
                         newPassword = ""
                         confirmPassword = ""
+                        firstNameWarning = null
+                        lastNameWarning = null
+                        phoneWarning = null
                     } catch (_: HttpException) {
                         errorText = "Не удалось восстановить пароль"
                     } catch (_: IOException) {
@@ -551,8 +629,14 @@ private fun RecoverPasswordScreen(
         PlainField(
             value = firstName,
             onValueChange = { value ->
-                if (isAllowedCyrillicInput(value)) {
-                    firstName = value
+                when {
+                    !isAllowedCyrillicInput(value) -> {
+                        firstNameWarning = CYRILLIC_WARNING
+                    }
+                    value != firstName -> {
+                        firstName = value
+                        firstNameWarning = null
+                    }
                 }
             },
             label = "Имя",
@@ -562,14 +646,21 @@ private fun RecoverPasswordScreen(
                     contentDescription = null,
                     tint = UrbanBrown
                 )
-            }
+            },
+            warning = firstNameWarning
         )
         Spacer(Modifier.height(12.dp))
         PlainField(
             value = lastName,
             onValueChange = { value ->
-                if (isAllowedCyrillicInput(value)) {
-                    lastName = value
+                when {
+                    !isAllowedCyrillicInput(value) -> {
+                        lastNameWarning = CYRILLIC_WARNING
+                    }
+                    value != lastName -> {
+                        lastName = value
+                        lastNameWarning = null
+                    }
                 }
             },
             label = "Фамилия",
@@ -579,17 +670,33 @@ private fun RecoverPasswordScreen(
                     contentDescription = null,
                     tint = UrbanBrown
                 )
-            }
+            },
+            warning = lastNameWarning
         )
         Spacer(Modifier.height(12.dp))
         PhoneField(
             value = phone,
             onValueChange = { value ->
-                if (isAllowedDigitsInput(value)) {
-                    phone = value
+                when {
+                    !isAllowedDigitsInput(value) -> {
+                        phoneWarning = PHONE_CHARS_WARNING
+                    }
+                    value.length > 11 -> {
+                        phoneWarning = PHONE_FORMAT_WARNING
+                    }
+                    value.isNotEmpty() && value.first() !in listOf('7', '8') -> {
+                        phoneWarning = PHONE_FORMAT_WARNING
+                    }
+                    else -> {
+                        if (value != phone) {
+                            phone = value
+                            phoneWarning = null
+                        }
+                    }
                 }
             },
-            label = "Телефон"
+            label = "Телефон",
+            warning = phoneWarning
         )
         Spacer(Modifier.height(12.dp))
         PasswordField(
@@ -740,7 +847,8 @@ private fun AuthDecor() {
 private fun PhoneField(
     value: String,
     onValueChange: (String) -> Unit,
-    label: String
+    label: String,
+    warning: String? = null
 ) {
     PlainField(
         value = value,
@@ -754,6 +862,7 @@ private fun PhoneField(
                 tint = UrbanBrown
             )
         },
+        warning = warning,
         prefix = {
             Text(
                 text = "+",
@@ -812,7 +921,8 @@ private fun PlainField(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     icon: @Composable (() -> Unit)? = null,
     trailing: @Composable (() -> Unit)? = null,
-    prefix: @Composable (() -> Unit)? = null
+    prefix: @Composable (() -> Unit)? = null,
+    warning: String? = null
 ) {
     TextField(
         value = value,
@@ -831,12 +941,22 @@ private fun PlainField(
         leadingIcon = icon,
         trailingIcon = trailing,
         prefix = prefix,
+        isError = warning != null,
+        supportingText = {
+            if (warning != null) {
+                Text(
+                    text = warning,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = AlertRed
+                )
+            }
+        },
         colors = TextFieldDefaults.colors(
             focusedContainerColor = BackgroundLight,
             unfocusedContainerColor = BackgroundLight,
             disabledContainerColor = BackgroundLight,
-            focusedIndicatorColor = SafeGreen,
-            unfocusedIndicatorColor = BorderWarm,
+            focusedIndicatorColor = if (warning != null) AlertRed else SafeGreen,
+            unfocusedIndicatorColor = if (warning != null) AlertRed else BorderWarm,
             cursorColor = SafeGreen,
             focusedLabelColor = UrbanBrown,
             unfocusedLabelColor = UrbanBrown,
