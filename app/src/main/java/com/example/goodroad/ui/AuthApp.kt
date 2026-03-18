@@ -63,6 +63,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.goodroad.BuildConfig
 import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.network.LoginReq
+import com.example.goodroad.data.network.RecoverPasswordReq
 import com.example.goodroad.data.network.RegisterReq
 import com.example.goodroad.ui.theme.AlertRed
 import com.example.goodroad.ui.theme.BackgroundLight
@@ -83,9 +84,9 @@ private const val RECOVER_ROUTE = "recover"
 private const val USER_HOME_ROUTE = "user_home"
 private const val MODERATOR_HOME_ROUTE = "moderator_home"
 
-private val cyrillicInputRegex = Regex("^[\\p{IsCyrillic} -]*$")
+private val cyrillicInputRegex = Regex("^(?:(?=.*\\p{IsCyrillic})[\\p{IsCyrillic} -]*|[ -]*)$")
 private val digitsInputRegex = Regex("^\\d*$")
-private val cyrillicValueRegex = Regex("^[\\p{IsCyrillic} -]+$")
+private val cyrillicValueRegex = Regex("^(?=.*\\p{IsCyrillic})[\\p{IsCyrillic} -]+$")
 private val digitsValueRegex = Regex("^\\d+$")
 
 private fun homeRoute(role: String): String {
@@ -453,17 +454,90 @@ private fun RegisterScreen(
 private fun RecoverPasswordScreen(
     onLogin: () -> Unit
 ) {
+    var firstName by rememberSaveable { mutableStateOf("") }
+    var lastName by rememberSaveable { mutableStateOf("") }
     var phone by rememberSaveable { mutableStateOf("") }
     var newPassword by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
-    var infoText by rememberSaveable { mutableStateOf<String?>(null) }
+    var errorText by rememberSaveable { mutableStateOf<String?>(null) }
+    var successText by rememberSaveable { mutableStateOf<String?>(null) }
+    var loading by rememberSaveable { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     AuthScreenFrame(
         title = "Смена пароля",
-        subtitle = "Для восстановления нужен отдельный endpoint на backend. Пока это только UI-заглушка.",
+        subtitle = "Для восстановления введите имя, фамилию, номер телефона и новый пароль.",
         action = {
-            AuthButton(text = "Сменить пароль") {
-                infoText = "В текущем сервере доступна только смена пароля через старый пароль."
+            AuthButton(
+                text = if (loading) "Сохраняем..." else "Сменить пароль",
+                enabled = !loading
+            ) {
+                val firstNameNormalized = normalizeRequiredCyrillic(firstName)
+                if (firstNameNormalized == null) {
+                    errorText = "Имя обязательно: только кириллица, пробел и -"
+                    successText = null
+                    return@AuthButton
+                }
+
+                val lastNameNormalized = normalizeRequiredCyrillic(lastName)
+                if (lastNameNormalized == null) {
+                    errorText = "Фамилия обязательна: только кириллица, пробел и -"
+                    successText = null
+                    return@AuthButton
+                }
+
+                val phoneDigits = normalizeRequiredDigits(phone)
+                if (phoneDigits == null || newPassword.isBlank() || confirmPassword.isBlank()) {
+                    errorText = "Заполните все поля"
+                    successText = null
+                    return@AuthButton
+                }
+                if (newPassword != confirmPassword) {
+                    errorText = "Пароли не совпадают"
+                    successText = null
+                    return@AuthButton
+                }
+
+                if (BuildConfig.MOCK_AUTH) {
+                    errorText = null
+                    successText = "Пароль успешно изменен. Теперь можно войти."
+                    firstName = ""
+                    lastName = ""
+                    phone = ""
+                    newPassword = ""
+                    confirmPassword = ""
+                    return@AuthButton
+                }
+
+                scope.launch {
+                    loading = true
+                    errorText = null
+                    successText = null
+                    try {
+                        ApiClient.authApi.recoverPassword(
+                            RecoverPasswordReq(
+                                phone = formatPhoneForRequest(phoneDigits),
+                                firstName = firstNameNormalized,
+                                lastName = lastNameNormalized,
+                                newPassword = newPassword
+                            )
+                        )
+                        successText = "Пароль успешно изменен. Теперь можно войти."
+                        firstName = ""
+                        lastName = ""
+                        phone = ""
+                        newPassword = ""
+                        confirmPassword = ""
+                    } catch (_: HttpException) {
+                        errorText = "Не удалось восстановить пароль"
+                    } catch (_: IOException) {
+                        errorText = "Нет соединения с сервером"
+                    } catch (_: Exception) {
+                        errorText = "Ошибка смены пароля"
+                    } finally {
+                        loading = false
+                    }
+                }
             }
         },
         footer = {
@@ -474,6 +548,40 @@ private fun RecoverPasswordScreen(
             )
         }
     ) {
+        PlainField(
+            value = firstName,
+            onValueChange = { value ->
+                if (isAllowedCyrillicInput(value)) {
+                    firstName = value
+                }
+            },
+            label = "Имя",
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = UrbanBrown
+                )
+            }
+        )
+        Spacer(Modifier.height(12.dp))
+        PlainField(
+            value = lastName,
+            onValueChange = { value ->
+                if (isAllowedCyrillicInput(value)) {
+                    lastName = value
+                }
+            },
+            label = "Фамилия",
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = UrbanBrown
+                )
+            }
+        )
+        Spacer(Modifier.height(12.dp))
         PhoneField(
             value = phone,
             onValueChange = { value ->
@@ -495,7 +603,8 @@ private fun RecoverPasswordScreen(
             onValueChange = { confirmPassword = it },
             label = "Подтвердите пароль"
         )
-        AuthStatusText(text = infoText)
+        AuthStatusText(text = errorText)
+        AuthSuccessText(text = successText)
     }
 }
 
@@ -811,6 +920,21 @@ private fun AuthStatusText(
         text = text,
         style = MaterialTheme.typography.bodySmall,
         color = AlertRed
+    )
+}
+
+@Composable
+private fun AuthSuccessText(
+    text: String?
+) {
+    if (text == null) {
+        return
+    }
+    Spacer(Modifier.height(12.dp))
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodySmall,
+        color = SafeGreen
     )
 }
 

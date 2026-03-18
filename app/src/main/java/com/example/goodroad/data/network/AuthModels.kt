@@ -12,6 +12,13 @@ data class RegisterReq(
     val password: String
 )
 
+data class RecoverPasswordReq(
+    val phone: String,
+    val firstName: String,
+    val lastName: String,
+    val newPassword: String
+)
+
 data class AuthResp(
     val user: UserDto? = null,
     val message: String? = null

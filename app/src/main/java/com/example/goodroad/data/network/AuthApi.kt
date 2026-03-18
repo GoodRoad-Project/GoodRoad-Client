@@ -10,4 +10,7 @@ interface AuthApi {
 
     @POST("/auth/register")
     suspend fun register(@Body req: RegisterReq): AuthResp
+
+    @POST("/auth/recover-password")
+    suspend fun recoverPassword(@Body req: RecoverPasswordReq)
 }
