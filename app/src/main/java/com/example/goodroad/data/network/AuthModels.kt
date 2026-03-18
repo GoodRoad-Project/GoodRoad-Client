@@ -18,7 +18,7 @@ data class AuthResp(
 )
 
 data class UserDto(
-    val id: Long? = null,
+    val id: String? = null,
     val firstName: String? = null,
     val lastName: String? = null,
     val role: String? = null,

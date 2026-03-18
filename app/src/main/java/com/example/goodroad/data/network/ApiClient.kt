@@ -22,7 +22,7 @@ object ApiClient {
 
     val authApi: AuthApi by lazy {
         Retrofit.Builder()
-            .baseUrl(BuildConfig.BASE_URL)
+            .baseUrl(BuildConfig.GOODROAD_SERVER_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
