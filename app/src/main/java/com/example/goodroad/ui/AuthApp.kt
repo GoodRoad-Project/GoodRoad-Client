@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -791,29 +793,44 @@ private fun AuthDecor() {
             drawPath(path = lightPatch, color = BackgroundLight)
 
             val road = Path().apply {
-                moveTo(size.width * 0.84f, -12f)
+                moveTo(size.width * 0.88f, -8f)
                 cubicTo(
-                    size.width * 0.72f, size.height * 0.1f,
-                    size.width * 0.58f, size.height * 0.24f,
-                    size.width * 0.56f, size.height * 0.42f
+                    size.width * 0.8f, size.height * 0.06f,
+                    size.width * 0.7f, size.height * 0.14f,
+                    size.width * 0.62f, size.height * 0.28f
                 )
                 cubicTo(
-                    size.width * 0.54f, size.height * 0.55f,
-                    size.width * 0.42f, size.height * 0.67f,
-                    size.width * 0.22f, size.height * 0.71f
+                    size.width * 0.55f, size.height * 0.4f,
+                    size.width * 0.42f, size.height * 0.52f,
+                    size.width * 0.26f, size.height * 0.58f
                 )
                 cubicTo(
-                    size.width * 0.08f, size.height * 0.75f,
-                    size.width * 0.02f, size.height * 0.87f,
-                    -16f, size.height
+                    size.width * 0.15f, size.height * 0.62f,
+                    size.width * 0.07f, size.height * 0.68f,
+                    -8f, size.height * 0.8f
                 )
             }
+
             drawPath(
                 path = road,
                 brush = SolidColor(UrbanBrown),
                 style = Stroke(
-                    width = size.width * 0.12f,
-                    cap = StrokeCap.Round
+                    width = size.width * 0.09f,
+                    cap = StrokeCap.Square,
+                    join = StrokeJoin.Round
+                )
+            )
+
+            drawPath(
+                path = road,
+                color = BackgroundLight.copy(alpha = 0.95f),
+                style = Stroke(
+                    width = size.width * 0.014f,
+                    cap = StrokeCap.Butt,
+                    join = StrokeJoin.Round,
+                    pathEffect = PathEffect.dashPathEffect(
+                        floatArrayOf(size.width * 0.06f, size.width * 0.04f)
+                    )
                 )
             )
         }
