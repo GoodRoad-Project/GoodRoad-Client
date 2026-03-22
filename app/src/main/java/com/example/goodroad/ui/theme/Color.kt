@@ -26,3 +26,5 @@ val Obstacle = Color(0xFFD56B63)
 val TextPrimary = Color(0xFF2F2B28)
 val TextSecondary = Color(0xFF7A6F66)
 val WhiteSoft = Color(0xFFFFFBF7)
+
+val GrayButton = Color(0xFF9E9E9E)

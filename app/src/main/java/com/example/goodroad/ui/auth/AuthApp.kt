@@ -1,4 +1,5 @@
 package com.example.goodroad.ui.auth
+import com.example.goodroad.ui.user.UserNav
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
@@ -66,13 +67,10 @@ fun AuthApp(
             }
 
             composable(USER_HOME_ROUTE) {
-                RoleStubScreen(
-                    title = "Главный экран пользователя",
+                UserNav(
                     onLogout = {
                         navController.navigate(LOGIN_ROUTE) {
-                            popUpTo(USER_HOME_ROUTE) {
-                                inclusive = true
-                            }
+                            popUpTo(USER_HOME_ROUTE) { inclusive = true }
                             launchSingleTop = true
                         }
                     }

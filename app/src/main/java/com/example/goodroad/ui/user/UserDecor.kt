@@ -1,74 +1,37 @@
-package com.example.goodroad.ui.auth
+package com.example.goodroad.ui.user
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.*
-import androidx.compose.ui.graphics.*
-import com.example.goodroad.ui.theme.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-@Composable
-fun AuthScreenFrame(
-    title: String,
-    subtitle: String? = null,
-    action: @Composable () -> Unit,
-    footer: @Composable () -> Unit,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundLight)
-            .verticalScroll(rememberScrollState())
-    ) {
-        AuthDecor()
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 24.dp)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary
-            )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    modifier = Modifier.padding(top = 8.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
-                )
-            }
-            Spacer(Modifier.height(28.dp))
-            content()
-            Spacer(Modifier.height(28.dp))
-            action()
-            Spacer(Modifier.height(16.dp))
-            footer()
-        }
-    }
-}
+import com.example.goodroad.ui.theme.BackgroundLight
+import com.example.goodroad.ui.theme.SurfaceWarm
+import com.example.goodroad.ui.theme.TextPrimary
+import com.example.goodroad.ui.theme.UrbanBrown
 
 @Composable
-fun AuthDecor() {
+fun UserDecor() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(230.dp)
             .statusBarsPadding()
-            .padding(horizontal = 18.dp, vertical = 12.dp)
+//            .padding(horizontal = 18.dp, vertical = 12.dp)
             .clip(RoundedCornerShape(32.dp))
             .background(SurfaceWarm)
     ) {
