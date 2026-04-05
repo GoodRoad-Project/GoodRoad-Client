@@ -4,12 +4,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.ui.auth.AuthButton
 import com.example.goodroad.ui.theme.BackgroundLight
 import com.example.goodroad.ui.theme.TextPrimary
+import com.example.goodroad.ui.viewmodel.UserViewModel
 
 @Composable
 fun UserProfileScreen(
@@ -18,6 +19,9 @@ fun UserProfileScreen(
     onDelete: () -> Unit,
     onLogout: () -> Unit
 ) {
+    LaunchedEffect(Unit) {
+        vm.getCurrentUser()
+    }
 
     val user = vm.user.value
 
@@ -45,28 +49,19 @@ fun UserProfileScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            UserInfoBlock("Имя", user.firstName)
-            UserInfoBlock("Фамилия", user.lastName)
-            UserInfoBlock("Роль", user.role)
+            UserInfoBlock("Имя", user.firstName ?: "")
+            UserInfoBlock("Фамилия", user.lastName ?: "")
+            UserInfoBlock("Роль", user.role ?: "")
 
             Spacer(Modifier.height(20.dp))
 
-            AuthButton(
-                text = "Редактировать",
-                onClick = onEdit
-            )
+            AuthButton(text = "Редактировать", onClick = onEdit)
             Spacer(Modifier.height(10.dp))
 
-            AuthButton(
-                text = "Удалить аккаунт",
-                onClick = onDelete
-            )
+            AuthButton(text = "Удалить аккаунт", onClick = onDelete)
             Spacer(Modifier.height(10.dp))
 
-            AuthButton(
-                text = "Выйти",
-                onClick = onLogout
-            )
+            AuthButton(text = "Выйти", onClick = onLogout)
         }
     }
 }

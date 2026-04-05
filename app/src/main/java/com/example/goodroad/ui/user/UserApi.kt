@@ -9,11 +9,20 @@ data class UserDto(
     val active: Boolean
 )
 
-data class UpdateUserReq(
+data class UpdateSettingsReq(
+    val firstName: String? = null,
+    val lastName: String? = null,
+    val photoUrl: String? = null,
+    val phone: String? = null
+)
+
+data class SettingsView(
+    val id: String,
+    val role: String,
     val firstName: String?,
     val lastName: String?,
     val photoUrl: String?,
-    val phone: String?
+    val active: Boolean
 )
 
 data class ChangePasswordReq(

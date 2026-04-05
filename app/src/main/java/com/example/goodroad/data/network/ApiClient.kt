@@ -20,12 +20,21 @@ object ApiClient {
         .writeTimeout(20, TimeUnit.SECONDS)
         .build()
 
-    val authApi: AuthApi by lazy {
+    val authApi: AuthApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         Retrofit.Builder()
             .baseUrl(BuildConfig.GOODROAD_SERVER_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(AuthApi::class.java)
+    }
+
+    val userApi: UserApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        Retrofit.Builder()
+            .baseUrl(BuildConfig.GOODROAD_SERVER_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(UserApi::class.java)
     }
 }

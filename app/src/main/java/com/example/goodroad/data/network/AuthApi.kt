@@ -1,5 +1,6 @@
 package com.example.goodroad.data.network
 
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -12,5 +13,5 @@ interface AuthApi {
     suspend fun register(@Body req: RegisterReq): AuthResp
 
     @POST("/auth/recover-password")
-    suspend fun recoverPassword(@Body req: RecoverPasswordReq)
+    suspend fun recoverPassword(@Body req: RecoverPasswordReq) : Response<Unit>
 }

@@ -12,9 +12,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.BuildConfig
 import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.network.RegisterReq
+import com.example.goodroad.ui.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
@@ -34,7 +38,15 @@ fun RegisterScreen(
     var phoneWarning by rememberSaveable { mutableStateOf<String?>(null) }
     var errorText by rememberSaveable { mutableStateOf<String?>(null) }
     var loading by rememberSaveable { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
+    val viewModel: AuthViewModel = viewModel()
+    val registerResult by viewModel.loginResult.observeAsState()
+    val error by viewModel.error.observeAsState()
+
+    LaunchedEffect(registerResult) {
+        registerResult?.user?.role?.let { role ->
+            onRegisterSuccess(role)
+        }
+    }
 
     AuthScreenFrame(
         title = "Создать аккаунт",
@@ -75,30 +87,12 @@ fun RegisterScreen(
                     return@AuthButton
                 }
 
-                scope.launch {
-                    loading = true
-                    errorText = null
-                    try {
-                        val resp = ApiClient.authApi.register(
-                            RegisterReq(
-                                firstName = firstNameNormalized,
-                                lastName = lastNameNormalized,
-                                phone = formatPhoneForRequest(phoneDigits),
-                                password = password
-                            )
-                        )
-                        val role = resp.user?.role ?: "USER"
-                        onRegisterSuccess(role)
-                    } catch (_: HttpException) {
-                        errorText = "Не удалось зарегистрироваться"
-                    } catch (_: IOException) {
-                        errorText = "Нет соединения с сервером"
-                    } catch (_: Exception) {
-                        errorText = "Ошибка регистрации"
-                    } finally {
-                        loading = false
-                    }
-                }
+                viewModel.register(
+                    firstNameNormalized,
+                    lastNameNormalized,
+                    formatPhoneForRequest(phoneDigits),
+                    password
+                )
             }
         },
         footer = {
@@ -202,6 +196,6 @@ fun RegisterScreen(
             label = "Подтвердите пароль"
         )
 
-        AuthStatusText(text = errorText)
+        AuthStatusText(text = error ?: errorText)
     }
 }

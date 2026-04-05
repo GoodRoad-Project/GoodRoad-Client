@@ -1,25 +1,22 @@
 package com.example.goodroad.ui.auth
-import com.example.goodroad.ui.theme.*
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.BuildConfig
-import com.example.goodroad.data.network.ApiClient
-import com.example.goodroad.data.network.LoginReq
-import kotlinx.coroutines.launch
-import retrofit2.HttpException
-import java.io.IOException
+import com.example.goodroad.ui.theme.*
+import com.example.goodroad.ui.viewmodel.AuthViewModel
 import androidx.compose.runtime.saveable.rememberSaveable
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (String) -> Unit,
+    onLoginSuccess: () -> Unit,
     onSignUp: () -> Unit,
     onForgotPassword: () -> Unit
 ) {
@@ -28,7 +25,16 @@ fun LoginScreen(
     var phoneWarning by rememberSaveable { mutableStateOf<String?>(null) }
     var errorText by rememberSaveable { mutableStateOf<String?>(null) }
     var loading by rememberSaveable { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
+
+    val viewModel: AuthViewModel = viewModel()
+    val loginResult by viewModel.loginResult.observeAsState()
+    val error by viewModel.error.observeAsState()
+
+    LaunchedEffect(loginResult) {
+        if (loginResult?.user != null) {
+            onLoginSuccess()
+        }
+    }
 
     AuthScreenFrame(
         title = "Вход",
@@ -41,45 +47,20 @@ fun LoginScreen(
                 if (phoneDigits == null || password.isBlank()) {
                     phoneWarning = if (phone.isNotBlank() && !isValidRussianPhoneDigits(phone.trim())) {
                         PHONE_FORMAT_WARNING
-                    } else {
-                        phoneWarning
-                    }
+                    } else null
                     errorText = "Заполните телефон и пароль"
                     return@AuthButton
                 }
 
                 if (BuildConfig.MOCK_AUTH) {
                     errorText = null
-                    onLoginSuccess("USER")
+                    onLoginSuccess()
                     return@AuthButton
                 }
 
-                scope.launch {
-                    loading = true
-                    errorText = null
-                    try {
-                        val resp = ApiClient.authApi.login(
-                            LoginReq(
-                                phone = formatPhoneForRequest(phoneDigits),
-                                password = password
-                            )
-                        )
-                        val role = resp.user?.role
-                        if (role.isNullOrBlank()) {
-                            errorText = "Не удалось определить роль пользователя"
-                        } else {
-                            onLoginSuccess(role)
-                        }
-                    } catch (_: HttpException) {
-                        errorText = "Неверный телефон или пароль"
-                    } catch (_: IOException) {
-                        errorText = "Нет соединения с сервером"
-                    } catch (_: Exception) {
-                        errorText = "Ошибка входа"
-                    } finally {
-                        loading = false
-                    }
-                }
+                loading = true
+                viewModel.login(formatPhoneForRequest(phoneDigits), password)
+                loading = false
             }
         },
         footer = {
@@ -94,15 +75,9 @@ fun LoginScreen(
             value = phone,
             onValueChange = { value ->
                 when {
-                    !isAllowedDigitsInput(value) -> {
-                        phoneWarning = PHONE_CHARS_WARNING
-                    }
-                    value.length > 11 -> {
-                        phoneWarning = PHONE_FORMAT_WARNING
-                    }
-                    value.isNotEmpty() && value.first() !in listOf('7', '8') -> {
-                        phoneWarning = PHONE_FORMAT_WARNING
-                    }
+                    !isAllowedDigitsInput(value) -> phoneWarning = PHONE_CHARS_WARNING
+                    value.length > 11 -> phoneWarning = PHONE_FORMAT_WARNING
+                    value.isNotEmpty() && value.first() !in listOf('7', '8') -> phoneWarning = PHONE_FORMAT_WARNING
                     else -> {
                         if (value != phone) {
                             phone = value
@@ -141,6 +116,6 @@ fun LoginScreen(
             }
         }
 
-        AuthStatusText(text = errorText)
+        AuthStatusText(text = error ?: errorText)
     }
 }

@@ -15,7 +15,7 @@ android {
         versionName '1.0'
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
-        buildConfigField "boolean", "MOCK_AUTH", "true"
+        buildConfigField "boolean", "MOCK_AUTH", "false"
         buildConfigField "String", "GOODROAD_SERVER_URL", "\"http://10.0.2.2:8080/\""
     }
 
@@ -57,6 +57,7 @@ android {
 
 dependencies {
     implementation 'androidx.compose.foundation:foundation:1.10.5'
+    implementation 'androidx.compose.runtime:runtime-livedata:1.10.6'
     def composeBom = platform('androidx.compose:compose-bom:2024.06.00')
 
     implementation 'androidx.core:core-ktx:1.15.0'

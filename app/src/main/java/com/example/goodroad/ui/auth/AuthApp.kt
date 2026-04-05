@@ -25,11 +25,9 @@ fun AuthApp(
         ) {
             composable(LOGIN_ROUTE) {
                 LoginScreen(
-                    onLoginSuccess = { role ->
-                        navController.navigate(homeRoute(role)) {
-                            popUpTo(LOGIN_ROUTE) {
-                                inclusive = true
-                            }
+                    onLoginSuccess = {
+                        navController.navigate(USER_HOME_ROUTE) {
+                            popUpTo(LOGIN_ROUTE) { inclusive = true }
                             launchSingleTop = true
                         }
                     },

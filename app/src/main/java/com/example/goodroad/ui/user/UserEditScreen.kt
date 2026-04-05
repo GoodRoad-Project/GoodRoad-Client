@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import com.example.goodroad.ui.auth.AuthButton
 import com.example.goodroad.ui.auth.PlainField
 import com.example.goodroad.ui.theme.TextPrimary
+import com.example.goodroad.ui.viewmodel.UserViewModel
 
 @Composable
 fun UserEditScreen(
@@ -50,14 +51,16 @@ fun UserEditScreen(
             label = "URL фото, телефон и пароль(на сервере функцию пофиксить): TODO"
         )
 
-
-
         Spacer(Modifier.height(20.dp))
 
         AuthButton(
             text = "Сохранить"
         ) {
-            vm.update(firstName, lastName)
+            vm.updateUser(
+                firstName = firstName,
+                lastName = lastName,
+                photoUrl = photoUrl.ifBlank { null }
+            )
             onBack()
         }
     }
