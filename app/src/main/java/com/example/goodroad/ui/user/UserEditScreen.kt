@@ -13,10 +13,10 @@ import com.example.goodroad.ui.viewmodel.UserViewModel
 
 @Composable
 fun UserEditScreen(
-    vm: UserViewModel,
+    userViewModel: UserViewModel,
     onBack: () -> Unit
 ) {
-    val user = vm.user.value ?: return
+    val user = userViewModel.user.value ?: return
 
     var firstName by remember { mutableStateOf(user.firstName ?: "") }
     var lastName by remember { mutableStateOf(user.lastName ?: "") }
@@ -56,7 +56,7 @@ fun UserEditScreen(
         AuthButton(
             text = "Сохранить"
         ) {
-            vm.updateUser(
+            userViewModel.updateUser(
                 firstName = firstName,
                 lastName = lastName,
                 photoUrl = photoUrl.ifBlank { null }

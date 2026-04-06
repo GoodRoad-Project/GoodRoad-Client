@@ -21,26 +21,26 @@ fun UserNav(onLogout: () -> Unit) {
         }
     }
 
-    val vm: UserViewModel = viewModel(factory = factory)
+    val userViewModel: UserViewModel = viewModel(factory = factory)
 
     var screen by remember { mutableStateOf("profile") }
 
     when (screen) {
         "profile" -> UserProfileScreen(
-            vm = vm,
+            userViewModel = userViewModel,
             onEdit = { screen = "edit" },
             onDelete = { screen = "delete" },
             onLogout = onLogout
         )
 
         "edit" -> UserEditScreen(
-            vm = vm,
+            userViewModel = userViewModel,
             onBack = { screen = "profile" }
         )
 
         "delete" -> UserDeleteAccountScreen(
             onDelete = {
-                vm.logout()
+                userViewModel.logout()
                 onLogout()
             },
             onExit = { screen = "profile" }

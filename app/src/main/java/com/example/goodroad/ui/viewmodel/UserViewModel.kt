@@ -3,7 +3,6 @@ package com.example.goodroad.ui.viewmodel
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.goodroad.data.network.UserApi
 import com.example.goodroad.data.repository.UserRepository
 import com.example.goodroad.ui.user.DeleteAccountReq
 import com.example.goodroad.ui.user.SettingsView
@@ -13,15 +12,19 @@ import kotlinx.coroutines.launch
 class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
     var user = mutableStateOf<SettingsView?>(null)
-        private set
+    var isLoading = mutableStateOf(false)
+    var errorMessage = mutableStateOf<String?>(null)
 
     fun getCurrentUser() {
         viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
             try {
-                val realUser = repository.getCurrentUser()
-                user.value = realUser
+                user.value = repository.getCurrentUser()
             } catch (e: Exception) {
-                e.printStackTrace()
+                errorMessage.value = e.message ?: "Неизвестная ошибка"
+            } finally {
+                isLoading.value = false
             }
         }
     }
@@ -29,12 +32,9 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     fun updateUser(firstName: String, lastName: String, photoUrl: String? = null, phone: String? = null) {
         viewModelScope.launch {
             try {
-                val updatedUser = repository.updateCurrentUser(
-                    UpdateSettingsReq(firstName, lastName, photoUrl, phone)
-                )
-                user.value = updatedUser
+                user.value = repository.updateCurrentUser(UpdateSettingsReq(firstName, lastName, photoUrl, phone))
             } catch (e: Exception) {
-                e.printStackTrace()
+                errorMessage.value = e.message
             }
         }
     }
@@ -44,7 +44,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
             try {
                 repository.changePassword(oldPassword, newPassword)
             } catch (e: Exception) {
-                e.printStackTrace()
+                errorMessage.value = e.message
             }
         }
     }
@@ -55,7 +55,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                 repository.deleteCurrentUser(DeleteAccountReq(password))
                 user.value = null
             } catch (e: Exception) {
-                e.printStackTrace()
+                errorMessage.value = e.message
             }
         }
     }

@@ -10,15 +10,15 @@ import retrofit2.http.PUT
 
 interface UserApi {
 
-    @GET("users")
+    @GET("/users")
     suspend fun getCurrentUser(): Response<SettingsView>
 
-    @PUT("users")
+    @PUT("/users")
     suspend fun updateCurrentUser(@Body req: UpdateSettingsReq): Response<SettingsView>
 
-    @POST("users/change-password")
+    @POST("/users")
     suspend fun changePassword(@Body req: ChangePasswordReq): Response<Unit>
 
-    @DELETE("users")
+    @DELETE("/users")
     suspend fun deleteCurrentUser(@Body req : DeleteAccountReq):  Response<Unit>
 }
