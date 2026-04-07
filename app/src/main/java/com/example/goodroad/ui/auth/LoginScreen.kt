@@ -13,7 +13,6 @@ import com.example.goodroad.BuildConfig
 import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.viewmodel.AuthViewModel
 import androidx.compose.runtime.saveable.rememberSaveable
-import com.example.goodroad.data.network.ApiClient
 
 @Composable
 fun LoginScreen(
@@ -33,10 +32,6 @@ fun LoginScreen(
 
     LaunchedEffect(loginResult) {
         if (loginResult?.user != null) {
-            ApiClient.setCredentials(
-                phone = formatPhoneForRequest(normalizeRequiredRussianPhone(phone)!!),
-                password = password
-            )
             onLoginSuccess()
         }
     }
@@ -65,7 +60,6 @@ fun LoginScreen(
 
                 loading = true
                 viewModel.login(formatPhoneForRequest(phoneDigits), password)
-                loading = false
             }
         },
         footer = {

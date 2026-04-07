@@ -1,11 +1,9 @@
 package com.example.goodroad.ui.user
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -21,19 +19,29 @@ fun UserProfileScreen(
     onDelete: () -> Unit,
     onLogout: () -> Unit
 ) {
-    LaunchedEffect(Unit) {
-        userViewModel.getCurrentUser()
+    val user by userViewModel.user
+    val isLoading by userViewModel.isLoading
+    val errorMessage by userViewModel.errorMessage
+
+    LaunchedEffect(userViewModel) {
+        if (user == null && !userViewModel.isDeleted) {
+            userViewModel.getCurrentUser()
+        }
     }
 
     when {
-        userViewModel.isLoading.value -> {
-            Text("Загрузка...", color = TextPrimary)
+        isLoading -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
         }
-        userViewModel.errorMessage.value != null -> {
-            Text("Ошибка: ${userViewModel.errorMessage.value}", color = Color.Red)
+        errorMessage != null -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Ошибка: $errorMessage", color = Color.Red)
+            }
         }
-        userViewModel.user.value != null -> {
-            val user = userViewModel.user.value!!
+        user != null -> {
+            val u = user!!
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 color = BackgroundLight
@@ -50,15 +58,28 @@ fun UserProfileScreen(
                         color = TextPrimary
                     )
                     Spacer(Modifier.height(20.dp))
-                    UserInfoBlock("Имя", user.firstName ?: "")
-                    UserInfoBlock("Фамилия", user.lastName ?: "")
-                    UserInfoBlock("Роль", user.role ?: "")
+                    UserInfoBlock("Имя", u.firstName ?: "")
+                    UserInfoBlock("Фамилия", u.lastName ?: "")
+                    UserInfoBlock("Роль", u.role ?: "")
                     Spacer(Modifier.height(20.dp))
                     AuthButton(text = "Редактировать", onClick = onEdit)
                     Spacer(Modifier.height(10.dp))
-                    AuthButton(text = "Удалить аккаунт", onClick = onDelete)
+                    AuthButton(text = "Удалить аккаунт") {
+                        onDelete()
+                    }
                     Spacer(Modifier.height(10.dp))
-                    AuthButton(text = "Выйти", onClick = onLogout)
+                    AuthButton(text = "Выйти") {
+                        userViewModel.logout {
+                            onLogout()
+                        }
+                    }
+                }
+            }
+        }
+        else -> {
+            LaunchedEffect(Unit) {
+                if (userViewModel.isDeleted) {
+                    onLogout()
                 }
             }
         }

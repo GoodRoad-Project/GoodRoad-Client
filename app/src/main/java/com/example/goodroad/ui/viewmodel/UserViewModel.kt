@@ -14,6 +14,8 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     var user = mutableStateOf<SettingsView?>(null)
     var isLoading = mutableStateOf(false)
     var errorMessage = mutableStateOf<String?>(null)
+    var isDeleted = false
+        private set
 
     fun getCurrentUser() {
         viewModelScope.launch {
@@ -49,18 +51,26 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         }
     }
 
-    fun deleteUser(password: String) {
+    fun deleteUser(password: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
             try {
                 repository.deleteCurrentUser(DeleteAccountReq(password))
                 user.value = null
+                isDeleted = true
+                onSuccess()
             } catch (e: Exception) {
                 errorMessage.value = e.message
+            } finally {
+                isLoading.value = false
             }
         }
     }
 
-    fun logout() {
+    fun logout(onSuccess: () -> Unit) {
         user.value = null
+        isDeleted = false
+        onSuccess()
     }
 }

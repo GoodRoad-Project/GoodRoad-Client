@@ -39,11 +39,10 @@ fun UserNav(onLogout: () -> Unit) {
         )
 
         "delete" -> UserDeleteAccountScreen(
-            onDelete = {
-                userViewModel.logout()
-                onLogout()
-            },
-            onExit = { screen = "profile" }
+            viewModel = userViewModel,
+            onExit = {
+                screen = "profile"
+            }
         )
     }
 }
