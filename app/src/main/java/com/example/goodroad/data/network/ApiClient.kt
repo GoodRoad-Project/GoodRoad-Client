@@ -22,22 +22,23 @@ object ApiClient {
         userPassword = password
     }
 
-    private val client = OkHttpClient.Builder()
-        .addInterceptor(logging)
-        .addInterceptor { chain ->
-            val requestBuilder = chain.request().newBuilder()
-            val phone = userPhone
-            val password = userPassword
-            if (!phone.isNullOrBlank() && !password.isNullOrBlank()) {
-                val credential = Credentials.basic(phone, password)
-                requestBuilder.addHeader("Authorization", credential)
+    private val client: OkHttpClient
+        get() = OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .addInterceptor { chain ->
+                val requestBuilder = chain.request().newBuilder()
+                val phone = userPhone
+                val password = userPassword
+                if (!phone.isNullOrBlank() && !password.isNullOrBlank()) {
+                    val credential = Credentials.basic(phone, password)
+                    requestBuilder.addHeader("Authorization", credential)
+                }
+                chain.proceed(requestBuilder.build())
             }
-            chain.proceed(requestBuilder.build())
-        }
-        .connectTimeout(20, TimeUnit.SECONDS)
-        .readTimeout(20, TimeUnit.SECONDS)
-        .writeTimeout(20, TimeUnit.SECONDS)
-        .build()
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
+            .build()
 
     val authApi: AuthApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         Retrofit.Builder()

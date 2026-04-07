@@ -18,6 +18,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         private set
 
     fun getCurrentUser() {
+        if (isDeleted) return
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null

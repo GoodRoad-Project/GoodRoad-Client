@@ -19,7 +19,6 @@ fun UserDeleteAccountScreen(
     onExit: () -> Unit
 ) {
     var password by remember { mutableStateOf("") }
-
     val isLoading by viewModel.isLoading
     val errorMessage by viewModel.errorMessage
 
@@ -30,7 +29,6 @@ fun UserDeleteAccountScreen(
     ) {
 
         UserDecor()
-
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
