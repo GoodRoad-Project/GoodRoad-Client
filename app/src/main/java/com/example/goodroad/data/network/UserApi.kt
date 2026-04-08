@@ -15,10 +15,7 @@ interface UserApi {
     suspend fun getCurrentUser(): Response<SettingsView>
 
     @PUT("/users")
-    suspend fun updateCurrentUser(@Body req: UpdateSettingsReq): Response<SettingsView>
-
-    @POST("/users")
-    suspend fun changePassword(@Body req: ChangePasswordReq): Response<Unit>
+    suspend fun updateCurrentUser(@Body req: UpdateUserReq): Response<SettingsView>
 
     @HTTP(method = "DELETE", path = "/users", hasBody = true)
     suspend fun deleteCurrentUser(@Body req: DeleteAccountReq): Response<Unit>

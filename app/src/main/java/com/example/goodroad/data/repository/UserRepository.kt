@@ -11,15 +11,10 @@ class UserRepository(private val api: UserApi) {
         throw Exception("Ошибка загрузки пользователя: ${response.code()} ${response.message()}")
     }
 
-    suspend fun updateCurrentUser(req: UpdateSettingsReq): SettingsView? {
+    suspend fun updateCurrentUser(req: UpdateUserReq): SettingsView? {
         val response = api.updateCurrentUser(req)
         if (response.isSuccessful) return response.body()
         throw Exception("Ошибка обновления пользователя: ${response.code()} ${response.message()}")
-    }
-
-    suspend fun changePassword(oldPassword: String, newPassword: String) {
-        val response = api.changePassword(ChangePasswordReq(oldPassword, newPassword))
-        if (!response.isSuccessful) throw Exception("Ошибка смены пароля: ${response.code()} ${response.message()}")
     }
 
     suspend fun deleteCurrentUser(req: DeleteAccountReq) {

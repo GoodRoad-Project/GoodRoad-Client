@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.goodroad.data.repository.UserRepository
 import com.example.goodroad.ui.user.DeleteAccountReq
 import com.example.goodroad.ui.user.SettingsView
-import com.example.goodroad.ui.user.UpdateSettingsReq
+import com.example.goodroad.ui.user.UpdateUserReq
 import kotlinx.coroutines.launch
 
 class UserViewModel(private val repository: UserRepository) : ViewModel() {
@@ -32,20 +32,26 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         }
     }
 
-    fun updateUser(firstName: String, lastName: String, photoUrl: String? = null, phone: String? = null) {
+    fun updateUser(
+        firstName: String,
+        lastName: String,
+        photoUrl: String? = null,
+        phone: String? = null,
+        oldPassword: String? = null,
+        newPassword: String? = null
+    ) {
         viewModelScope.launch {
+            errorMessage.value = null
             try {
-                user.value = repository.updateCurrentUser(UpdateSettingsReq(firstName, lastName, photoUrl, phone))
-            } catch (e: Exception) {
-                errorMessage.value = e.message
-            }
-        }
-    }
-
-    fun changePassword(oldPassword: String, newPassword: String) {
-        viewModelScope.launch {
-            try {
-                repository.changePassword(oldPassword, newPassword)
+                val req = UpdateUserReq(
+                    firstName = firstName,
+                    lastName = lastName,
+                    photoUrl = photoUrl,
+                    phone = phone,
+                    oldPassword = oldPassword,
+                    newPassword = newPassword
+                )
+                user.value = repository.updateCurrentUser(req)
             } catch (e: Exception) {
                 errorMessage.value = e.message
             }

@@ -6,14 +6,17 @@ data class UserDto(
     val firstName: String?,
     val lastName: String?,
     val photoUrl: String?,
+    val phone: String?,
     val active: Boolean
 )
 
-data class UpdateSettingsReq(
+data class UpdateUserReq(
     val firstName: String? = null,
     val lastName: String? = null,
     val photoUrl: String? = null,
-    val phone: String? = null
+    val phone: String? = null,
+    val oldPassword: String? = null,
+    val newPassword: String? = null
 )
 
 data class SettingsView(
@@ -22,12 +25,8 @@ data class SettingsView(
     val firstName: String?,
     val lastName: String?,
     val photoUrl: String?,
+    val phone: String?,
     val active: Boolean
-)
-
-data class ChangePasswordReq(
-    val oldPassword: String,
-    val newPassword: String
 )
 
 data class DeleteAccountReq(
