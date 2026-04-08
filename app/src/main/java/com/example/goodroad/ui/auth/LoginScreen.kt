@@ -1,18 +1,16 @@
 package com.example.goodroad.ui.auth
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.goodroad.BuildConfig
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.livedata.observeAsState
 import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.viewmodel.AuthViewModel
-import androidx.compose.runtime.saveable.rememberSaveable
 
 @Composable
 fun LoginScreen(
@@ -24,11 +22,11 @@ fun LoginScreen(
     var password by rememberSaveable { mutableStateOf("") }
     var phoneWarning by rememberSaveable { mutableStateOf<String?>(null) }
     var errorText by rememberSaveable { mutableStateOf<String?>(null) }
-    var loading by rememberSaveable { mutableStateOf(false) }
 
     val viewModel: AuthViewModel = viewModel()
     val loginResult by viewModel.loginResult.observeAsState()
     val error by viewModel.error.observeAsState()
+    val loading by viewModel.isLoading.observeAsState(initial = false)
 
     LaunchedEffect(loginResult) {
         if (loginResult?.user != null) {
@@ -51,14 +49,7 @@ fun LoginScreen(
                     errorText = "Заполните телефон и пароль"
                     return@AuthButton
                 }
-
-                if (BuildConfig.MOCK_AUTH) {
-                    errorText = null
-                    onLoginSuccess()
-                    return@AuthButton
-                }
-
-                loading = true
+                errorText = null
                 viewModel.login(formatPhoneForRequest(phoneDigits), password)
             }
         },

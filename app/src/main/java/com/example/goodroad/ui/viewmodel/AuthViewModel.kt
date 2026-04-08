@@ -22,40 +22,52 @@ class AuthViewModel : ViewModel() {
     private val _recoverResult = MutableLiveData<Boolean?>()
     val recoverResult: LiveData<Boolean?> = _recoverResult
 
+    private val _isLoading = MutableLiveData(false)
+    val isLoading: LiveData<Boolean> = _isLoading
+
     fun login(phone: String, password: String) {
         viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
             try {
                 val response = authRepository.loginUser(phone, password)
                 ApiClient.setCredentials(phone, password)
                 _loginResult.value = response
-                _error.value = null
             } catch (e: Exception) {
                 _error.value = e.message ?: "Ошибка логина"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
     fun register(firstName: String, lastName: String, phone: String, password: String) {
         viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
             try {
                 val response = authRepository.registerUser(firstName, lastName, phone, password)
                 ApiClient.setCredentials(phone, password)
                 _loginResult.value = response
-                _error.value = null
             } catch (e: Exception) {
                 _error.value = e.message ?: "Ошибка регистрации"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
     fun recoverPassword(phone: String, firstName: String, lastName: String, newPassword: String) {
         viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
             try {
                 val success = authRepository.recoverPassword(phone, firstName, lastName, newPassword)
                 _recoverResult.value = success
-                _error.value = null
             } catch (e: Exception) {
                 _error.value = e.message ?: "Ошибка восстановления пароля"
+            } finally {
+                _isLoading.value = false
             }
         }
     }

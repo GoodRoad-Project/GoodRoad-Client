@@ -7,10 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.ui.auth.AuthButton
-import com.example.goodroad.ui.auth.PlainField
-import com.example.goodroad.ui.theme.GrayButton
-import com.example.goodroad.ui.theme.TextPrimary
-import com.example.goodroad.ui.theme.WhiteSoft
+import com.example.goodroad.ui.auth.PasswordField
+import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.viewmodel.UserViewModel
 
 @Composable
@@ -39,7 +37,7 @@ fun UserDeleteAccountScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        PlainField(
+        PasswordField(
             value = password,
             onValueChange = { password = it },
             label = "Пароль"
