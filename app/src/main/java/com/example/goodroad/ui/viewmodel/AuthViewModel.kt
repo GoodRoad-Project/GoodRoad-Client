@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.goodroad.data.auth.AuthResp
-import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.auth.AuthRepository
+import com.example.goodroad.data.network.ApiClient
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.io.IOException
 
 class AuthViewModel : ViewModel() {
 
@@ -29,12 +31,13 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
+
             try {
                 val response = authRepository.loginUser(phone, password)
                 ApiClient.setCredentials(phone, password)
                 _loginResult.value = response
             } catch (e: Exception) {
-                _error.value = e.message ?: "Ошибка логина"
+                _error.value = mapAuthError(e, AuthAction.LOGIN)
             } finally {
                 _isLoading.value = false
             }
@@ -45,12 +48,13 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
+
             try {
                 val response = authRepository.registerUser(firstName, lastName, phone, password)
                 ApiClient.setCredentials(phone, password)
                 _loginResult.value = response
             } catch (e: Exception) {
-                _error.value = e.message ?: "Ошибка регистрации"
+                _error.value = mapAuthError(e, AuthAction.REGISTER)
             } finally {
                 _isLoading.value = false
             }
@@ -61,14 +65,51 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
+
             try {
                 val success = authRepository.recoverPassword(phone, firstName, lastName, newPassword)
                 _recoverResult.value = success
             } catch (e: Exception) {
-                _error.value = e.message ?: "Ошибка восстановления пароля"
+                _error.value = mapAuthError(e, AuthAction.RECOVER)
             } finally {
                 _isLoading.value = false
             }
         }
+    }
+
+    private fun mapAuthError(e: Exception, action: AuthAction): String {
+        return when (e) {
+            is HttpException -> when (e.code()) {
+                400 -> when (action) {
+                    AuthAction.RECOVER -> "Неверные данные для восстановления"
+                    else -> "Проверьте введённые данные"
+                }
+
+                401 -> "Неверный номер телефона или пароль"
+                403 -> when (action) {
+                    AuthAction.REGISTER -> "Регистрация запрещена"
+                    else -> "Доступ запрещён"
+                }
+
+                404 -> when (action) {
+                    AuthAction.RECOVER -> "Пользователь не найден"
+                    else -> "Пользователь не найден"
+                }
+
+                409 -> "Пользователь с таким номером уже существует"
+                500 -> "Сервер временно недоступен"
+                else -> "Ошибка операции"
+            }
+
+            is IOException -> "Проверьте подключение к интернету"
+
+            else -> "Неизвестная ошибка"
+        }
+    }
+
+    private enum class AuthAction {
+        LOGIN,
+        REGISTER,
+        RECOVER
     }
 }

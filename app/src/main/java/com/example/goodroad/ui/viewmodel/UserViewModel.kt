@@ -3,29 +3,34 @@ package com.example.goodroad.ui.viewmodel
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.goodroad.data.user.UserRepository
 import com.example.goodroad.data.user.DeleteAccountReq
 import com.example.goodroad.data.user.SettingsView
 import com.example.goodroad.data.user.UpdateUserReq
+import com.example.goodroad.data.user.UserRepository
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.io.IOException
 
 class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
     var user = mutableStateOf<SettingsView?>(null)
     var isLoading = mutableStateOf(false)
     var errorMessage = mutableStateOf<String?>(null)
+
     var isDeleted = false
         private set
 
     fun getCurrentUser() {
         if (isDeleted) return
+
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null
+
             try {
                 user.value = repository.getCurrentUser()
             } catch (e: Exception) {
-                errorMessage.value = e.message ?: "Неизвестная ошибка"
+                errorMessage.value = mapUserError(e)
             } finally {
                 isLoading.value = false
             }
@@ -41,7 +46,9 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         newPassword: String? = null
     ) {
         viewModelScope.launch {
+            isLoading.value = true
             errorMessage.value = null
+
             try {
                 val req = UpdateUserReq(
                     firstName = firstName,
@@ -51,9 +58,13 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                     oldPassword = oldPassword,
                     newPassword = newPassword
                 )
+
                 user.value = repository.updateCurrentUser(req)
+
             } catch (e: Exception) {
-                errorMessage.value = e.message
+                errorMessage.value = mapUserError(e)
+            } finally {
+                isLoading.value = false
             }
         }
     }
@@ -62,13 +73,14 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null
+
             try {
                 repository.deleteCurrentUser(DeleteAccountReq(password))
                 user.value = null
                 isDeleted = true
                 onSuccess()
             } catch (e: Exception) {
-                errorMessage.value = e.message
+                errorMessage.value = mapUserError(e)
             } finally {
                 isLoading.value = false
             }
@@ -79,5 +91,21 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         user.value = null
         isDeleted = false
         onSuccess()
+    }
+
+    private fun mapUserError(e: Exception): String {
+        return when (e) {
+            is HttpException -> when (e.code()) {
+                400 -> "Некорректные данные профиля"
+                401 -> "Вы не авторизованы"
+                403 -> "Нет прав для выполнения действия"
+                404 -> "Пользователь не найден"
+                409 -> "Телефон уже используется другим пользователем"
+                500 -> "Сервер временно недоступен"
+                else -> "Ошибка операции"
+            }
+            is IOException -> "Проверьте подключение к интернету"
+            else -> e.message ?: "Неизвестная ошибка"
+        }
     }
 }

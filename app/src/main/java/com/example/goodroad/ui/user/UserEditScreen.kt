@@ -10,12 +10,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Photo
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Phone
 import com.example.goodroad.ui.auth.*
 import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.viewmodel.UserViewModel
 import com.example.goodroad.ui.common.validation.*
+
 @Composable
 fun UserEditScreen(
     userViewModel: UserViewModel,
@@ -53,6 +52,7 @@ fun UserEditScreen(
         )
 
         Spacer(Modifier.height(12.dp))
+
         PlainField(
             value = firstName,
             onValueChange = { value ->
@@ -65,11 +65,18 @@ fun UserEditScreen(
                 }
             },
             label = "Имя",
-            icon = { Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = UrbanBrown) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = UrbanBrown
+                )
+            },
             warning = firstNameWarning
         )
 
         Spacer(Modifier.height(12.dp))
+
         PlainField(
             value = lastName,
             onValueChange = { value ->
@@ -82,19 +89,33 @@ fun UserEditScreen(
                 }
             },
             label = "Фамилия",
-            icon = { Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = UrbanBrown) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = UrbanBrown
+                )
+            },
             warning = lastNameWarning
         )
 
         Spacer(Modifier.height(12.dp))
+
         PlainField(
             value = photoUrl,
             onValueChange = { photoUrl = it },
             label = "URL фото",
-            icon = { Icon(imageVector = Icons.Default.Photo, contentDescription = null, tint = UrbanBrown) }
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Photo,
+                    contentDescription = null,
+                    tint = UrbanBrown
+                )
+            }
         )
 
         Spacer(Modifier.height(12.dp))
+
         PhoneField(
             value = phone,
             onValueChange = { value ->
@@ -111,6 +132,7 @@ fun UserEditScreen(
         )
 
         Spacer(Modifier.height(12.dp))
+
         PasswordField(
             value = oldPassword,
             onValueChange = { oldPassword = it },
@@ -118,13 +140,24 @@ fun UserEditScreen(
         )
 
         Spacer(Modifier.height(12.dp))
+
         PasswordField(
             value = newPassword,
             onValueChange = { newPassword = it },
             label = "Новый пароль"
         )
 
+        if (!finalError.isNullOrBlank()) {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = finalError,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
         Spacer(Modifier.height(20.dp))
+
         AuthButton(text = "Сохранить") {
             val firstNameNormalized = normalizeRequiredCyrillic(firstName)
             if (firstNameNormalized == null) {
@@ -140,7 +173,9 @@ fun UserEditScreen(
                 return@AuthButton
             }
 
-            val phoneDigits = phone.takeIf { it.isNotBlank() }?.let { normalizeRequiredRussianPhone(it) }
+            val phoneDigits =
+                phone.takeIf { it.isNotBlank() }?.let { normalizeRequiredRussianPhone(it) }
+
             if (phone.isNotBlank() && phoneDigits == null) {
                 phoneWarning = PHONE_FORMAT_WARNING
                 errorText = "Некорректный телефон"
@@ -165,6 +200,7 @@ fun UserEditScreen(
         }
 
         Spacer(Modifier.height(12.dp))
+
         AuthButton(
             text = "Выйти",
             backgroundColor = GrayButton,
@@ -173,15 +209,6 @@ fun UserEditScreen(
             userViewModel.logout {
                 onBack()
             }
-        }
-
-        if (!finalError.isNullOrBlank()) {
-            Spacer(Modifier.height(12.dp))
-            Text(
-                text = finalError,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium
-            )
         }
     }
 }

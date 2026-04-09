@@ -8,8 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.ui.auth.AuthButton
-import com.example.goodroad.ui.theme.BackgroundLight
-import com.example.goodroad.ui.theme.TextPrimary
+import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.viewmodel.UserViewModel
 
 @Composable

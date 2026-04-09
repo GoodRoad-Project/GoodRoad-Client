@@ -8,8 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.goodroad.ui.theme.BackgroundLight
-import com.example.goodroad.ui.theme.TextPrimary
+import com.example.goodroad.ui.theme.*
 
 @Composable
 fun RoleStubScreen(

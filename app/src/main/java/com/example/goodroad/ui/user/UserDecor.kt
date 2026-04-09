@@ -19,10 +19,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.goodroad.ui.theme.BackgroundLight
-import com.example.goodroad.ui.theme.SurfaceWarm
-import com.example.goodroad.ui.theme.TextPrimary
-import com.example.goodroad.ui.theme.UrbanBrown
+import com.example.goodroad.ui.theme.*
 
 @Composable
 fun UserDecor() {
