@@ -1,6 +1,8 @@
 package com.example.goodroad.data.network
 
 import com.example.goodroad.BuildConfig
+import com.example.goodroad.data.auth.AuthApi
+import com.example.goodroad.data.user.UserApi
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor

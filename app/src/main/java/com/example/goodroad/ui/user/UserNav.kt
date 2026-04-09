@@ -3,7 +3,7 @@ package com.example.goodroad.ui.user
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.data.network.ApiClient
-import com.example.goodroad.data.repository.UserRepository
+import com.example.goodroad.data.user.UserRepository
 import com.example.goodroad.ui.viewmodel.UserViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.compose.runtime.Composable

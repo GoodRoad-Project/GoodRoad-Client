@@ -1,4 +1,4 @@
-package com.example.goodroad.ui.auth
+package com.example.goodroad.ui.common.validation
 
 private val cyrillicInputRegex = Regex("^[\\p{IsCyrillic} -]*$")
 private val digitsInputRegex = Regex("^\\d*$")

@@ -1,4 +1,4 @@
-package com.example.goodroad.data.network
+package com.example.goodroad.data.auth
 
 data class LoginReq(
     val phone: String,

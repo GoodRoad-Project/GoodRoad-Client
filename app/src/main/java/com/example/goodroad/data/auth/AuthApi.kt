@@ -1,4 +1,4 @@
-package com.example.goodroad.data.network
+package com.example.goodroad.data.auth
 
 import retrofit2.Response
 import retrofit2.http.Body

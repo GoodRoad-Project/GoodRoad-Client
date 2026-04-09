@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.goodroad.data.network.AuthResp
+import com.example.goodroad.data.auth.AuthResp
 import com.example.goodroad.data.network.ApiClient
-import com.example.goodroad.data.repository.AuthRepository
+import com.example.goodroad.data.auth.AuthRepository
 import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {

@@ -1,11 +1,6 @@
-package com.example.goodroad.data.repository
+package com.example.goodroad.data.auth
 
 import com.example.goodroad.data.network.ApiClient
-import com.example.goodroad.data.network.AuthResp
-import com.example.goodroad.data.network.LoginReq
-import com.example.goodroad.data.network.RecoverPasswordReq
-import com.example.goodroad.data.network.RegisterReq
-import retrofit2.Response
 
 class AuthRepository {
     private val api = ApiClient.authApi

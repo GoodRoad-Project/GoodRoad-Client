@@ -1,7 +1,9 @@
-package com.example.goodroad.data.repository
+package com.example.goodroad.data.user
 
-import com.example.goodroad.data.network.UserApi
-import com.example.goodroad.ui.user.*
+import com.example.goodroad.data.user.UserApi
+import com.example.goodroad.data.user.DeleteAccountReq
+import com.example.goodroad.data.user.SettingsView
+import com.example.goodroad.data.user.UpdateUserReq
 
 class UserRepository(private val api: UserApi) {
 

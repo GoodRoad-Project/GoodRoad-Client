@@ -1,12 +1,12 @@
-package com.example.goodroad.data.network
+package com.example.goodroad.data.user
 
-import com.example.goodroad.ui.user.*
-import retrofit2.http.Body
-import retrofit2.http.DELETE
+import com.example.goodroad.data.user.DeleteAccountReq
+import com.example.goodroad.data.user.SettingsView
+import com.example.goodroad.data.user.UpdateUserReq
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.HTTP
-import retrofit2.http.POST
 import retrofit2.http.PUT
 
 interface UserApi {

@@ -3,10 +3,10 @@ package com.example.goodroad.ui.viewmodel
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.goodroad.data.repository.UserRepository
-import com.example.goodroad.ui.user.DeleteAccountReq
-import com.example.goodroad.ui.user.SettingsView
-import com.example.goodroad.ui.user.UpdateUserReq
+import com.example.goodroad.data.user.UserRepository
+import com.example.goodroad.data.user.DeleteAccountReq
+import com.example.goodroad.data.user.SettingsView
+import com.example.goodroad.data.user.UpdateUserReq
 import kotlinx.coroutines.launch
 
 class UserViewModel(private val repository: UserRepository) : ViewModel() {

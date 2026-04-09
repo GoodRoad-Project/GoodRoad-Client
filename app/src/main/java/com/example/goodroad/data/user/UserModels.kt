@@ -1,4 +1,7 @@
-package com.example.goodroad.ui.user
+package com.example.goodroad.data.user
+
+class UserModels {
+}
 
 data class UserDto(
     val id: String,

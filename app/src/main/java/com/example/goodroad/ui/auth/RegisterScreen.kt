@@ -1,27 +1,22 @@
 package com.example.goodroad.ui.auth
-import com.example.goodroad.ui.theme.*
 
+import com.example.goodroad.ui.theme.*
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.goodroad.ui.common.validation.*
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.BuildConfig
-import com.example.goodroad.data.network.ApiClient
-import com.example.goodroad.data.network.RegisterReq
 import com.example.goodroad.ui.viewmodel.AuthViewModel
-import kotlinx.coroutines.launch
-import retrofit2.HttpException
-import java.io.IOException
 
 @Composable
 fun RegisterScreen(
