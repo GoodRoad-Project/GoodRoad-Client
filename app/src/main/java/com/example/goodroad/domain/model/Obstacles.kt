@@ -20,7 +20,7 @@ sealed class ObstacleDetails {
 
     data class Stairs(
         val stepCount: Int,
-        val hasRamp: Boolean = false;
+        val hasRamp: Boolean = false
     ) : ObstacleDetails()
 
     data class Slope(
