@@ -1,11 +1,11 @@
 package com.example.goodroad.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.goodroad.data.auth.AuthResp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.goodroad.data.auth.AuthRepository
+import com.example.goodroad.data.auth.AuthResp
 import com.example.goodroad.data.network.ApiClient
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -62,19 +62,8 @@ class AuthViewModel : ViewModel() {
     }
 
     fun recoverPassword(phone: String, firstName: String, lastName: String, newPassword: String) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _error.value = null
-
-            try {
-                val success = authRepository.recoverPassword(phone, firstName, lastName, newPassword)
-                _recoverResult.value = success
-            } catch (e: Exception) {
-                _error.value = mapAuthError(e, AuthAction.RECOVER)
-            } finally {
-                _isLoading.value = false
-            }
-        }
+        _recoverResult.value = null
+        _error.value = "Восстановление пароля пока не подключено на сервере"
     }
 
     private fun mapAuthError(e: Exception, action: AuthAction): String {

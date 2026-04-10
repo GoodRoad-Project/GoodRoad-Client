@@ -1,21 +1,35 @@
 package com.example.goodroad.ui.auth
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.goodroad.ui.common.validation.*
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.livedata.observeAsState
-import com.example.goodroad.ui.theme.*
+import com.example.goodroad.ui.common.validation.PHONE_FORMAT_WARNING
+import com.example.goodroad.ui.common.validation.formatPhoneForRequest
+import com.example.goodroad.ui.common.validation.isAllowedDigitsInput
+import com.example.goodroad.ui.common.validation.isValidRussianPhoneDigits
+import com.example.goodroad.ui.common.validation.normalizeRequiredRussianPhone
+import com.example.goodroad.ui.theme.UrbanBrown
 import com.example.goodroad.ui.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit,
+    onLoginSuccess: (String) -> Unit,
     onSignUp: () -> Unit,
     onForgotPassword: () -> Unit
 ) {
@@ -30,8 +44,8 @@ fun LoginScreen(
     val loading by viewModel.isLoading.observeAsState(initial = false)
 
     LaunchedEffect(loginResult) {
-        if (loginResult?.user != null) {
-            onLoginSuccess()
+        loginResult?.user?.role?.let { role ->
+            onLoginSuccess(role)
         }
     }
 
@@ -66,7 +80,7 @@ fun LoginScreen(
             value = phone,
             onValueChange = { value ->
                 when {
-                    !isAllowedDigitsInput(value) -> phoneWarning = PHONE_CHARS_WARNING
+                    !isAllowedDigitsInput(value) -> phoneWarning = PHONE_FORMAT_WARNING
                     value.length > 11 -> phoneWarning = PHONE_FORMAT_WARNING
                     value.isNotEmpty() && value.first() !in listOf('7', '8') -> phoneWarning = PHONE_FORMAT_WARNING
                     else -> {

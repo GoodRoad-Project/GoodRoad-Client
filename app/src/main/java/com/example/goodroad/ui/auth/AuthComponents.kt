@@ -1,14 +1,29 @@
 package com.example.goodroad.ui.auth
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import com.example.goodroad.ui.theme.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Color
+import com.example.goodroad.ui.theme.AlertRed
+import com.example.goodroad.ui.theme.SafeGreen
+import com.example.goodroad.ui.theme.SafeRoute
+import com.example.goodroad.ui.theme.BackgroundLight
+import com.example.goodroad.ui.theme.TextSecondary
+import com.example.goodroad.ui.theme.UrbanBrown
 
 @Composable
 fun AuthButton(
@@ -26,10 +41,10 @@ fun AuthButton(
             .height(54.dp),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = SafeRoute,
-            contentColor = BackgroundLight,
-            disabledContainerColor = SafeRoute.copy(alpha = 0.6f),
-            disabledContentColor = BackgroundLight
+            containerColor = backgroundColor,
+            contentColor = contentColor,
+            disabledContainerColor = backgroundColor.copy(alpha = 0.6f),
+            disabledContentColor = contentColor
         )
     ) {
         Text(

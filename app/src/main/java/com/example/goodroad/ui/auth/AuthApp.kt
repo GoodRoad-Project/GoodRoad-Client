@@ -1,5 +1,4 @@
 package com.example.goodroad.ui.auth
-import com.example.goodroad.ui.user.UserNav
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
@@ -9,7 +8,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.goodroad.ui.theme.*
+import com.example.goodroad.ui.theme.BackgroundLight
+import com.example.goodroad.ui.user.UserNav
 
 @Composable
 fun AuthApp(
@@ -25,8 +25,8 @@ fun AuthApp(
         ) {
             composable(LOGIN_ROUTE) {
                 LoginScreen(
-                    onLoginSuccess = {
-                        navController.navigate(USER_HOME_ROUTE) {
+                    onLoginSuccess = { role ->
+                        navController.navigate(homeRoute(role)) {
                             popUpTo(LOGIN_ROUTE) { inclusive = true }
                             launchSingleTop = true
                         }

@@ -1,17 +1,28 @@
 package com.example.goodroad.ui.auth
 
-import android.util.Log
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.goodroad.ui.common.validation.*
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.material3.Icon
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.goodroad.ui.theme.*
+import com.example.goodroad.ui.common.validation.CYRILLIC_WARNING
+import com.example.goodroad.ui.common.validation.PHONE_CHARS_WARNING
+import com.example.goodroad.ui.common.validation.PHONE_FORMAT_WARNING
+import com.example.goodroad.ui.common.validation.formatPhoneForRequest
+import com.example.goodroad.ui.common.validation.isAllowedCyrillicInput
+import com.example.goodroad.ui.common.validation.isAllowedDigitsInput
+import com.example.goodroad.ui.common.validation.normalizeRequiredCyrillic
+import com.example.goodroad.ui.common.validation.normalizeRequiredRussianPhone
+import com.example.goodroad.ui.theme.UrbanBrown
 import com.example.goodroad.ui.viewmodel.AuthViewModel
 
 @Composable
@@ -29,24 +40,8 @@ fun RecoverPasswordScreen(
     var errorText by rememberSaveable { mutableStateOf<String?>(null) }
 
     val viewModel: AuthViewModel = viewModel()
-
     val recoverResult by viewModel.recoverResult.observeAsState()
     val error by viewModel.error.observeAsState()
-
-    LaunchedEffect(recoverResult) {
-        if (recoverResult == true) {
-            errorText = null
-            firstName = ""
-            lastName = ""
-            phone = ""
-            newPassword = ""
-            confirmPassword = ""
-            firstNameWarning = null
-            lastNameWarning = null
-            phoneWarning = null
-            errorText = "Пароль успешно изменен. Теперь можно войти."
-        }
-    }
 
     AuthScreenFrame(
         title = "Смена пароля",
@@ -82,8 +77,7 @@ fun RecoverPasswordScreen(
                     return@AuthButton
                 }
 
-                Log.d("RecoverPassword", "phone=$phoneDigits, first=$firstNameNormalized, last=$lastNameNormalized")
-
+                errorText = null
                 viewModel.recoverPassword(
                     phone = formatPhoneForRequest(phoneDigits),
                     firstName = firstNameNormalized,
@@ -112,11 +106,13 @@ fun RecoverPasswordScreen(
                 }
             },
             label = "Имя",
-            icon = { androidx.compose.material3.Icon(
-                imageVector = androidx.compose.material.icons.Icons.Default.Person,
-                contentDescription = null,
-                tint = UrbanBrown
-            ) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = UrbanBrown
+                )
+            },
             warning = firstNameWarning
         )
 
@@ -134,11 +130,13 @@ fun RecoverPasswordScreen(
                 }
             },
             label = "Фамилия",
-            icon = { androidx.compose.material3.Icon(
-                imageVector = androidx.compose.material.icons.Icons.Default.Person,
-                contentDescription = null,
-                tint = UrbanBrown
-            ) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = UrbanBrown
+                )
+            },
             warning = lastNameWarning
         )
 
@@ -176,8 +174,6 @@ fun RecoverPasswordScreen(
             onValueChange = { confirmPassword = it },
             label = "Подтвердите пароль"
         )
-
-        Spacer(Modifier.height(12.dp))
 
         AuthStatusText(text = error ?: errorText)
     }
