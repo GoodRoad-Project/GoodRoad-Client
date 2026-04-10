@@ -16,6 +16,11 @@ class UserRepository(private val api: UserApi) {
         throw HttpException(response)
     }
 
+    suspend fun changePassword(oldPassword: String, newPassword: String) {
+        val response = api.changePassword(oldPassword, newPassword)
+        if (!response.isSuccessful) throw HttpException(response)
+    }
+
     suspend fun deleteCurrentUser(req: DeleteAccountReq) {
         val response = api.deleteCurrentUser(req)
         if (!response.isSuccessful) throw HttpException(response)

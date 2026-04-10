@@ -3,6 +3,7 @@ package com.example.goodroad.ui.viewmodel
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.user.DeleteAccountReq
 import com.example.goodroad.data.user.SettingsView
 import com.example.goodroad.data.user.UpdateUserReq
@@ -50,17 +51,41 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
             errorMessage.value = null
 
             try {
+                val current = user.value
+                val phoneToUpdate = phone?.takeIf { it.isNotBlank() }
+                val hasPasswordChange = !oldPassword.isNullOrBlank() || !newPassword.isNullOrBlank()
+
+                if (hasPasswordChange && (oldPassword.isNullOrBlank() || newPassword.isNullOrBlank())) {
+                    throw IllegalArgumentException("Для смены пароля заполните оба поля")
+                }
+
                 val req = UpdateUserReq(
-                    firstName = firstName,
-                    lastName = lastName,
-                    photoUrl = photoUrl,
-                    phone = phone,
-                    oldPassword = oldPassword,
-                    newPassword = newPassword
+                    firstName = firstName.takeIf { it != current?.firstName },
+                    lastName = lastName.takeIf { it != current?.lastName },
+                    photoUrl = photoUrl.takeIf { it != current?.photoUrl },
+                    phone = phoneToUpdate
                 )
 
-                user.value = repository.updateCurrentUser(req)
+                val hasProfileChanges = req.firstName != null ||
+                        req.lastName != null ||
+                        req.photoUrl != null ||
+                        req.phone != null
 
+                if (!hasProfileChanges && !hasPasswordChange) {
+                    throw IllegalArgumentException("Нет изменений для сохранения")
+                }
+
+                if (hasProfileChanges) {
+                    user.value = repository.updateCurrentUser(req)
+                    if (req.phone != null) {
+                        ApiClient.updateCredentials(phone = req.phone)
+                    }
+                }
+
+                if (hasPasswordChange) {
+                    repository.changePassword(oldPassword!!, newPassword!!)
+                    ApiClient.updateCredentials(password = newPassword)
+                }
             } catch (e: Exception) {
                 errorMessage.value = mapUserError(e)
             } finally {
@@ -76,6 +101,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
             try {
                 repository.deleteCurrentUser(DeleteAccountReq(password))
+                ApiClient.clearCredentials()
                 user.value = null
                 isDeleted = true
                 onSuccess()
@@ -88,13 +114,16 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     }
 
     fun logout(onSuccess: () -> Unit) {
+        ApiClient.clearCredentials()
         user.value = null
         isDeleted = false
+        errorMessage.value = null
         onSuccess()
     }
 
     private fun mapUserError(e: Exception): String {
         return when (e) {
+            is IllegalArgumentException -> e.message ?: "Некорректные данные"
             is HttpException -> when (e.code()) {
                 400 -> "Некорректные данные профиля"
                 401 -> "Вы не авторизованы"

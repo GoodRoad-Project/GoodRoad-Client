@@ -1,13 +1,12 @@
 package com.example.goodroad.data.user
 
-import com.example.goodroad.data.user.DeleteAccountReq
-import com.example.goodroad.data.user.SettingsView
-import com.example.goodroad.data.user.UpdateUserReq
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.HTTP
+import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Query
 
 interface UserApi {
 
@@ -16,6 +15,12 @@ interface UserApi {
 
     @PUT("/users")
     suspend fun updateCurrentUser(@Body req: UpdateUserReq): Response<SettingsView>
+
+    @POST("/users")
+    suspend fun changePassword(
+        @Query("oldPassword") oldPassword: String,
+        @Query("newPassword") newPassword: String
+    ): Response<Unit>
 
     @HTTP(method = "DELETE", path = "/users", hasBody = true)
     suspend fun deleteCurrentUser(@Body req: DeleteAccountReq): Response<Unit>

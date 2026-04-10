@@ -1,12 +1,15 @@
 package com.example.goodroad.ui.user
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.user.UserRepository
 import com.example.goodroad.ui.viewmodel.UserViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.compose.runtime.Composable
 
 @Composable
 fun UserNav(onLogout: () -> Unit) {
@@ -35,14 +38,13 @@ fun UserNav(onLogout: () -> Unit) {
 
         "edit" -> UserEditScreen(
             userViewModel = userViewModel,
-            onBack = { screen = "profile" }
+            onBack = { screen = "profile" },
+            onLogout = onLogout
         )
 
         "delete" -> UserDeleteAccountScreen(
             viewModel = userViewModel,
-            onExit = {
-                screen = "profile"
-            }
+            onExit = onLogout
         )
     }
 }
