@@ -24,6 +24,20 @@ object ApiClient {
         userPassword = password
     }
 
+    fun updateCredentials(phone: String? = null, password: String? = null) {
+        if (!phone.isNullOrBlank()) {
+            userPhone = phone
+        }
+        if (!password.isNullOrBlank()) {
+            userPassword = password
+        }
+    }
+
+    fun clearCredentials() {
+        userPhone = null
+        userPassword = null
+    }
+
     private val client: OkHttpClient
         get() = OkHttpClient.Builder()
             .addInterceptor(logging)
