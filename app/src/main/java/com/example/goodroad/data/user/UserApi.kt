@@ -1,12 +1,8 @@
 package com.example.goodroad.data.user
 
+import okhttp3.MultipartBody
 import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.HTTP
-import retrofit2.http.POST
-import retrofit2.http.PUT
-import retrofit2.http.Query
+import retrofit2.http.*
 
 interface UserApi {
 
@@ -21,6 +17,10 @@ interface UserApi {
         @Query("oldPassword") oldPassword: String,
         @Query("newPassword") newPassword: String
     ): Response<Unit>
+
+    @Multipart
+    @POST("/users/avatar")
+    suspend fun uploadAvatar(@Part file: MultipartBody.Part): Response<AvatarUploadResp>
 
     @HTTP(method = "DELETE", path = "/users", hasBody = true)
     suspend fun deleteCurrentUser(@Body req: DeleteAccountReq): Response<Unit>

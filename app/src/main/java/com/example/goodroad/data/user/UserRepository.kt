@@ -1,5 +1,6 @@
 package com.example.goodroad.data.user
 
+import okhttp3.MultipartBody
 import retrofit2.HttpException
 
 class UserRepository(private val api: UserApi) {
@@ -19,6 +20,12 @@ class UserRepository(private val api: UserApi) {
     suspend fun changePassword(oldPassword: String, newPassword: String) {
         val response = api.changePassword(oldPassword, newPassword)
         if (!response.isSuccessful) throw HttpException(response)
+    }
+
+    suspend fun uploadAvatar(file: MultipartBody.Part): AvatarUploadResp? {
+        val response = api.uploadAvatar(file)
+        if (response.isSuccessful) return response.body()
+        throw HttpException(response)
     }
 
     suspend fun deleteCurrentUser(req: DeleteAccountReq) {

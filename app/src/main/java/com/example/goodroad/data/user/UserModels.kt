@@ -16,6 +16,10 @@ data class UpdateUserReq(
     val phone: String? = null
 )
 
+data class AvatarUploadResp(
+    val photoUrl: String
+)
+
 data class SettingsView(
     val id: String,
     val role: String,

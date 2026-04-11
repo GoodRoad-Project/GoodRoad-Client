@@ -1,15 +1,18 @@
 package com.example.goodroad.ui.viewmodel
 
+import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.goodroad.data.network.ApiClient
-import com.example.goodroad.data.user.DeleteAccountReq
-import com.example.goodroad.data.user.SettingsView
-import com.example.goodroad.data.user.UpdateUserReq
-import com.example.goodroad.data.user.UserRepository
+import com.example.goodroad.data.user.*
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.HttpException
+import java.io.File
 import java.io.IOException
 
 class UserViewModel(private val repository: UserRepository) : ViewModel() {
@@ -17,6 +20,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     var user = mutableStateOf<SettingsView?>(null)
     var isLoading = mutableStateOf(false)
     var errorMessage = mutableStateOf<String?>(null)
+    var successMessage = mutableStateOf<String?>(null)
 
     var isDeleted = false
         private set
@@ -49,6 +53,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null
+            successMessage.value = null
 
             try {
                 val current = user.value
@@ -86,6 +91,8 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                     repository.changePassword(oldPassword!!, newPassword!!)
                     ApiClient.updateCredentials(password = newPassword)
                 }
+
+                successMessage.value = "Профиль успешно сохранен"
             } catch (e: Exception) {
                 errorMessage.value = mapUserError(e)
             } finally {
@@ -94,10 +101,47 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         }
     }
 
+    fun uploadAvatar(context: Context, uri: Uri, onSuccess: (String) -> Unit) {
+        viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
+            successMessage.value = null
+
+            try {
+                val resolver = context.contentResolver
+                val mimeType = resolver.getType(uri) ?: "image/*"
+                val extension = MimeTypeMap.resolveExtension(mimeType)
+                val tempFile = File.createTempFile("avatar_upload", extension, context.cacheDir)
+                resolver.openInputStream(uri)?.use { input ->
+                    tempFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                } ?: throw IllegalArgumentException("Не удалось прочитать выбранный файл")
+
+                val requestBody = tempFile.asRequestBody(mimeType.toMediaTypeOrNull())
+                val part = MultipartBody.Part.createFormData("file", tempFile.name, requestBody)
+                val response = repository.uploadAvatar(part)
+                    ?: throw IllegalStateException("Сервер не вернул ссылку на фото")
+
+                onSuccess(response.photoUrl)
+                tempFile.delete()
+            } catch (e: Exception) {
+                errorMessage.value = mapUserError(e)
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
+    fun clearSuccessMessage() {
+        successMessage.value = null
+    }
+
     fun deleteUser(password: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null
+            successMessage.value = null
 
             try {
                 repository.deleteCurrentUser(DeleteAccountReq(password))
@@ -118,6 +162,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         user.value = null
         isDeleted = false
         errorMessage.value = null
+        successMessage.value = null
         onSuccess()
     }
 
@@ -135,6 +180,17 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
             }
             is IOException -> "Проверьте подключение к интернету"
             else -> e.message ?: "Неизвестная ошибка"
+        }
+    }
+
+    private object MimeTypeMap {
+        fun resolveExtension(mimeType: String): String {
+            return when (mimeType) {
+                "image/jpeg" -> ".jpg"
+                "image/png" -> ".png"
+                "image/webp" -> ".webp"
+                else -> ".tmp"
+            }
         }
     }
 }
