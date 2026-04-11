@@ -6,7 +6,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.goodroad.ui.auth.AuthButton
 import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.viewmodel.UserViewModel
@@ -16,7 +18,8 @@ fun UserProfileScreen(
     userViewModel: UserViewModel,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onSelectObstacles: () -> Unit
 ) {
     val user by userViewModel.user
     val isLoading by userViewModel.isLoading
@@ -30,17 +33,20 @@ fun UserProfileScreen(
 
     when {
         isLoading -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }
+
         errorMessage != null -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("Ошибка: $errorMessage", color = Color.Red)
             }
         }
+
         user != null -> {
             val u = user!!
+
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 color = BackgroundLight
@@ -50,36 +56,83 @@ fun UserProfileScreen(
                         .fillMaxSize()
                         .padding(24.dp)
                 ) {
+
                     UserDecor()
+
                     Text(
                         "Профиль",
                         style = MaterialTheme.typography.headlineLarge,
                         color = TextPrimary
                     )
+
                     Spacer(Modifier.height(20.dp))
-                    UserInfoBlock("Имя", u.firstName ?: "")
-                    UserInfoBlock("Фамилия", u.lastName ?: "")
-                    UserInfoBlock("Роль", u.role ?: "")
-                    Spacer(Modifier.height(20.dp))
-                    AuthButton(text = "Редактировать", onClick = onEdit)
-                    Spacer(Modifier.height(10.dp))
-                    AuthButton(text = "Удалить аккаунт") {
-                        onDelete()
-                    }
-                    Spacer(Modifier.height(10.dp))
-                    AuthButton(text = "Выйти") {
-                        userViewModel.logout {
-                            onLogout()
+
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = UrbanBrown.copy(alpha = 0.08f)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+
+                            Text(
+                                text = "${u.firstName ?: ""} ${u.lastName ?: ""}",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = UrbanBrown
+                            )
+
+                            Spacer(Modifier.height(6.dp))
+
+                            Text(
+                                text = "Роль: ${u.role ?: ""}",
+                                fontSize = 16.sp,
+                                color = UrbanBrown.copy(alpha = 0.8f)
+                            )
                         }
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+
+                    AuthButton(
+                        text = "Выбрать препятствия",
+                        backgroundColor = SoftYellow ,
+                        contentColor = WhiteSoft
+                    ) {
+                        onSelectObstacles()
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    AuthButton(
+                        text = "Перейти на карту",
+                        backgroundColor = SoftYellow ,
+                        contentColor = WhiteSoft
+                    ) {
+                    }
+
+                    Spacer(Modifier.height(10.dp))
+
+                    AuthButton(text = "Редактировать", onClick = onEdit)
+
+                    Spacer(Modifier.height(10.dp))
+
+                    AuthButton(text = "Удалить аккаунт", onClick = onDelete)
+
+                    Spacer(Modifier.height(10.dp))
+
+                    AuthButton(text = "Выйти") {
+                        userViewModel.logout { onLogout() }
                     }
                 }
             }
         }
+
         else -> {
             LaunchedEffect(Unit) {
-                if (userViewModel.isDeleted) {
-                    onLogout()
-                }
+                if (userViewModel.isDeleted) onLogout()
             }
         }
     }

@@ -12,6 +12,7 @@ val UrbanBrown = Color(0xFFA28A72)
 val BackgroundLight = Color(0xFFF7F5F0)
 val SurfaceWarm = Color(0xFFEEE7DD)
 val BorderWarm = Color(0xFFD8CEC0)
+val SoftYellow = Color(0xFFF2C94C)
 
 val MapBackground = Color(0xFFF3EFE7)
 val Buildings = Color(0xFFDCCFBE)
@@ -22,6 +23,7 @@ val SafeRoute = Color(0xFF4E9B6F)
 val BalancedRoute = Color(0xFF4F87C9)
 val FastRoute = Color(0xFF7C6BCB)
 val Obstacle = Color(0xFFD56B63)
+
 
 val TextPrimary = Color(0xFF2F2B28)
 val TextSecondary = Color(0xFF7A6F66)

@@ -28,7 +28,7 @@ import com.example.goodroad.ui.theme.UrbanBrown
 @Composable
 fun AuthButton(
     text: String,
-    backgroundColor: Color = SafeRoute,
+    backgroundColor: Color = SafeGreen,
     contentColor: Color = BackgroundLight,
     enabled: Boolean = true,
     onClick: () -> Unit
