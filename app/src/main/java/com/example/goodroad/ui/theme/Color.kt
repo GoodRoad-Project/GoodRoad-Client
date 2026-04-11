@@ -7,7 +7,7 @@ val SafeGreen = Color(0xFF6FAE8A)
 val InclusiveViolet = Color(0xFF8B7AC6)
 val AlertRed = Color(0xFFD56B63)
 
-val UrbanBrown = Color(0xFFA28A72)
+val UrbanBrown = Color(0xFFA28A72) // 0xFF7A6F66
 
 val BackgroundLight = Color(0xFFF7F5F0)
 val SurfaceWarm = Color(0xFFEEE7DD)
