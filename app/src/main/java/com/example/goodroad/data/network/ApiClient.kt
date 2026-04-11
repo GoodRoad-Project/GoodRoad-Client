@@ -3,8 +3,7 @@ package com.example.goodroad.data.network
 import com.example.goodroad.BuildConfig
 import com.example.goodroad.data.auth.AuthApi
 import com.example.goodroad.data.user.UserApi
-import okhttp3.Credentials
-import okhttp3.OkHttpClient
+import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -18,11 +17,6 @@ object ApiClient {
 
     private var userPhone: String? = null
     private var userPassword: String? = null
-
-    fun setCredentials(phone: String, password: String) {
-        userPhone = phone
-        userPassword = password
-    }
 
     fun updateCredentials(phone: String? = null, password: String? = null) {
         if (!phone.isNullOrBlank()) {
