@@ -42,6 +42,7 @@ fun RecoverPasswordScreen(
     val viewModel: AuthViewModel = viewModel()
     val recoverResult by viewModel.recoverResult.observeAsState()
     val error by viewModel.error.observeAsState()
+    val successText = if (recoverResult == true) "Пароль успешно восстановлен" else null
 
     AuthScreenFrame(
         title = "Смена пароля",
@@ -176,5 +177,6 @@ fun RecoverPasswordScreen(
         )
 
         AuthStatusText(text = error ?: errorText)
+        AuthSuccessText(text = successText)
     }
 }

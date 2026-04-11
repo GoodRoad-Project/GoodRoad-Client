@@ -1,11 +1,7 @@
 package com.example.goodroad.ui.viewmodel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.goodroad.data.auth.AuthRepository
-import com.example.goodroad.data.auth.AuthResp
+import androidx.lifecycle.*
+import com.example.goodroad.data.auth.*
 import com.example.goodroad.data.network.ApiClient
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -34,7 +30,7 @@ class AuthViewModel : ViewModel() {
 
             try {
                 val response = authRepository.loginUser(phone, password)
-                ApiClient.setCredentials(phone, password)
+                ApiClient.updateCredentials(phone, password)
                 _loginResult.value = response
             } catch (e: Exception) {
                 _error.value = mapAuthError(e, AuthAction.LOGIN)
@@ -51,7 +47,7 @@ class AuthViewModel : ViewModel() {
 
             try {
                 val response = authRepository.registerUser(firstName, lastName, phone, password)
-                ApiClient.setCredentials(phone, password)
+                ApiClient.updateCredentials(phone, password)
                 _loginResult.value = response
             } catch (e: Exception) {
                 _error.value = mapAuthError(e, AuthAction.REGISTER)
@@ -62,8 +58,21 @@ class AuthViewModel : ViewModel() {
     }
 
     fun recoverPassword(phone: String, firstName: String, lastName: String, newPassword: String) {
-        _recoverResult.value = null
-        _error.value = "Восстановление пароля пока не подключено на сервере"
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            _recoverResult.value = null
+
+            try {
+                val ok = authRepository.recoverPassword(phone, firstName, lastName, newPassword)
+                _recoverResult.value = ok
+            } catch (e: Exception) {
+                _error.value = mapAuthError(e, AuthAction.RECOVER)
+                _recoverResult.value = false
+            } finally {
+                _isLoading.value = false
+            }
+        }
     }
 
     private fun mapAuthError(e: Exception, action: AuthAction): String {
@@ -74,17 +83,17 @@ class AuthViewModel : ViewModel() {
                     else -> "Проверьте введённые данные"
                 }
 
-                401 -> "Неверный номер телефона или пароль"
+                401 -> when (action) {
+                    AuthAction.RECOVER -> "Имя, фамилия или телефон не совпадают"
+                    else -> "Неверный номер телефона или пароль"
+                }
+
                 403 -> when (action) {
                     AuthAction.REGISTER -> "Регистрация запрещена"
                     else -> "Доступ запрещён"
                 }
 
-                404 -> when (action) {
-                    AuthAction.RECOVER -> "Пользователь не найден"
-                    else -> "Пользователь не найден"
-                }
-
+                404 -> "Пользователь не найден"
                 409 -> "Пользователь с таким номером уже существует"
                 500 -> "Сервер временно недоступен"
                 else -> "Ошибка операции"
