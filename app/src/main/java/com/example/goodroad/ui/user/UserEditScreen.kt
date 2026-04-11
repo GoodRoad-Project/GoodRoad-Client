@@ -1,42 +1,28 @@
 package com.example.goodroad.ui.user
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Photo
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.goodroad.ui.auth.AuthButton
-import com.example.goodroad.ui.auth.PasswordField
-import com.example.goodroad.ui.auth.PhoneField
-import com.example.goodroad.ui.auth.PlainField
-import com.example.goodroad.ui.common.validation.CYRILLIC_WARNING
-import com.example.goodroad.ui.common.validation.PHONE_CHARS_WARNING
-import com.example.goodroad.ui.common.validation.PHONE_FORMAT_WARNING
-import com.example.goodroad.ui.common.validation.formatPhoneForRequest
-import com.example.goodroad.ui.common.validation.isAllowedCyrillicInput
-import com.example.goodroad.ui.common.validation.isAllowedDigitsInput
-import com.example.goodroad.ui.common.validation.normalizeRequiredCyrillic
-import com.example.goodroad.ui.common.validation.normalizeRequiredRussianPhone
-import com.example.goodroad.ui.theme.GrayButton
-import com.example.goodroad.ui.theme.TextPrimary
-import com.example.goodroad.ui.theme.UrbanBrown
-import com.example.goodroad.ui.theme.WhiteSoft
+import coil.compose.AsyncImage
+import com.example.goodroad.ui.auth.*
+import com.example.goodroad.ui.common.validation.*
+import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.viewmodel.UserViewModel
 
 @Composable
@@ -45,14 +31,17 @@ fun UserEditScreen(
     onBack: () -> Unit,
     onLogout: () -> Unit
 ) {
+    val context = LocalContext.current
     val user = userViewModel.user.value ?: return
 
     var firstName by remember { mutableStateOf(user.firstName ?: "") }
     var lastName by remember { mutableStateOf(user.lastName ?: "") }
     var photoUrl by remember { mutableStateOf(user.photoUrl ?: "") }
+    var selectedPhotoUri by remember { mutableStateOf<Uri?>(null) }
     var phone by remember { mutableStateOf("") }
     var oldPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
+    var confirmNewPassword by remember { mutableStateOf("") }
 
     var firstNameWarning by remember { mutableStateOf<String?>(null) }
     var lastNameWarning by remember { mutableStateOf<String?>(null) }
@@ -61,6 +50,17 @@ fun UserEditScreen(
 
     val errorMessage by remember { derivedStateOf { userViewModel.errorMessage.value } }
     val finalError = errorMessage ?: errorText
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            selectedPhotoUri = uri
+            userViewModel.uploadAvatar(context, uri) { uploadedUrl ->
+                photoUrl = uploadedUrl
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -126,17 +126,74 @@ fun UserEditScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        PlainField(
-            value = photoUrl,
-            onValueChange = { photoUrl = it },
-            label = "URL фото",
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Photo,
-                    contentDescription = null,
-                    tint = UrbanBrown
-                )
+        Text(
+            text = "Фото профиля",
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextPrimary
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            when {
+                selectedPhotoUri != null -> {
+                    AsyncImage(
+                        model = selectedPhotoUri,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                photoUrl.isNotBlank() -> {
+                    AsyncImage(
+                        model = photoUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                else -> {
+                    Surface(
+                        modifier = Modifier.size(120.dp),
+                        shape = CircleShape,
+                        color = WhiteSoft,
+                        tonalElevation = 2.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Photo,
+                                contentDescription = null,
+                                tint = UrbanBrown,
+                                modifier = Modifier.size(36.dp)
+                            )
+                        }
+                    }
+                }
             }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        AuthButton(
+            text = "Выбрать фото"
+        ) {
+            photoPickerLauncher.launch("image/*")
+        }
+
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = "Фотография загружается как файл на сервер, а в профиле сохраняется ссылка на нее.",
+            style = MaterialTheme.typography.bodySmall,
+            color = UrbanBrown
         )
 
         Spacer(Modifier.height(12.dp))
@@ -152,7 +209,7 @@ fun UserEditScreen(
                     else -> null
                 }
             },
-            label = "Новый телефон",
+            label = "Телефон",
             warning = phoneWarning
         )
 
@@ -179,9 +236,17 @@ fun UserEditScreen(
             label = "Новый пароль"
         )
 
+        Spacer(Modifier.height(12.dp))
+
+        PasswordField(
+            value = confirmNewPassword,
+            onValueChange = { confirmNewPassword = it },
+            label = "Подтвердите новый пароль"
+        )
+
         Spacer(Modifier.height(4.dp))
         Text(
-            text = "Чтобы сменить пароль, заполните оба поля. Иначе оставьте их пустыми.",
+            text = "Чтобы сменить пароль, заполните старый пароль и дважды введите новый.",
             style = MaterialTheme.typography.bodySmall,
             color = UrbanBrown
         )
@@ -223,6 +288,18 @@ fun UserEditScreen(
 
             val oldPass = oldPassword.takeIf { it.isNotBlank() }
             val newPass = newPassword.takeIf { it.isNotBlank() }
+            val confirmPass = confirmNewPassword.takeIf { it.isNotBlank() }
+
+            if (!newPass.isNullOrBlank() || !confirmPass.isNullOrBlank() || !oldPass.isNullOrBlank()) {
+                if (oldPass.isNullOrBlank() || newPass.isNullOrBlank() || confirmPass.isNullOrBlank()) {
+                    errorText = "Для смены пароля заполните все три поля"
+                    return@AuthButton
+                }
+                if (newPass != confirmPass) {
+                    errorText = "Новые пароли не совпадают"
+                    return@AuthButton
+                }
+            }
 
             userViewModel.updateUser(
                 firstName = firstNameNormalized,
@@ -235,6 +312,7 @@ fun UserEditScreen(
 
             oldPassword = ""
             newPassword = ""
+            confirmNewPassword = ""
             errorText = null
         }
 
