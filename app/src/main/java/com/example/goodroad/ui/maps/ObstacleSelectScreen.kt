@@ -61,7 +61,7 @@ fun ObstacleSelectScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    text = "Выберите препятствия, которые вас интересуют:",
+                    text = "Выберите препятствия, которые хотите избегать:",
                     style = MaterialTheme.typography.bodyLarge,
                     color = UrbanBrown
                 )
@@ -116,7 +116,7 @@ fun ObstacleSelectScreen(
 
                 AuthButton(
                     text = "Назад в профиль",
-                    backgroundColor = GrayButton,
+                    backgroundColor = UrbanBrown,
                     contentColor = WhiteSoft
                 ) {
                     onBackToProfile()

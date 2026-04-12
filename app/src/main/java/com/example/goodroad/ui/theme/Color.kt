@@ -3,16 +3,15 @@ package com.example.goodroad.ui.theme
 import androidx.compose.ui.graphics.Color
 
 val PrimaryBlue = Color(0xFF4F87C9)
-val SafeGreen = Color(0xFF6FAE8A)
+val SafeGreen = Color(0xFF549671)
 val InclusiveViolet = Color(0xFF8B7AC6)
 val AlertRed = Color(0xFFD56B63)
 
-val UrbanBrown = Color(0xFFA28A72) // 0xFF7A6F66
+val UrbanBrown = Color(0xFF887058)
 
 val BackgroundLight = Color(0xFFF7F5F0)
 val SurfaceWarm = Color(0xFFEEE7DD)
 val BorderWarm = Color(0xFFD8CEC0)
-val SoftYellow = Color(0xFFF2C94C)
 
 val MapBackground = Color(0xFFF3EFE7)
 val Buildings = Color(0xFFDCCFBE)
