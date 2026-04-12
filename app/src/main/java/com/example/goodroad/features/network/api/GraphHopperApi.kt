@@ -1,6 +1,6 @@
 package com.example.goodroad.features.network.api
-/*
-import com.example.goodroad.features.network.GraphHopperResponse
+
+import com.example.goodroad.model.RouteResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -15,5 +15,5 @@ interface GraphHopperApi {
         @Query("calc_points") calcPoints: Boolean = true,
         @Query("points_encoded") pointsEncoded: Boolean = true,
         @Query("key") apiKey: String
-    ): GraphHopperResponse
-}*/
+    ): RouteResponse
+}
