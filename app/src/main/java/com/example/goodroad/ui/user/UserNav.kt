@@ -44,6 +44,7 @@ fun UserNav(onLogout: () -> Unit) {
 
         "delete" -> UserDeleteAccountScreen(
             viewModel = userViewModel,
+            onBack = { screen = "profile" },
             onExit = onLogout
         )
 

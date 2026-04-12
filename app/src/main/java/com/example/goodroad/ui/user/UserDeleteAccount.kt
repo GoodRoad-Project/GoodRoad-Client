@@ -13,7 +13,8 @@ import com.example.goodroad.ui.theme.*
 @Composable
 fun UserDeleteAccountScreen(
     viewModel: UserViewModel,
-    onExit: () -> Unit
+    onExit: () -> Unit,
+    onBack: () -> Unit
 ) {
     var password by remember { mutableStateOf("") }
     val isLoading by viewModel.isLoading
@@ -56,21 +57,11 @@ fun UserDeleteAccountScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         AuthButton(
-            text = "Выйти",
-            backgroundColor = GrayButton,
+            text = "Назад в профиль",
+            backgroundColor = UrbanBrown,
             contentColor = WhiteSoft,
-            enabled = !isLoading
-        ) {
-            viewModel.logout {
-                onExit()
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.padding(top = 16.dp))
-        }
+            onClick = onBack
+        )
 
         errorMessage?.let {
             Text(
