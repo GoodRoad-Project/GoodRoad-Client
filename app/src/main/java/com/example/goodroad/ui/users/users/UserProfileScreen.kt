@@ -1,4 +1,4 @@
-package com.example.goodroad.ui.user
+package com.example.goodroad.ui.users.users
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import com.example.goodroad.ui.theme.*
+import com.example.goodroad.ui.users.UserDecor
+
 @Composable
 fun UserProfileScreen(
     userViewModel: UserViewModel,

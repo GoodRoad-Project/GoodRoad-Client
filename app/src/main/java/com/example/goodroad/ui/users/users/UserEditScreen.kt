@@ -1,4 +1,4 @@
-package com.example.goodroad.ui.user
+package com.example.goodroad.ui.users.users
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -24,6 +24,9 @@ import com.example.goodroad.ui.viewmodel.UserViewModel
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.SolidColor
+import com.example.goodroad.ui.users.UserDecor
+
 @Composable
 fun UserEditScreen(
     userViewModel: UserViewModel,
@@ -215,7 +218,7 @@ fun UserEditScreen(
                 contentColor = UrbanBrown
             ),
             border = ButtonDefaults.outlinedButtonBorder.copy(
-                brush = androidx.compose.ui.graphics.SolidColor(BorderWarm)
+                brush = SolidColor(BorderWarm)
             )
         ) {
             Icon(

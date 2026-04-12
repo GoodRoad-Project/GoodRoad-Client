@@ -1,4 +1,4 @@
-package com.example.goodroad.ui.user
+package com.example.goodroad.ui.users
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background

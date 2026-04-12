@@ -1,8 +1,8 @@
 package com.example.goodroad.ui.auth
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.livedata.observeAsState
@@ -13,9 +13,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.ui.common.validation.*
 import com.example.goodroad.ui.theme.UrbanBrown
 import com.example.goodroad.ui.viewmodel.AuthViewModel
+import com.example.goodroad.data.auth.AuthResp
+
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (String) -> Unit,
+    onLoginSuccess: (AuthResp) -> Unit,
     onSignUp: () -> Unit,
     onForgotPassword: () -> Unit
 ) {
@@ -30,8 +32,11 @@ fun LoginScreen(
     val loading by viewModel.isLoading.observeAsState(initial = false)
 
     LaunchedEffect(loginResult) {
-        loginResult?.user?.role?.let { role ->
-            onLoginSuccess(role)
+        Log.d("LOGIN_DEBUG", "RAW RESPONSE = $loginResult")
+        Log.d("LOGIN_DEBUG", "ROLE = ${loginResult?.user?.role}")
+
+        loginResult?.let { resp ->
+            onLoginSuccess(resp)
         }
     }
 
@@ -43,13 +48,17 @@ fun LoginScreen(
                 enabled = !loading
             ) {
                 val phoneDigits = normalizeRequiredRussianPhone(phone)
+
                 if (phoneDigits == null || password.isBlank()) {
-                    phoneWarning = if (phone.isNotBlank() && !isValidRussianPhoneDigits(phone.trim())) {
-                        PHONE_FORMAT_WARNING
-                    } else null
+                    phoneWarning =
+                        if (phone.isNotBlank() && !isValidRussianPhoneDigits(phone.trim())) {
+                            PHONE_FORMAT_WARNING
+                        } else null
+
                     errorText = "Заполните телефон и пароль"
                     return@AuthButton
                 }
+
                 errorText = null
                 viewModel.login(formatPhoneForRequest(phoneDigits), password)
             }
@@ -62,18 +71,18 @@ fun LoginScreen(
             )
         }
     ) {
+
         PhoneField(
             value = phone,
             onValueChange = { value ->
                 when {
                     !isAllowedDigitsInput(value) -> phoneWarning = PHONE_FORMAT_WARNING
                     value.length > 11 -> phoneWarning = PHONE_FORMAT_WARNING
-                    value.isNotEmpty() && value.first() !in listOf('7', '8') -> phoneWarning = PHONE_FORMAT_WARNING
+                    value.isNotEmpty() && value.first() !in listOf('7', '8') ->
+                        phoneWarning = PHONE_FORMAT_WARNING
                     else -> {
-                        if (value != phone) {
-                            phone = value
-                            phoneWarning = null
-                        }
+                        phone = value
+                        phoneWarning = null
                     }
                 }
             },
@@ -93,17 +102,10 @@ fun LoginScreen(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.End
         ) {
-            TextButton(
-                onClick = onForgotPassword,
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Text(
-                    text = "Забыли пароль?",
-                    color = UrbanBrown
-                )
+            TextButton(onClick = onForgotPassword) {
+                Text("Забыли пароль?", color = UrbanBrown)
             }
         }
 
