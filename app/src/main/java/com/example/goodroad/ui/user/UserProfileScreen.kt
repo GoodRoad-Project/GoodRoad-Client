@@ -97,7 +97,7 @@ fun UserProfileScreen(
 
                     AuthButton(
                         text = "Выбрать препятствия",
-                        backgroundColor = SoftYellow ,
+                        backgroundColor = UrbanBrown,
                         contentColor = WhiteSoft
                     ) {
                         onSelectObstacles()
@@ -107,7 +107,7 @@ fun UserProfileScreen(
 
                     AuthButton(
                         text = "Перейти на карту",
-                        backgroundColor = SoftYellow ,
+                        backgroundColor = UrbanBrown,
                         contentColor = WhiteSoft
                     ) {
                     }

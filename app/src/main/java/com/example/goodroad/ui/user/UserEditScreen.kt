@@ -360,8 +360,8 @@ fun UserEditScreen(
         Spacer(Modifier.height(12.dp))
 
         AuthButton(
-            text = "Назад",
-            backgroundColor = GrayButton,
+            text = "Назад в профиль",
+            backgroundColor = UrbanBrown,
             contentColor = WhiteSoft,
             onClick = onBack
         )
