@@ -3,10 +3,10 @@ package com.example.goodroad.ui.user
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
@@ -20,9 +20,25 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.goodroad.ui.auth.*
-import com.example.goodroad.ui.common.validation.*
-import com.example.goodroad.ui.theme.*
+import com.example.goodroad.ui.auth.AuthButton
+import com.example.goodroad.ui.auth.AuthSuccessText
+import com.example.goodroad.ui.auth.PasswordField
+import com.example.goodroad.ui.auth.PhoneField
+import com.example.goodroad.ui.auth.PlainField
+import com.example.goodroad.ui.common.validation.CYRILLIC_WARNING
+import com.example.goodroad.ui.common.validation.PHONE_CHARS_WARNING
+import com.example.goodroad.ui.common.validation.PHONE_FORMAT_WARNING
+import com.example.goodroad.ui.common.validation.formatPhoneForRequest
+import com.example.goodroad.ui.common.validation.isAllowedCyrillicInput
+import com.example.goodroad.ui.common.validation.isAllowedDigitsInput
+import com.example.goodroad.ui.common.validation.normalizeRequiredCyrillic
+import com.example.goodroad.ui.common.validation.normalizeRequiredRussianPhone
+import com.example.goodroad.ui.theme.BackgroundLight
+import com.example.goodroad.ui.theme.BorderWarm
+import com.example.goodroad.ui.theme.GrayButton
+import com.example.goodroad.ui.theme.TextPrimary
+import com.example.goodroad.ui.theme.UrbanBrown
+import com.example.goodroad.ui.theme.WhiteSoft
 import com.example.goodroad.ui.viewmodel.UserViewModel
 
 @Composable
@@ -49,7 +65,31 @@ fun UserEditScreen(
     var errorText by remember { mutableStateOf<String?>(null) }
 
     val errorMessage by remember { derivedStateOf { userViewModel.errorMessage.value } }
+    val successMessage by remember { derivedStateOf { userViewModel.successMessage.value } }
+    val isLoading by remember { derivedStateOf { userViewModel.isLoading.value } }
     val finalError = errorMessage ?: errorText
+
+    val hasProfileChanges by remember(firstName, lastName, photoUrl, phone, selectedPhotoUri, user) {
+        derivedStateOf {
+            firstName != (user.firstName ?: "") ||
+                    lastName != (user.lastName ?: "") ||
+                    photoUrl != (user.photoUrl ?: "") ||
+                    phone.isNotBlank() ||
+                    selectedPhotoUri != null
+        }
+    }
+
+    val hasPasswordChanges by remember(oldPassword, newPassword, confirmNewPassword) {
+        derivedStateOf {
+            oldPassword.isNotBlank() || newPassword.isNotBlank() || confirmNewPassword.isNotBlank()
+        }
+    }
+
+    val canSave by remember(hasProfileChanges, hasPasswordChanges, isLoading) {
+        derivedStateOf {
+            (hasProfileChanges || hasPasswordChanges) && !isLoading
+        }
+    }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -71,7 +111,7 @@ fun UserEditScreen(
         UserDecor()
 
         Text(
-            "Редактирование профиля",
+            text = "Редактирование профиля",
             style = MaterialTheme.typography.headlineLarge,
             color = TextPrimary
         )
@@ -82,7 +122,9 @@ fun UserEditScreen(
             value = firstName,
             onValueChange = { value ->
                 when {
-                    !isAllowedCyrillicInput(value) -> firstNameWarning = CYRILLIC_WARNING
+                    !isAllowedCyrillicInput(value) -> {
+                        firstNameWarning = CYRILLIC_WARNING
+                    }
                     value != firstName -> {
                         firstName = value
                         firstNameWarning = null
@@ -106,7 +148,9 @@ fun UserEditScreen(
             value = lastName,
             onValueChange = { value ->
                 when {
-                    !isAllowedCyrillicInput(value) -> lastNameWarning = CYRILLIC_WARNING
+                    !isAllowedCyrillicInput(value) -> {
+                        lastNameWarning = CYRILLIC_WARNING
+                    }
                     value != lastName -> {
                         lastName = value
                         lastNameWarning = null
@@ -125,12 +169,6 @@ fun UserEditScreen(
         )
 
         Spacer(Modifier.height(12.dp))
-
-        Text(
-            text = "Фото профиля",
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextPrimary
-        )
 
         Spacer(Modifier.height(8.dp))
 
@@ -181,20 +219,35 @@ fun UserEditScreen(
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(16.dp))
 
-        AuthButton(
-            text = "Выбрать фото"
+        OutlinedButton(
+            onClick = { photoPickerLauncher.launch("image/*") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = BackgroundLight,
+                contentColor = UrbanBrown
+            ),
+            border = ButtonDefaults.outlinedButtonBorder.copy(
+                brush = androidx.compose.ui.graphics.SolidColor(BorderWarm)
+            )
         ) {
-            photoPickerLauncher.launch("image/*")
+            Icon(
+                imageVector = Icons.Default.Photo,
+                contentDescription = null,
+                tint = UrbanBrown,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = "Выбрать фото профиля",
+                style = MaterialTheme.typography.titleMedium,
+                color = UrbanBrown
+            )
         }
-
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = "Фотография загружается как файл на сервер, а в профиле сохраняется ссылка на нее.",
-            style = MaterialTheme.typography.bodySmall,
-            color = UrbanBrown
-        )
 
         Spacer(Modifier.height(12.dp))
 
@@ -251,6 +304,8 @@ fun UserEditScreen(
             color = UrbanBrown
         )
 
+        AuthSuccessText(text = successMessage)
+
         if (!finalError.isNullOrBlank()) {
             Spacer(Modifier.height(12.dp))
             Text(
@@ -262,7 +317,10 @@ fun UserEditScreen(
 
         Spacer(Modifier.height(20.dp))
 
-        AuthButton(text = "Сохранить") {
+        AuthButton(
+            text = if (isLoading) "Сохраняем..." else "Сохранить",
+            enabled = canSave
+        ) {
             val firstNameNormalized = normalizeRequiredCyrillic(firstName)
             if (firstNameNormalized == null) {
                 firstNameWarning = CYRILLIC_WARNING
@@ -324,15 +382,5 @@ fun UserEditScreen(
             contentColor = WhiteSoft,
             onClick = onBack
         )
-
-        Spacer(Modifier.height(12.dp))
-
-        AuthButton(
-            text = "Выйти",
-            backgroundColor = GrayButton,
-            contentColor = WhiteSoft
-        ) {
-            userViewModel.logout(onLogout)
-        }
     }
 }
