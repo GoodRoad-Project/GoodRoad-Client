@@ -1,9 +1,5 @@
 package com.example.goodroad.ui.auth
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.*
-import androidx.compose.ui.graphics.*
-import com.example.goodroad.ui.theme.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,6 +13,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.*
+import androidx.compose.ui.graphics.*
+import com.example.goodroad.ui.theme.*
 @Composable
 fun AuthScreenFrame(
     title: String,

@@ -1,12 +1,12 @@
 package com.example.goodroad.ui.auth
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -14,17 +14,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.goodroad.ui.common.validation.CYRILLIC_WARNING
-import com.example.goodroad.ui.common.validation.PHONE_CHARS_WARNING
-import com.example.goodroad.ui.common.validation.PHONE_FORMAT_WARNING
-import com.example.goodroad.ui.common.validation.formatPhoneForRequest
-import com.example.goodroad.ui.common.validation.isAllowedCyrillicInput
-import com.example.goodroad.ui.common.validation.isAllowedDigitsInput
-import com.example.goodroad.ui.common.validation.normalizeRequiredCyrillic
-import com.example.goodroad.ui.common.validation.normalizeRequiredRussianPhone
+import com.example.goodroad.ui.common.validation.*
 import com.example.goodroad.ui.theme.UrbanBrown
 import com.example.goodroad.ui.viewmodel.AuthViewModel
-
 @Composable
 fun RecoverPasswordScreen(
     onLogin: () -> Unit

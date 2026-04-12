@@ -3,7 +3,6 @@ package com.example.goodroad.ui.user
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,8 +10,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Photo
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,27 +17,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.goodroad.ui.auth.AuthButton
-import com.example.goodroad.ui.auth.AuthSuccessText
-import com.example.goodroad.ui.auth.PasswordField
-import com.example.goodroad.ui.auth.PhoneField
-import com.example.goodroad.ui.auth.PlainField
-import com.example.goodroad.ui.common.validation.CYRILLIC_WARNING
-import com.example.goodroad.ui.common.validation.PHONE_CHARS_WARNING
-import com.example.goodroad.ui.common.validation.PHONE_FORMAT_WARNING
-import com.example.goodroad.ui.common.validation.formatPhoneForRequest
-import com.example.goodroad.ui.common.validation.isAllowedCyrillicInput
-import com.example.goodroad.ui.common.validation.isAllowedDigitsInput
-import com.example.goodroad.ui.common.validation.normalizeRequiredCyrillic
-import com.example.goodroad.ui.common.validation.normalizeRequiredRussianPhone
-import com.example.goodroad.ui.theme.BackgroundLight
-import com.example.goodroad.ui.theme.BorderWarm
-import com.example.goodroad.ui.theme.GrayButton
-import com.example.goodroad.ui.theme.TextPrimary
-import com.example.goodroad.ui.theme.UrbanBrown
-import com.example.goodroad.ui.theme.WhiteSoft
+import com.example.goodroad.ui.auth.*
+import com.example.goodroad.ui.common.validation.*
+import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.viewmodel.UserViewModel
-
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 @Composable
 fun UserEditScreen(
     userViewModel: UserViewModel,

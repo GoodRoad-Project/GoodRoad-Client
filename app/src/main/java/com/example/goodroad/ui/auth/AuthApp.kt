@@ -5,12 +5,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
 import com.example.goodroad.ui.theme.BackgroundLight
 import com.example.goodroad.ui.user.UserNav
-
 @Composable
 fun AuthApp(
     navController: NavHostController = rememberNavController()

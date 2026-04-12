@@ -6,7 +6,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.goodroad.data.network.ApiClient
-import com.example.goodroad.data.user.*
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -14,7 +13,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.HttpException
 import java.io.File
 import java.io.IOException
-
+import com.example.goodroad.data.user.*
 class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
     var user = mutableStateOf<SettingsView?>(null)

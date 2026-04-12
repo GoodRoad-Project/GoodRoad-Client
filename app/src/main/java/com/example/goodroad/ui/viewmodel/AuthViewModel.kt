@@ -1,12 +1,11 @@
 package com.example.goodroad.ui.viewmodel
 
-import androidx.lifecycle.*
-import com.example.goodroad.data.auth.*
 import com.example.goodroad.data.network.ApiClient
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
-
+import androidx.lifecycle.*
+import com.example.goodroad.data.auth.*
 class AuthViewModel : ViewModel() {
 
     private val authRepository = AuthRepository()

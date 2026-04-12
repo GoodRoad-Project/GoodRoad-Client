@@ -1,32 +1,18 @@
 package com.example.goodroad.ui.auth
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.goodroad.ui.common.validation.PHONE_FORMAT_WARNING
-import com.example.goodroad.ui.common.validation.formatPhoneForRequest
-import com.example.goodroad.ui.common.validation.isAllowedDigitsInput
-import com.example.goodroad.ui.common.validation.isValidRussianPhoneDigits
-import com.example.goodroad.ui.common.validation.normalizeRequiredRussianPhone
+import com.example.goodroad.ui.common.validation.*
 import com.example.goodroad.ui.theme.UrbanBrown
 import com.example.goodroad.ui.viewmodel.AuthViewModel
-
 @Composable
 fun LoginScreen(
     onLoginSuccess: (String) -> Unit,

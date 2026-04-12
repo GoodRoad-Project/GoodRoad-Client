@@ -3,12 +3,11 @@ package com.example.goodroad.data.network
 import com.example.goodroad.BuildConfig
 import com.example.goodroad.data.auth.AuthApi
 import com.example.goodroad.data.user.UserApi
-import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
-
+import okhttp3.*
 object ApiClient {
 
     private val logging = HttpLoggingInterceptor().apply {

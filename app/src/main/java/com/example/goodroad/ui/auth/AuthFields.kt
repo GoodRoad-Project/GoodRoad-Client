@@ -1,10 +1,5 @@
 package com.example.goodroad.ui.auth
 
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.text.input.*
-import com.example.goodroad.ui.theme.*
-import androidx.compose.material.icons.filled.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,7 +9,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.interaction.MutableInteractionSource
-
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.text.input.*
+import com.example.goodroad.ui.theme.*
+import androidx.compose.material.icons.filled.*
 @Composable
 fun PhoneField(
     value: String,
