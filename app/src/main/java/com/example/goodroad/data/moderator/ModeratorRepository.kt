@@ -11,7 +11,7 @@ class ModeratorRepository {
         val response = api.getModerators()
 
         if (response.isSuccessful) {
-            return response.body() ?: emptyList()
+            return response.body().orEmpty()
         }
 
         throw HttpException(response)
@@ -21,7 +21,7 @@ class ModeratorRepository {
         val response = api.createModerator(req)
 
         if (response.isSuccessful) {
-            return response.body() ?: ""
+            return response.body() ?: throw Exception("Empty response body")
         }
 
         throw HttpException(response)

@@ -41,7 +41,8 @@ class ModeratorViewModel(
         firstName: String,
         lastName: String,
         phone: String,
-        password: String
+        password: String,
+        onSuccess: () -> Unit
     ) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -49,9 +50,19 @@ class ModeratorViewModel(
 
             try {
                 repository.createModerator(
-                    CreateModeratorReq(firstName, lastName, phone, password)
+                    CreateModeratorReq(
+                        firstName = firstName,
+                        lastName = lastName,
+                        phone = phone,
+                        password = password
+                    )
                 )
-                loadModerators()
+
+                val updated = repository.getModerators()
+                _moderators.value = updated
+
+                onSuccess()
+
             } catch (e: Exception) {
                 _error.value = e.message ?: "Ошибка добавления"
             } finally {
@@ -67,7 +78,10 @@ class ModeratorViewModel(
 
             try {
                 repository.disableModerator(id)
-                loadModerators()
+
+                val updated = repository.getModerators()
+                _moderators.value = updated
+
             } catch (e: Exception) {
                 _error.value = e.message ?: "Ошибка отключения"
             } finally {

@@ -1,14 +1,42 @@
 package com.example.goodroad.ui.users.moderators
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.data.moderator.ModeratorView
 import com.example.goodroad.ui.auth.AuthScreenFrame
-import com.example.goodroad.ui.theme.UrbanBrown
+import com.example.goodroad.ui.auth.PhoneField
+import com.example.goodroad.ui.common.validation.PHONE_FORMAT_WARNING
+import com.example.goodroad.ui.common.validation.formatPhoneForRequest
+import com.example.goodroad.ui.common.validation.isAllowedDigitsInput
+import com.example.goodroad.ui.common.validation.normalizeRequiredRussianPhone
 import com.example.goodroad.ui.viewmodel.ModeratorViewModel
 
 @Composable
@@ -30,11 +58,18 @@ fun ModeratorsManagementScreen(
 
     AuthScreenFrame(
         title = "Модераторы",
+
         action = {
-            Button(onClick = { showAddDialog = true }) {
-                Text("+ Добавить")
+            Button(
+                onClick = { showAddDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Text("+ Добавить модератора")
             }
         },
+
         footer = {
             Button(
                 modifier = Modifier
@@ -81,16 +116,16 @@ fun ModeratorsManagementScreen(
                 }
             } else {
 
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
                     moderators.forEach { moderator ->
 
                         val isAdmin = moderator.role == "MODERATOR_ADMIN"
+                        val isDisabled = !moderator.active
 
                         Card(
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = CardDefaults.cardElevation(2.dp)
                         ) {
 
                             Row(
@@ -113,7 +148,7 @@ fun ModeratorsManagementScreen(
 
                                     Text(
                                         text = moderator.role ?: "",
-                                        color = UrbanBrown
+                                        color = MaterialTheme.colorScheme.primary
                                     )
 
                                     Text(
@@ -121,22 +156,33 @@ fun ModeratorsManagementScreen(
                                     )
                                 }
 
-                                if (!isAdmin) {
-                                    Button(
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.error
-                                        ),
-                                        onClick = {
-                                            selectedForDelete = moderator
-                                        }
-                                    ) {
-                                        Text("Удалить")
+                                when {
+                                    isAdmin -> {
+                                        Text(
+                                            text = "ADMIN",
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
                                     }
-                                } else {
-                                    Text(
-                                        text = "ADMIN",
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+
+                                    isDisabled -> {
+                                        Text(
+                                            text = "DISABLED",
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+
+                                    else -> {
+                                        Button(
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.error
+                                            ),
+                                            onClick = {
+                                                selectedForDelete = moderator
+                                            }
+                                        ) {
+                                            Text("Удалить")
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -153,13 +199,43 @@ fun ModeratorsManagementScreen(
         var phone by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
 
+        var phoneWarning by remember { mutableStateOf<String?>(null) }
+        var errorText by remember { mutableStateOf<String?>(null) }
+
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
             confirmButton = {
-                Button(onClick = {
-                    viewModel.addModerator(firstName, lastName, phone, password)
-                    showAddDialog = false
-                }) {
+                Button(
+                    onClick = {
+
+                        val phoneDigits = normalizeRequiredRussianPhone(phone)
+
+                        if (firstName.isBlank() ||
+                            lastName.isBlank() ||
+                            password.isBlank() ||
+                            phoneDigits == null
+                        ) {
+                            errorText = "Заполните все поля корректно"
+
+                            phoneWarning = if (phoneDigits == null && phone.isNotBlank()) {
+                                PHONE_FORMAT_WARNING
+                            } else null
+
+                            return@Button
+                        }
+
+                        errorText = null
+
+                        viewModel.addModerator(
+                            firstName = firstName.trim(),
+                            lastName = lastName.trim(),
+                            phone = formatPhoneForRequest(phoneDigits),
+                            password = password
+                        ) {
+                            showAddDialog = false
+                        }
+                    }
+                ) {
                     Text("Создать")
                 }
             },
@@ -170,11 +246,67 @@ fun ModeratorsManagementScreen(
             },
             title = { Text("Добавить модератора") },
             text = {
+
                 Column {
-                    OutlinedTextField(firstName, { firstName = it }, label = { Text("Имя") })
-                    OutlinedTextField(lastName, { lastName = it }, label = { Text("Фамилия") })
-                    OutlinedTextField(phone, { phone = it }, label = { Text("Телефон") })
-                    OutlinedTextField(password, { password = it }, label = { Text("Пароль") })
+
+                    OutlinedTextField(
+                        value = firstName,
+                        onValueChange = {
+                            firstName = it
+                            errorText = null
+                        },
+                        label = { Text("Имя") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    OutlinedTextField(
+                        value = lastName,
+                        onValueChange = {
+                            lastName = it
+                            errorText = null
+                        },
+                        label = { Text("Фамилия") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    PhoneField(
+                        value = phone,
+                        onValueChange = { value ->
+                            phone = value
+                            errorText = null
+
+                            phoneWarning = when {
+                                value.isEmpty() -> null
+                                !isAllowedDigitsInput(value) -> PHONE_FORMAT_WARNING
+                                value.length > 11 -> PHONE_FORMAT_WARNING
+                                value.firstOrNull() !in listOf('7', '8') -> PHONE_FORMAT_WARNING
+                                else -> null
+                            }
+                        },
+                        label = "Телефон",
+                        warning = phoneWarning
+                    )
+
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = {
+                            password = it
+                            errorText = null
+                        },
+                        label = { Text("Пароль") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation()
+                    )
+
+                    if (!errorText.isNullOrBlank()) {
+                        Text(
+                            text = errorText!!,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         )
