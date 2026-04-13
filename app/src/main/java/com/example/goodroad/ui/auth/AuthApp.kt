@@ -16,6 +16,7 @@ import com.example.goodroad.ui.theme.BackgroundLight
 import com.example.goodroad.ui.users.UserNav
 import com.example.goodroad.ui.users.moderators.AdminProfileScreen
 import com.example.goodroad.ui.users.moderators.ModeratorsManagementScreen
+import com.example.goodroad.ui.users.moderators.ReviewModerationScreen
 import com.example.goodroad.ui.viewmodel.UserViewModel
 import com.example.goodroad.ui.viewmodel.ModeratorViewModel
 
@@ -141,7 +142,12 @@ fun AuthApp(
             }
 
             composable("reviews") {
-                androidx.compose.material3.Text("Reviews screen")
+
+                ReviewModerationScreen(
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
             }
         }
     }
