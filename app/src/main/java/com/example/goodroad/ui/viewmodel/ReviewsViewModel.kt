@@ -172,6 +172,10 @@ class ReviewsViewModel(private val repository: ReviewRepository) : ViewModel() {
         successMessage.value = null
     }
 
+    fun clearErrorMessage() {
+        errorMessage.value = null
+    }
+
     private fun mapReviewError(e: Exception): String {
         return when (e) {
             is IllegalArgumentException -> e.message ?: "Некорректные данные отзыва"

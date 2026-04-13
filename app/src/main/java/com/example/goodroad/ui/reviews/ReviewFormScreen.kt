@@ -1,30 +1,28 @@
 package com.example.goodroad.ui.reviews
 
-import android.content.Context
-import android.location.Address
-import android.location.Geocoder
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import android.content.*
+import android.location.*
+import androidx.activity.compose.*
+import androidx.activity.result.contract.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Photo
+import androidx.compose.foundation.text.*
+import androidx.compose.material.icons.*
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.*
+import androidx.compose.ui.platform.*
+import androidx.compose.ui.text.input.*
+import androidx.compose.ui.unit.*
 import com.example.goodroad.data.review.*
 import com.example.goodroad.ui.auth.*
+import com.example.goodroad.ui.common.validation.*
 import com.example.goodroad.ui.theme.*
-import com.example.goodroad.ui.user.UserDecor
-import com.example.goodroad.ui.viewmodel.ReviewsViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.util.Locale
+import com.example.goodroad.ui.user.*
+import com.example.goodroad.ui.viewmodel.*
+import kotlinx.coroutines.*
+import java.util.*
 
 @Composable
 fun ReviewFormScreen(
@@ -67,6 +65,15 @@ fun ReviewFormScreen(
     val isPhotoUploading by reviewsViewModel.isPhotoUploading
     val serverError by reviewsViewModel.errorMessage
 
+    var isPreparingSubmit by remember(reviewKey) { mutableStateOf(false) }
+    val submitInProgress = isSubmitting || isPreparingSubmit
+
+    LaunchedEffect(isSubmitting) {
+        if (isSubmitting) {
+            isPreparingSubmit = false
+        }
+    }
+
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris ->
@@ -100,7 +107,8 @@ fun ReviewFormScreen(
             PlainField(
                 value = placeName,
                 onValueChange = { placeName = it },
-                label = "Название места"
+                label = "Название места",
+                maxLength = PLACE_NAME_MAX_LENGTH
             )
 
             Spacer(Modifier.height(8.dp))
@@ -113,21 +121,28 @@ fun ReviewFormScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            PlainField(
-                value = latitude,
-                onValueChange = { latitude = it },
-                label = "Широта",
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                PlainField(
+                    value = latitude,
+                    onValueChange = { latitude = it },
+                    label = "Широта",
+                    maxLength = COORDINATE_MAX_LENGTH,
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                )
 
-            Spacer(Modifier.height(12.dp))
-
-            PlainField(
-                value = longitude,
-                onValueChange = { longitude = it },
-                label = "Долгота",
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-            )
+                PlainField(
+                    value = longitude,
+                    onValueChange = { longitude = it },
+                    label = "Долгота",
+                    maxLength = COORDINATE_MAX_LENGTH,
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                )
+            }
 
             Spacer(Modifier.height(12.dp))
 
@@ -198,7 +213,11 @@ fun ReviewFormScreen(
 
             TextField(
                 value = comment,
-                onValueChange = { comment = it },
+                onValueChange = { value ->
+                    if (value.length <= COMMENT_MAX_LENGTH) {
+                        comment = value
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 56.dp),
@@ -255,65 +274,82 @@ fun ReviewFormScreen(
                 onRemove = { photoUrls.remove(it) }
             )
 
-            AuthStatusText(formError ?: serverError)
+            AuthStatusText(
+                text = formError ?: serverError,
+                onTimeout = {
+                    formError = null
+                    reviewsViewModel.clearMessages()
+                }
+            )
 
             Spacer(Modifier.height(20.dp))
 
             AuthButton(
                 text = when {
                     isPhotoUploading -> "Загружаем фото..."
-                    isSubmitting -> "Сохраняем..."
+                    submitInProgress -> "Сохраняем..."
                     isEdit -> "Сохранить изменения"
                     else -> "Отправить отзыв"
                 },
-                enabled = !isSubmitting && !isPhotoUploading
+                enabled = !submitInProgress && !isPhotoUploading
             ) {
                 scope.launch {
-                    val validationError = validateReviewForm(
-                        latitude = latitude,
-                        longitude = longitude,
-                        rating = rating,
-                        obstacleSeverities = obstacleSeverities
-                    )
+                    isPreparingSubmit = true
+                    var sentToViewModel = false
 
-                    if (validationError != null) {
-                        formError = validationError
-                        return@launch
-                    }
+                    try {
+                        val validationError = validateReviewForm(
+                            latitude = latitude,
+                            longitude = longitude,
+                            rating = rating,
+                            obstacleSeverities = obstacleSeverities
+                        )
 
-                    val lat = latitude.trim().replace(',', '.').toDouble()
-                    val lon = longitude.trim().replace(',', '.').toDouble()
+                        if (validationError != null) {
+                            formError = validationError
+                            return@launch
+                        }
 
-                    val generatedAddress = resolveReviewAddress(
-                        context = context,
-                        latitude = lat,
-                        longitude = lon,
-                        placeName = placeName,
-                        fallbackAddress = initialReview?.address
-                    )
+                        val lat = latitude.trim().replace(',', '.').toDouble()
+                        val lon = longitude.trim().replace(',', '.').toDouble()
 
-                    formError = null
-                    reviewsViewModel.clearMessages()
+                        val generatedAddress = resolveReviewAddress(
+                            context = context,
+                            latitude = lat,
+                            longitude = lon,
+                            placeName = placeName,
+                            fallbackAddress = initialReview?.address
+                        )
 
-                    val request = UpsertReviewReq(
-                        latitude = lat,
-                        longitude = lon,
-                        address = generatedAddress,
-                        rating = rating!!.toShort(),
-                        obstacles = ReviewObstacleTypes.map { type ->
-                            ReviewObstacle(
-                                obstacleType = type,
-                                severity = (obstacleSeverities[type] ?: 0).toShort()
-                            )
-                        },
-                        comment = comment.trim().ifBlank { null },
-                        photoUrls = photoUrls.toList()
-                    )
+                        formError = null
+                        reviewsViewModel.clearMessages()
 
-                    if (isEdit) {
-                        reviewsViewModel.updateReview(initialReview!!.id, request, onSaved)
-                    } else {
-                        reviewsViewModel.createReview(request, onSaved)
+                        val request = UpsertReviewReq(
+                            latitude = lat,
+                            longitude = lon,
+                            address = generatedAddress,
+                            rating = rating!!.toShort(),
+                            obstacles = ReviewObstacleTypes.map { type ->
+                                ReviewObstacle(
+                                    obstacleType = type,
+                                    severity = (obstacleSeverities[type] ?: 0).toShort()
+                                )
+                            },
+                            comment = comment.trim().ifBlank { null },
+                            photoUrls = photoUrls.toList()
+                        )
+
+                        sentToViewModel = true
+
+                        if (isEdit) {
+                            reviewsViewModel.updateReview(initialReview!!.id, request, onSaved)
+                        } else {
+                            reviewsViewModel.createReview(request, onSaved)
+                        }
+                    } finally {
+                        if (!sentToViewModel) {
+                            isPreparingSubmit = false
+                        }
                     }
                 }
             }

@@ -4,13 +4,13 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.*
+import androidx.compose.ui.unit.*
 import com.example.goodroad.data.review.*
 import com.example.goodroad.ui.auth.*
 import com.example.goodroad.ui.theme.*
-import com.example.goodroad.ui.user.UserDecor
-import com.example.goodroad.ui.viewmodel.ReviewsViewModel
+import com.example.goodroad.ui.user.*
+import com.example.goodroad.ui.viewmodel.*
 
 @Composable
 fun ReviewDetailsScreen(
@@ -46,7 +46,7 @@ fun ReviewDetailsScreen(
                         reviewsViewModel.deleteReview(review.id, onDeleted)
                     }
                 ) {
-                    Text("Да", color = AlertRed)
+                    Text("Да", color = UrbanBrown)
                 }
             },
             dismissButton = {
@@ -113,7 +113,7 @@ fun ReviewDetailsScreen(
                     Spacer(Modifier.height(8.dp))
                     review.obstacles.forEach { obstacle ->
                         Text(
-                            text = "${obstacleLabel(obstacle.obstacleType)} — ${obstacleSeverityText(obstacle.severity.toInt())}",
+                            text = "${obstacleLabel(obstacle.obstacleType)}: ${obstacleSeverityText(obstacle.severity.toInt())}",
                             style = MaterialTheme.typography.bodyLarge,
                             color = TextPrimary
                         )
@@ -122,7 +122,10 @@ fun ReviewDetailsScreen(
                 }
             }
 
-            AuthStatusText(errorMessage)
+            AuthStatusText(
+                text = errorMessage,
+                onTimeout = reviewsViewModel::clearErrorMessage
+            )
 
             Spacer(Modifier.height(20.dp))
 
