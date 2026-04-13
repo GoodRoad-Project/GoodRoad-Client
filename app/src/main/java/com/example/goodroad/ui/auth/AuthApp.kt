@@ -17,6 +17,7 @@ import com.example.goodroad.ui.users.UserNav
 import com.example.goodroad.ui.users.moderators.AdminProfileScreen
 import com.example.goodroad.ui.users.moderators.ModeratorsManagementScreen
 import com.example.goodroad.ui.users.moderators.ReviewModerationScreen
+import com.example.goodroad.ui.users.moderators.ModeratorProfileScreen
 import com.example.goodroad.ui.viewmodel.UserViewModel
 import com.example.goodroad.ui.viewmodel.ModeratorViewModel
 
@@ -39,20 +40,24 @@ fun AuthApp(
 
                         val role = resp.user?.role
 
-                        val isAdmin = when (role) {
-                            "ADMIN",
-                            "MODERATOR",
-                            "MODERATOR_ADMIN" -> true
-                            else -> false
-                        }
+                        when (role) {
 
-                        if (isAdmin) {
-                            navController.navigate("admin_home") {
-                                popUpTo(LOGIN_ROUTE) { inclusive = true }
+                            "MODERATOR_ADMIN" -> {
+                                navController.navigate("admin_home") {
+                                    popUpTo(LOGIN_ROUTE) { inclusive = true }
+                                }
                             }
-                        } else {
-                            navController.navigate(USER_HOME_ROUTE) {
-                                popUpTo(LOGIN_ROUTE) { inclusive = true }
+
+                            "MODERATOR" -> {
+                                navController.navigate("moderator_home") {
+                                    popUpTo(LOGIN_ROUTE) { inclusive = true }
+                                }
+                            }
+
+                            else -> {
+                                navController.navigate(USER_HOME_ROUTE) {
+                                    popUpTo(LOGIN_ROUTE) { inclusive = true }
+                                }
                             }
                         }
                     },
@@ -115,6 +120,34 @@ fun AuthApp(
                     onLogout = {
                         navController.navigate(LOGIN_ROUTE) {
                             popUpTo("admin_home") { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable("moderator_home") {
+
+                val userViewModel: UserViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            return UserViewModel(
+                                UserRepository(ApiClient.userApi)
+                            ) as T
+                        }
+                    }
+                )
+
+                ModeratorProfileScreen(
+                    userViewModel = userViewModel,
+
+                    onReviews = {
+                        navController.navigate("reviews")
+                    },
+
+                    onLogout = {
+                        navController.navigate(LOGIN_ROUTE) {
+                            popUpTo("moderator_home") { inclusive = true }
                         }
                     }
                 )

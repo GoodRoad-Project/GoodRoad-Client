@@ -1,31 +1,8 @@
 package com.example.goodroad.ui.users.moderators
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -33,11 +10,37 @@ import androidx.compose.ui.unit.dp
 import com.example.goodroad.data.moderator.ModeratorView
 import com.example.goodroad.ui.auth.AuthScreenFrame
 import com.example.goodroad.ui.auth.PhoneField
+import com.example.goodroad.ui.auth.PasswordField
 import com.example.goodroad.ui.common.validation.PHONE_FORMAT_WARNING
 import com.example.goodroad.ui.common.validation.formatPhoneForRequest
 import com.example.goodroad.ui.common.validation.isAllowedDigitsInput
 import com.example.goodroad.ui.common.validation.normalizeRequiredRussianPhone
 import com.example.goodroad.ui.viewmodel.ModeratorViewModel
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.goodroad.ui.theme.UrbanBrown
+
+@Composable
+private fun NameField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String
+) {
+    com.example.goodroad.ui.auth.PlainField(
+        value = value,
+        onValueChange = onValueChange,
+        label = label,
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = null,
+                tint = UrbanBrown
+            )
+        }
+    )
+}
 
 @Composable
 fun ModeratorsManagementScreen(
@@ -230,10 +233,14 @@ fun ModeratorsManagementScreen(
                             firstName = firstName.trim(),
                             lastName = lastName.trim(),
                             phone = formatPhoneForRequest(phoneDigits),
-                            password = password
-                        ) {
-                            showAddDialog = false
-                        }
+                            password = password,
+                            onSuccess = {
+                                showAddDialog = false
+                                viewModel.loadModerators()
+                            }
+                        )
+
+                        showAddDialog = false
                     }
                 ) {
                     Text("Создать")
@@ -247,28 +254,26 @@ fun ModeratorsManagementScreen(
             title = { Text("Добавить модератора") },
             text = {
 
-                Column {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
 
-                    OutlinedTextField(
+                    NameField(
                         value = firstName,
                         onValueChange = {
                             firstName = it
                             errorText = null
                         },
-                        label = { Text("Имя") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        label = "Имя"
                     )
 
-                    OutlinedTextField(
+                    NameField(
                         value = lastName,
                         onValueChange = {
                             lastName = it
                             errorText = null
                         },
-                        label = { Text("Фамилия") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        label = "Фамилия"
                     )
 
                     PhoneField(
@@ -289,16 +294,13 @@ fun ModeratorsManagementScreen(
                         warning = phoneWarning
                     )
 
-                    OutlinedTextField(
+                    PasswordField(
                         value = password,
                         onValueChange = {
                             password = it
                             errorText = null
                         },
-                        label = { Text("Пароль") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        visualTransformation = PasswordVisualTransformation()
+                        label = "Пароль"
                     )
 
                     if (!errorText.isNullOrBlank()) {

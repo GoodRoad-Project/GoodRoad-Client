@@ -10,8 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.user.UserRepository
-import com.example.goodroad.ui.maps.MapsNav
-import com.example.goodroad.ui.users.users.*
+import com.example.goodroad.ui.users.users.UserProfileScreen
 import com.example.goodroad.ui.viewmodel.UserViewModel
 
 @Composable
@@ -51,20 +50,18 @@ fun UserNav(onLogout: () -> Unit) {
 
     val u = user!!
 
-    when (u.role?.uppercase()) {
-
-        "ADMIN", "MODERATOR", "MODERATOR_ADMIN" -> {
-            Text("Admin in wrong flow")
+    if (u.role?.uppercase() != "USER") {
+        LaunchedEffect(Unit) {
+            onLogout()
         }
-
-        else -> {
-            UserProfileScreen(
-                userViewModel = userViewModel,
-                onEdit = {},
-                onDelete = {},
-                onLogout = onLogout,
-                onSelectObstacles = {}
-            )
-        }
+        return
     }
+
+    UserProfileScreen(
+        userViewModel = userViewModel,
+        onEdit = {},
+        onDelete = {},
+        onLogout = onLogout,
+        onSelectObstacles = {}
+    )
 }
