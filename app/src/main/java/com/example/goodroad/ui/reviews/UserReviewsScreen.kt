@@ -5,15 +5,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.*
+import androidx.compose.ui.unit.*
 import com.example.goodroad.data.review.*
 import com.example.goodroad.ui.auth.*
 import com.example.goodroad.ui.theme.*
-import com.example.goodroad.ui.user.UserDecor
-import com.example.goodroad.ui.viewmodel.ReviewsViewModel
-import kotlinx.coroutines.delay
+import com.example.goodroad.ui.user.*
+import com.example.goodroad.ui.viewmodel.*
 
 @Composable
 fun UserReviewsScreen(
@@ -34,13 +32,6 @@ fun UserReviewsScreen(
 
     LaunchedEffect(Unit) {
         reviewsViewModel.loadReviews()
-    }
-
-    LaunchedEffect(successMessage) {
-        if (successMessage != null) {
-            delay(10_000)
-            reviewsViewModel.clearSuccessMessage()
-        }
     }
 
     Surface(
@@ -110,8 +101,14 @@ fun UserReviewsScreen(
                 onBack()
             }
 
-            AuthSuccessText(successMessage)
-            AuthStatusText(errorMessage)
+            AuthSuccessText(
+                text = successMessage,
+                onTimeout = reviewsViewModel::clearSuccessMessage
+            )
+            AuthStatusText(
+                text = errorMessage,
+                onTimeout = reviewsViewModel::clearErrorMessage
+            )
 
             Spacer(Modifier.height(16.dp))
 

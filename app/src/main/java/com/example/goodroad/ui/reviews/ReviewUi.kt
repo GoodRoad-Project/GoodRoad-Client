@@ -2,24 +2,21 @@ package com.example.goodroad.ui.reviews
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.draw.*
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.layout.*
+import androidx.compose.ui.text.font.*
+import androidx.compose.ui.text.style.*
+import androidx.compose.ui.unit.*
+import coil.compose.*
 import com.example.goodroad.data.review.*
 import com.example.goodroad.ui.theme.*
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import java.time.*
+import java.time.format.*
 
 val ReviewObstacleTypes = listOf(
     "CURB",
@@ -90,11 +87,11 @@ fun buildAddressLine(address: ReviewAddress): String {
 
     address.street
         ?.takeIf { it.isNotBlank() }
-        ?.let { parts += "ул. $it" }
+        ?.let { parts += it }
 
     address.house
         ?.takeIf { it.isNotBlank() }
-        ?.let { parts += "д. $it" }
+        ?.let { parts += it }
 
     address.placeName
         ?.takeIf { it.isNotBlank() }
