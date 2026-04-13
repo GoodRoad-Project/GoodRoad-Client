@@ -1,25 +1,27 @@
 package com.example.goodroad.ui.auth
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.ui.Modifier
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.*
+import androidx.compose.foundation.text.*
+import androidx.compose.material.icons.*
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.*
 import androidx.compose.ui.text.input.*
+import androidx.compose.ui.unit.*
+import com.example.goodroad.ui.common.validation.*
 import com.example.goodroad.ui.theme.*
-import androidx.compose.material.icons.filled.*
+
 @Composable
 fun PhoneField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
-    warning: String? = null
+    warning: String? = null,
+    maxLength: Int = PHONE_MAX_LENGTH
 ) {
     PlainField(
         value = value,
@@ -34,6 +36,7 @@ fun PhoneField(
             )
         },
         warning = warning,
+        maxLength = maxLength,
         prefix = {
             Text(
                 text = "+",
@@ -47,7 +50,8 @@ fun PhoneField(
 fun PasswordField(
     value: String,
     onValueChange: (String) -> Unit,
-    label: String
+    label: String,
+    maxLength: Int = PASSWORD_MAX_LENGTH
 ) {
     var visible by remember { mutableStateOf(false) }
 
@@ -68,6 +72,7 @@ fun PasswordField(
                 tint = UrbanBrown
             )
         },
+        maxLength = maxLength,
         trailing = {
             Icon(
                 imageVector = if (visible) {
@@ -93,17 +98,23 @@ fun PlainField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
+    modifier: Modifier = Modifier,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     icon: @Composable (() -> Unit)? = null,
     trailing: @Composable (() -> Unit)? = null,
     prefix: @Composable (() -> Unit)? = null,
-    warning: String? = null
+    warning: String? = null,
+    maxLength: Int = Int.MAX_VALUE
 ) {
     TextField(
         value = value,
-        onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth(),
+        onValueChange = { newValue ->
+            if (newValue.length <= maxLength) {
+                onValueChange(newValue)
+            }
+        },
+        modifier = modifier.fillMaxWidth(),
         label = {
             Text(
                 text = label,
