@@ -1,27 +1,41 @@
 package com.example.goodroad.ui.user
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.data.network.ApiClient
-import com.example.goodroad.data.review.*
+import com.example.goodroad.data.review.ReviewCardResp
+import com.example.goodroad.data.review.ReviewRepository
 import com.example.goodroad.data.user.UserRepository
 import com.example.goodroad.ui.maps.MapsNav
-import com.example.goodroad.ui.reviews.*
-import com.example.goodroad.ui.viewmodel.*
+import com.example.goodroad.ui.reviews.ReviewDetailsScreen
+import com.example.goodroad.ui.reviews.ReviewFormScreen
+import com.example.goodroad.ui.reviews.UserReviewsScreen
+import com.example.goodroad.ui.viewmodel.ReviewsViewModel
+import com.example.goodroad.ui.viewmodel.UserViewModel
 
 @Composable
 fun UserNav(onLogout: () -> Unit) {
-
     val userApi = ApiClient.userApi
     val reviewApi = ApiClient.reviewApi
 
-    val factory = object : ViewModelProvider.Factory {
+    val userFactory = object : ViewModelProvider.Factory {
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(UserViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
                 return UserViewModel(UserRepository(userApi)) as T
             }
+            throw IllegalArgumentException("Unknown ViewModel class")
+        }
+    }
+
+    val reviewsFactory = object : ViewModelProvider.Factory {
+        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ReviewsViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
                 return ReviewsViewModel(ReviewRepository(reviewApi, userApi)) as T
@@ -30,8 +44,8 @@ fun UserNav(onLogout: () -> Unit) {
         }
     }
 
-    val userViewModel: UserViewModel = viewModel(factory = factory)
-    val reviewsViewModel: ReviewsViewModel = viewModel(factory = factory)
+    val userViewModel: UserViewModel = viewModel(factory = userFactory)
+    val reviewsViewModel: ReviewsViewModel = viewModel(factory = reviewsFactory)
 
     var screen by remember { mutableStateOf("profile") }
     var selectedReview by remember { mutableStateOf<ReviewCardResp?>(null) }
@@ -65,9 +79,7 @@ fun UserNav(onLogout: () -> Unit) {
             onBackToProfile = {
                 screen = "profile"
             },
-            onSaveObstacles = {
-                screen = "profile"
-            }
+            onSaved = {}
         )
 
         "reviews" -> UserReviewsScreen(
