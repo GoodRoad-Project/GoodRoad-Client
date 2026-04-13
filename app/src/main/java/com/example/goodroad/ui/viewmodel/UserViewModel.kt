@@ -112,6 +112,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                 val mimeType = resolver.getType(uri) ?: "image/*"
                 val extension = MimeTypeMap.resolveExtension(mimeType)
                 val tempFile = File.createTempFile("avatar_upload", extension, context.cacheDir)
+
                 resolver.openInputStream(uri)?.use { input ->
                     tempFile.outputStream().use { output ->
                         input.copyTo(output)
@@ -120,6 +121,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
                 val requestBody = tempFile.asRequestBody(mimeType.toMediaTypeOrNull())
                 val part = MultipartBody.Part.createFormData("file", tempFile.name, requestBody)
+
                 val response = repository.uploadAvatar(part)
                     ?: throw IllegalStateException("Сервер не вернул ссылку на фото")
 
@@ -131,15 +133,6 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                 isLoading.value = false
             }
         }
-    }
-
-    fun clearSuccessMessage() {
-        successMessage.value = null
-    }
-
-    fun clearMessages() {
-        errorMessage.value = null
-        successMessage.value = null
     }
 
     fun deleteUser(password: String, onSuccess: () -> Unit) {
@@ -155,7 +148,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                 isDeleted = true
                 onSuccess()
             } catch (e: Exception) {
-                errorMessage.value = mapUserError(e)
+                errorMessage.value = mapDeleteError(e)
             } finally {
                 isLoading.value = false
             }
@@ -171,6 +164,15 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         onSuccess()
     }
 
+    fun clearSuccessMessage() {
+        successMessage.value = null
+    }
+
+    fun clearMessages() {
+        errorMessage.value = null
+        successMessage.value = null
+    }
+
     private fun mapUserError(e: Exception): String {
         return when (e) {
             is IllegalArgumentException -> e.message ?: "Некорректные данные"
@@ -182,6 +184,22 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                 409 -> "Телефон уже используется другим пользователем"
                 500 -> "Сервер временно недоступен"
                 else -> "Ошибка операции"
+            }
+            is IOException -> "Проверьте подключение к интернету"
+            else -> e.message ?: "Неизвестная ошибка"
+        }
+    }
+
+    private fun mapDeleteError(e: Exception): String {
+        return when (e) {
+            is HttpException -> when (e.code()) {
+                400 -> "Введите корректный пароль"
+                401 -> "Неверный пароль"
+                403 -> "Нет прав для удаления аккаунта"
+                404 -> "Аккаунт уже удалён или не найден"
+                409 -> "Невозможно удалить аккаунт (есть связанные данные)"
+                500 -> "Сервер временно недоступен"
+                else -> "Не удалось удалить аккаунт"
             }
             is IOException -> "Проверьте подключение к интернету"
             else -> e.message ?: "Неизвестная ошибка"

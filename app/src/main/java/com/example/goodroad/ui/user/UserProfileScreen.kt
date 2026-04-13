@@ -118,7 +118,7 @@ fun UserProfileScreen(
 
                     Spacer(Modifier.height(10.dp))
 
-                    AuthButton(text = "Редактировать", onClick = onEdit)
+                    AuthButton(text = "Редактировать профиль", onClick = onEdit)
 
                     Spacer(Modifier.height(10.dp))
 

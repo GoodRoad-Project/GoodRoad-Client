@@ -52,6 +52,10 @@ fun UserDeleteAccountScreen(
             label = "Пароль"
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        AuthStatusText(text = errorMessage)
+
         Spacer(modifier = Modifier.height(20.dp))
 
         AuthButton(
@@ -74,7 +78,5 @@ fun UserDeleteAccountScreen(
                 onBack()
             }
         )
-
-        AuthStatusText(text = errorMessage)
     }
 }
