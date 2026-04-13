@@ -69,16 +69,38 @@ fun moderationStatusColor(status: String): Color {
 }
 
 fun buildAddressLine(address: ReviewAddress): String {
-    val parts = listOf(
-        address.country,
-        address.region,
-        address.localityType,
-        address.city,
-        address.street,
-        address.house,
-        address.placeName
-    )
-    return parts.filterNot { it.isNullOrBlank() }.joinToString(", ")
+    val parts = mutableListOf<String>()
+
+    address.country
+        ?.takeIf { it.isNotBlank() }
+        ?.let { parts += it }
+
+    address.region
+        ?.takeIf { it.isNotBlank() }
+        ?.let { parts += it }
+
+    val locality = listOfNotNull(
+        address.localityType?.takeIf { it.isNotBlank() },
+        address.city?.takeIf { it.isNotBlank() }
+    ).joinToString(" ")
+
+    if (locality.isNotBlank()) {
+        parts += locality
+    }
+
+    address.street
+        ?.takeIf { it.isNotBlank() }
+        ?.let { parts += "ул. $it" }
+
+    address.house
+        ?.takeIf { it.isNotBlank() }
+        ?.let { parts += "д. $it" }
+
+    address.placeName
+        ?.takeIf { it.isNotBlank() }
+        ?.let { parts += it }
+
+    return parts.joinToString(", ")
 }
 
 fun formatReviewDate(raw: String): String {
