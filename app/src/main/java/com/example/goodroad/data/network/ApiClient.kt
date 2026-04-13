@@ -2,12 +2,14 @@ package com.example.goodroad.data.network
 
 import com.example.goodroad.BuildConfig
 import com.example.goodroad.data.auth.AuthApi
+import com.example.goodroad.data.review.ReviewApi
 import com.example.goodroad.data.user.UserApi
+import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
-import okhttp3.*
+
 object ApiClient {
 
     private val logging = HttpLoggingInterceptor().apply {
@@ -49,21 +51,23 @@ object ApiClient {
             .writeTimeout(20, TimeUnit.SECONDS)
             .build()
 
-    val authApi: AuthApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        Retrofit.Builder()
+    private fun retrofit(): Retrofit {
+        return Retrofit.Builder()
             .baseUrl(BuildConfig.GOODROAD_SERVER_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(AuthApi::class.java)
+    }
+
+    val authApi: AuthApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        retrofit().create(AuthApi::class.java)
     }
 
     val userApi: UserApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        Retrofit.Builder()
-            .baseUrl(BuildConfig.GOODROAD_SERVER_URL)
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(UserApi::class.java)
+        retrofit().create(UserApi::class.java)
+    }
+
+    val reviewApi: ReviewApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        retrofit().create(ReviewApi::class.java)
     }
 }
