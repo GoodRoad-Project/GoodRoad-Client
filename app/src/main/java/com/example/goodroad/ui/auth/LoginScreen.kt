@@ -107,6 +107,12 @@ fun LoginScreen(
             }
         }
 
-        AuthStatusText(text = error ?: errorText)
+        AuthStatusText(
+            text = error ?: errorText,
+            onTimeout = {
+                errorText = null
+                viewModel.clearError()
+            }
+        )
     }
 }

@@ -74,6 +74,14 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    fun clearError() {
+        _error.value = null
+    }
+
+    fun clearRecoverResult() {
+        _recoverResult.value = null
+    }
+
     private fun mapAuthError(e: Exception, action: AuthAction): String {
         return when (e) {
             is HttpException -> when (e.code()) {

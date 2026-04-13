@@ -106,7 +106,8 @@ fun RecoverPasswordScreen(
                     tint = UrbanBrown
                 )
             },
-            warning = firstNameWarning
+            warning = firstNameWarning,
+            maxLength = NAME_MAX_LENGTH
         )
 
         Spacer(Modifier.height(12.dp))
@@ -130,7 +131,8 @@ fun RecoverPasswordScreen(
                     tint = UrbanBrown
                 )
             },
-            warning = lastNameWarning
+            warning = lastNameWarning,
+            maxLength = NAME_MAX_LENGTH
         )
 
         Spacer(Modifier.height(12.dp))
@@ -168,7 +170,18 @@ fun RecoverPasswordScreen(
             label = "Подтвердите пароль"
         )
 
-        AuthStatusText(text = error ?: errorText)
-        AuthSuccessText(text = successText)
+        AuthStatusText(
+            text = error ?: errorText,
+            onTimeout = {
+                errorText = null
+                viewModel.clearError()
+            }
+        )
+        AuthSuccessText(
+            text = successText,
+            onTimeout = {
+                viewModel.clearRecoverResult()
+            }
+        )
     }
 }
