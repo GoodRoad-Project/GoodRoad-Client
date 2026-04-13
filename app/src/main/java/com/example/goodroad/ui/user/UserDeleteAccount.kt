@@ -1,15 +1,17 @@
 package com.example.goodroad.ui.user
 
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import com.example.goodroad.ui.auth.AuthButton
-import com.example.goodroad.ui.auth.PasswordField
-import com.example.goodroad.ui.viewmodel.UserViewModel
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.example.goodroad.ui.auth.AuthButton
+import com.example.goodroad.ui.auth.AuthStatusText
+import com.example.goodroad.ui.auth.PasswordField
 import com.example.goodroad.ui.theme.*
+import com.example.goodroad.ui.viewmodel.UserViewModel
+import kotlinx.coroutines.delay
+
 @Composable
 fun UserDeleteAccountScreen(
     viewModel: UserViewModel,
@@ -19,6 +21,13 @@ fun UserDeleteAccountScreen(
     var password by remember { mutableStateOf("") }
     val isLoading by viewModel.isLoading
     val errorMessage by viewModel.errorMessage
+
+    LaunchedEffect(errorMessage) {
+        if (!errorMessage.isNullOrBlank()) {
+            delay(5_000)
+            viewModel.clearMessages()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -60,15 +69,12 @@ fun UserDeleteAccountScreen(
             text = "Назад в профиль",
             backgroundColor = UrbanBrown,
             contentColor = WhiteSoft,
-            onClick = onBack
+            onClick = {
+                viewModel.clearMessages()
+                onBack()
+            }
         )
 
-        errorMessage?.let {
-            Text(
-                text = it,
-                color = Color.Red,
-                modifier = Modifier.padding(top = 16.dp)
-            )
-        }
+        AuthStatusText(text = errorMessage)
     }
 }

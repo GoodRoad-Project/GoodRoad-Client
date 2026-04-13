@@ -122,7 +122,8 @@ fun UserEditScreen(
                     tint = UrbanBrown
                 )
             },
-            warning = firstNameWarning
+            warning = firstNameWarning,
+            maxLength = NAME_MAX_LENGTH
         )
 
         Spacer(Modifier.height(12.dp))
@@ -148,7 +149,8 @@ fun UserEditScreen(
                     tint = UrbanBrown
                 )
             },
-            warning = lastNameWarning
+            warning = lastNameWarning,
+            maxLength = NAME_MAX_LENGTH
         )
 
         Spacer(Modifier.height(12.dp))
@@ -287,16 +289,20 @@ fun UserEditScreen(
             color = UrbanBrown
         )
 
-        AuthSuccessText(text = successMessage)
-
-        if (!finalError.isNullOrBlank()) {
-            Spacer(Modifier.height(12.dp))
-            Text(
-                text = finalError,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
+        AuthSuccessText(
+            text = successMessage,
+            onTimeout = {
+                errorText = null
+                userViewModel.clearMessages()
+            }
+        )
+        AuthStatusText(
+            text = finalError,
+            onTimeout = {
+                errorText = null
+                userViewModel.clearMessages()
+            }
+        )
 
         Spacer(Modifier.height(20.dp))
 

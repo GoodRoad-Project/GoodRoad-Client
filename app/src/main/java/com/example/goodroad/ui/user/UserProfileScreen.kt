@@ -33,15 +33,9 @@ fun UserProfileScreen(
     }
 
     when {
-        isLoading -> {
+        isLoading && user == null -> {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
-            }
-        }
-
-        errorMessage != null -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Ошибка: $errorMessage", color = Color.Red)
             }
         }
 
@@ -136,6 +130,12 @@ fun UserProfileScreen(
                         userViewModel.logout { onLogout() }
                     }
                 }
+            }
+        }
+
+        errorMessage != null -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Ошибка: $errorMessage", color = Color.Red)
             }
         }
 
