@@ -6,15 +6,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.goodroad.data.network.ApiClient
+import com.example.goodroad.data.user.*
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import retrofit2.HttpException
 import java.io.File
 import java.io.IOException
-import com.example.goodroad.data.user.*
-class UserViewModel(private val repository: UserRepository) : ViewModel() {
+
+class UserViewModel(
+    private val repository: UserRepository
+) : ViewModel() {
 
     var user = mutableStateOf<SettingsView?>(null)
     var isLoading = mutableStateOf(false)
@@ -34,7 +37,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
             try {
                 user.value = repository.getCurrentUser()
             } catch (e: Exception) {
-                errorMessage.value = mapUserError(e)
+                errorMessage.value = mapError(e)
             } finally {
                 isLoading.value = false
             }
@@ -59,10 +62,6 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                 val phoneToUpdate = phone?.takeIf { it.isNotBlank() }
                 val hasPasswordChange = !oldPassword.isNullOrBlank() || !newPassword.isNullOrBlank()
 
-                if (hasPasswordChange && (oldPassword.isNullOrBlank() || newPassword.isNullOrBlank())) {
-                    throw IllegalArgumentException("Для смены пароля заполните оба поля")
-                }
-
                 val req = UpdateUserReq(
                     firstName = firstName.takeIf { it != current?.firstName },
                     lastName = lastName.takeIf { it != current?.lastName },
@@ -70,19 +69,31 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                     phone = phoneToUpdate
                 )
 
-                val hasProfileChanges = req.firstName != null ||
-                        req.lastName != null ||
-                        req.photoUrl != null ||
-                        req.phone != null
-
-                if (!hasProfileChanges && !hasPasswordChange) {
-                    throw IllegalArgumentException("Нет изменений для сохранения")
+                if (hasPasswordChange) {
+                    if (oldPassword.isNullOrBlank() || newPassword.isNullOrBlank()) {
+                        throw IllegalArgumentException("Заполните оба пароля")
+                    }
                 }
 
-                if (hasProfileChanges) {
+                val hasChanges =
+                    req.firstName != null ||
+                            req.lastName != null ||
+                            req.photoUrl != null ||
+                            req.phone != null ||
+                            hasPasswordChange
+
+                if (!hasChanges) {
+                    throw IllegalArgumentException("Нет изменений")
+                }
+
+                if (req.firstName != null ||
+                    req.lastName != null ||
+                    req.photoUrl != null ||
+                    req.phone != null
+                ) {
                     user.value = repository.updateCurrentUser(req)
-                    if (req.phone != null) {
-                        ApiClient.updateCredentials(phone = req.phone)
+                    req.phone?.let {
+                        ApiClient.updateCredentials(phone = it)
                     }
                 }
 
@@ -91,9 +102,10 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                     ApiClient.updateCredentials(password = newPassword)
                 }
 
-                successMessage.value = "Профиль успешно сохранен"
+                successMessage.value = "Профиль обновлён"
+
             } catch (e: Exception) {
-                errorMessage.value = mapUserError(e)
+                errorMessage.value = mapError(e)
             } finally {
                 isLoading.value = false
             }
@@ -103,44 +115,35 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     fun uploadAvatar(context: Context, uri: Uri, onSuccess: (String) -> Unit) {
         viewModelScope.launch {
             isLoading.value = true
-            errorMessage.value = null
-            successMessage.value = null
 
             try {
                 val resolver = context.contentResolver
                 val mimeType = resolver.getType(uri) ?: "image/*"
-                val extension = MimeTypeMap.resolveExtension(mimeType)
-                val tempFile = File.createTempFile("avatar_upload", extension, context.cacheDir)
-                resolver.openInputStream(uri)?.use { input ->
-                    tempFile.outputStream().use { output ->
-                        input.copyTo(output)
-                    }
-                } ?: throw IllegalArgumentException("Не удалось прочитать выбранный файл")
 
-                val requestBody = tempFile.asRequestBody(mimeType.toMediaTypeOrNull())
-                val part = MultipartBody.Part.createFormData("file", tempFile.name, requestBody)
+                val file = File.createTempFile("avatar", ".tmp", context.cacheDir)
+                resolver.openInputStream(uri)?.use { input ->
+                    file.outputStream().use { it.write(input.readBytes()) }
+                }
+
+                val body = file.asRequestBody(mimeType.toMediaTypeOrNull())
+                val part = MultipartBody.Part.createFormData("file", file.name, body)
+
                 val response = repository.uploadAvatar(part)
-                    ?: throw IllegalStateException("Сервер не вернул ссылку на фото")
+                    ?: throw IllegalStateException("Нет ответа")
 
                 onSuccess(response.photoUrl)
-                tempFile.delete()
+
             } catch (e: Exception) {
-                errorMessage.value = mapUserError(e)
+                errorMessage.value = mapError(e)
             } finally {
                 isLoading.value = false
             }
         }
     }
 
-    fun clearSuccessMessage() {
-        successMessage.value = null
-    }
-
     fun deleteUser(password: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             isLoading.value = true
-            errorMessage.value = null
-            successMessage.value = null
 
             try {
                 repository.deleteCurrentUser(DeleteAccountReq(password))
@@ -149,7 +152,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                 isDeleted = true
                 onSuccess()
             } catch (e: Exception) {
-                errorMessage.value = mapUserError(e)
+                errorMessage.value = mapError(e)
             } finally {
                 isLoading.value = false
             }
@@ -160,36 +163,23 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         ApiClient.clearCredentials()
         user.value = null
         isDeleted = false
-        errorMessage.value = null
-        successMessage.value = null
         onSuccess()
     }
 
-    private fun mapUserError(e: Exception): String {
+    private fun mapError(e: Exception): String {
         return when (e) {
-            is IllegalArgumentException -> e.message ?: "Некорректные данные"
+            is IllegalArgumentException -> e.message ?: "Ошибка"
             is HttpException -> when (e.code()) {
-                400 -> "Некорректные данные профиля"
-                401 -> "Вы не авторизованы"
-                403 -> "Нет прав для выполнения действия"
-                404 -> "Пользователь не найден"
-                409 -> "Телефон уже используется другим пользователем"
-                500 -> "Сервер временно недоступен"
-                else -> "Ошибка операции"
+                400 -> "Ошибка данных"
+                401 -> "Не авторизован"
+                403 -> "Нет доступа"
+                404 -> "Не найдено"
+                409 -> "Конфликт данных"
+                500 -> "Ошибка сервера"
+                else -> "Ошибка"
             }
-            is IOException -> "Проверьте подключение к интернету"
-            else -> e.message ?: "Неизвестная ошибка"
-        }
-    }
-
-    private object MimeTypeMap {
-        fun resolveExtension(mimeType: String): String {
-            return when (mimeType) {
-                "image/jpeg" -> ".jpg"
-                "image/png" -> ".png"
-                "image/webp" -> ".webp"
-                else -> ".tmp"
-            }
+            is IOException -> "Нет интернета"
+            else -> e.message ?: "Ошибка"
         }
     }
 }

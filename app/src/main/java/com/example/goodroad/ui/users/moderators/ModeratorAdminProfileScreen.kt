@@ -1,5 +1,6 @@
 package com.example.goodroad.ui.users.moderators
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,6 +22,9 @@ fun AdminProfileScreen(
     onReviews: () -> Unit,
     onLogout: () -> Unit
 ) {
+
+    val safeOnModerators by rememberUpdatedState(onModerators)
+
     val user by userViewModel.user
     val isLoading by userViewModel.isLoading
     val errorMessage by userViewModel.errorMessage
@@ -99,7 +103,8 @@ fun AdminProfileScreen(
                         backgroundColor = UrbanBrown,
                         contentColor = WhiteSoft
                     ) {
-                        onModerators()
+                        Log.d("AdminProfile", "BUTTON CLICKED")
+                        safeOnModerators()
                     }
 
                     Spacer(Modifier.height(12.dp))

@@ -3,17 +3,21 @@ package com.example.goodroad.ui.auth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import androidx.compose.ui.Modifier
-import com.example.goodroad.data.auth.AuthResp
 import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.user.UserRepository
+import com.example.goodroad.data.moderator.ModeratorRepository
 import com.example.goodroad.ui.theme.BackgroundLight
 import com.example.goodroad.ui.users.UserNav
 import com.example.goodroad.ui.users.moderators.AdminProfileScreen
+import com.example.goodroad.ui.users.moderators.ModeratorsManagementScreen
 import com.example.goodroad.ui.viewmodel.UserViewModel
+import com.example.goodroad.ui.viewmodel.ModeratorViewModel
 
 @Composable
 fun AuthApp(
@@ -30,7 +34,7 @@ fun AuthApp(
 
             composable(LOGIN_ROUTE) {
                 LoginScreen(
-                    onLoginSuccess = { resp: AuthResp ->
+                    onLoginSuccess = { resp ->
 
                         val role = resp.user?.role
 
@@ -86,26 +90,58 @@ fun AuthApp(
             composable("admin_home") {
 
                 val userViewModel: UserViewModel = viewModel(
-                    factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-                        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-
-                            val repository = UserRepository(ApiClient.userApi)
-
-                            return UserViewModel(repository) as T
+                    factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            return UserViewModel(
+                                UserRepository(ApiClient.userApi)
+                            ) as T
                         }
                     }
                 )
 
                 AdminProfileScreen(
                     userViewModel = userViewModel,
-                    onModerators = {},
-                    onReviews = {},
+
+                    onModerators = {
+                        navController.navigate("moderators")
+                    },
+
+                    onReviews = {
+                        navController.navigate("reviews")
+                    },
+
                     onLogout = {
                         navController.navigate(LOGIN_ROUTE) {
                             popUpTo("admin_home") { inclusive = true }
                         }
                     }
                 )
+            }
+
+            composable("moderators") {
+
+                val moderatorViewModel: ModeratorViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            return ModeratorViewModel(
+                                ModeratorRepository()
+                            ) as T
+                        }
+                    }
+                )
+
+                ModeratorsManagementScreen(
+                    viewModel = moderatorViewModel,
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable("reviews") {
+                androidx.compose.material3.Text("Reviews screen")
             }
         }
     }
