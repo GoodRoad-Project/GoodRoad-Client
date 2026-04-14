@@ -10,7 +10,6 @@ import androidx.compose.ui.unit.*
 import com.example.goodroad.data.review.*
 import com.example.goodroad.ui.auth.*
 import com.example.goodroad.ui.theme.*
-import com.example.goodroad.ui.user.*
 import com.example.goodroad.ui.users.UserDecor
 import com.example.goodroad.ui.viewmodel.*
 

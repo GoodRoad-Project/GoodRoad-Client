@@ -1,5 +1,8 @@
 package com.example.goodroad.ui.user
 
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -7,12 +10,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.goodroad.ui.auth.AuthButton
-import com.example.goodroad.ui.viewmodel.UserViewModel
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.users.UserDecor
+import com.example.goodroad.ui.viewmodel.UserViewModel
 
 @Composable
 fun UserProfileScreen(
@@ -21,6 +21,7 @@ fun UserProfileScreen(
     onDelete: () -> Unit,
     onLogout: () -> Unit,
     onSelectObstacles: () -> Unit,
+    onOpenMap: () -> Unit,
     onOpenReviews: () -> Unit
 ) {
     val user by userViewModel.user
@@ -40,6 +41,21 @@ fun UserProfileScreen(
             }
         }
 
+        userViewModel.isDeleted -> {
+            LaunchedEffect(Unit) {
+                onLogout()
+            }
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
+
+        errorMessage != null && user == null -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Ошибка: $errorMessage", color = Color.Red)
+            }
+        }
+
         user != null -> {
             val u = user!!
 
@@ -55,7 +71,7 @@ fun UserProfileScreen(
                     UserDecor()
 
                     Text(
-                        "Профиль",
+                        text = "Профиль",
                         style = MaterialTheme.typography.headlineLarge,
                         color = TextPrimary
                     )
@@ -72,7 +88,7 @@ fun UserProfileScreen(
                             modifier = Modifier.padding(16.dp)
                         ) {
                             Text(
-                                text = "${u.firstName ?: ""} ${u.lastName ?: ""}",
+                                text = "${u.firstName ?: ""} ${u.lastName ?: ""}".trim(),
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = UrbanBrown
@@ -134,15 +150,9 @@ fun UserProfileScreen(
             }
         }
 
-        errorMessage != null -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Ошибка: $errorMessage", color = Color.Red)
-            }
-        }
-
         else -> {
-            LaunchedEffect(Unit) {
-                if (userViewModel.isDeleted) onLogout()
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
         }
     }

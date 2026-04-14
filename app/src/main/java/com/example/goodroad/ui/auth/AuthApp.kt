@@ -13,11 +13,8 @@ import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.user.UserRepository
 import com.example.goodroad.data.moderator.ModeratorRepository
 import com.example.goodroad.ui.theme.BackgroundLight
-import com.example.goodroad.ui.users.UserNav
-import com.example.goodroad.ui.users.moderators.AdminProfileScreen
-import com.example.goodroad.ui.users.moderators.ModeratorsManagementScreen
-import com.example.goodroad.ui.users.moderators.ReviewModerationScreen
-import com.example.goodroad.ui.users.moderators.ModeratorProfileScreen
+import com.example.goodroad.ui.user.UserNav
+import com.example.goodroad.ui.users.moderators.*
 import com.example.goodroad.ui.viewmodel.UserViewModel
 import com.example.goodroad.ui.viewmodel.ModeratorViewModel
 
@@ -33,27 +30,20 @@ fun AuthApp(
             navController = navController,
             startDestination = LOGIN_ROUTE
         ) {
-
             composable(LOGIN_ROUTE) {
                 LoginScreen(
                     onLoginSuccess = { resp ->
-
-                        val role = resp.user?.role
-
-                        when (role) {
-
+                        when (resp.user?.role) {
                             "MODERATOR_ADMIN" -> {
                                 navController.navigate("admin_home") {
                                     popUpTo(LOGIN_ROUTE) { inclusive = true }
                                 }
                             }
-
                             "MODERATOR" -> {
                                 navController.navigate("moderator_home") {
                                     popUpTo(LOGIN_ROUTE) { inclusive = true }
                                 }
                             }
-
                             else -> {
                                 navController.navigate(USER_HOME_ROUTE) {
                                     popUpTo(LOGIN_ROUTE) { inclusive = true }
@@ -85,6 +75,7 @@ fun AuthApp(
 
             composable(USER_HOME_ROUTE) {
                 UserNav(
+                    navController = navController,
                     onLogout = {
                         navController.navigate(LOGIN_ROUTE) {
                             popUpTo(USER_HOME_ROUTE) { inclusive = true }
@@ -94,29 +85,16 @@ fun AuthApp(
             }
 
             composable("admin_home") {
-
-                val userViewModel: UserViewModel = viewModel(
-                    factory = object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            return UserViewModel(
-                                UserRepository(ApiClient.userApi)
-                            ) as T
-                        }
+                val userViewModel: UserViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return UserViewModel(UserRepository(ApiClient.userApi)) as T
                     }
-                )
+                })
 
                 AdminProfileScreen(
                     userViewModel = userViewModel,
-
-                    onModerators = {
-                        navController.navigate("moderators")
-                    },
-
-                    onReviews = {
-                        navController.navigate("reviews")
-                    },
-
+                    onModerators = { navController.navigate("moderators") },
+                    onReviews = { navController.navigate("reviews") },
                     onLogout = {
                         navController.navigate(LOGIN_ROUTE) {
                             popUpTo("admin_home") { inclusive = true }
@@ -126,25 +104,15 @@ fun AuthApp(
             }
 
             composable("moderator_home") {
-
-                val userViewModel: UserViewModel = viewModel(
-                    factory = object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            return UserViewModel(
-                                UserRepository(ApiClient.userApi)
-                            ) as T
-                        }
+                val userViewModel: UserViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return UserViewModel(UserRepository(ApiClient.userApi)) as T
                     }
-                )
+                })
 
                 ModeratorProfileScreen(
                     userViewModel = userViewModel,
-
-                    onReviews = {
-                        navController.navigate("reviews")
-                    },
-
+                    onReviews = { navController.navigate("reviews") },
                     onLogout = {
                         navController.navigate(LOGIN_ROUTE) {
                             popUpTo("moderator_home") { inclusive = true }
@@ -154,32 +122,21 @@ fun AuthApp(
             }
 
             composable("moderators") {
-
-                val moderatorViewModel: ModeratorViewModel = viewModel(
-                    factory = object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            return ModeratorViewModel(
-                                ModeratorRepository()
-                            ) as T
-                        }
+                val moderatorViewModel: ModeratorViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return ModeratorViewModel(ModeratorRepository()) as T
                     }
-                )
+                })
 
                 ModeratorsManagementScreen(
                     viewModel = moderatorViewModel,
-                    onBack = {
-                        navController.popBackStack()
-                    }
+                    onBack = { navController.popBackStack() }
                 )
             }
 
             composable("reviews") {
-
                 ReviewModerationScreen(
-                    onBack = {
-                        navController.popBackStack()
-                    }
+                    onBack = { navController.popBackStack() }
                 )
             }
         }

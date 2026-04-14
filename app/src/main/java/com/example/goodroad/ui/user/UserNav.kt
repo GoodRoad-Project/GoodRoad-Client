@@ -5,9 +5,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.review.ReviewCardResp
 import com.example.goodroad.data.review.ReviewRepository
@@ -20,8 +22,20 @@ import com.example.goodroad.ui.users.users.UserEditScreen
 import com.example.goodroad.ui.viewmodel.ReviewsViewModel
 import com.example.goodroad.ui.viewmodel.UserViewModel
 
+private const val SCREEN_PROFILE = "profile"
+private const val SCREEN_EDIT = "edit"
+private const val SCREEN_DELETE = "delete"
+private const val SCREEN_OBSTACLES = "obstacles"
+private const val SCREEN_MAP = "map"
+private const val SCREEN_REVIEWS = "reviews"
+private const val SCREEN_REVIEW_FORM = "review_form"
+private const val SCREEN_REVIEW_DETAILS = "review_details"
+
 @Composable
-fun UserNav(onLogout: () -> Unit) {
+fun UserNav(
+    navController: NavHostController,
+    onLogout: () -> Unit
+) {
     val userApi = ApiClient.userApi
     val reviewApi = ApiClient.reviewApi
 
@@ -48,82 +62,89 @@ fun UserNav(onLogout: () -> Unit) {
     val userViewModel: UserViewModel = viewModel(factory = userFactory)
     val reviewsViewModel: ReviewsViewModel = viewModel(factory = reviewsFactory)
 
-    var screen by remember { mutableStateOf("profile") }
+    var screen by rememberSaveable { mutableStateOf(SCREEN_PROFILE) }
     var selectedReview by remember { mutableStateOf<ReviewCardResp?>(null) }
 
     when (screen) {
-        "profile" -> UserProfileScreen(
+        SCREEN_PROFILE -> UserProfileScreen(
             userViewModel = userViewModel,
-            onEdit = { screen = "edit" },
-            onDelete = { screen = "delete" },
+            onEdit = { screen = SCREEN_EDIT },
+            onDelete = { screen = SCREEN_DELETE },
             onLogout = onLogout,
-            onSelectObstacles = { screen = "obstacles" },
+            onSelectObstacles = { screen = SCREEN_OBSTACLES },
+            onOpenMap = { screen = SCREEN_MAP },
             onOpenReviews = {
                 selectedReview = null
-                screen = "reviews"
+                screen = SCREEN_REVIEWS
             }
         )
 
-        "edit" -> UserEditScreen(
+        SCREEN_EDIT -> UserEditScreen(
             userViewModel = userViewModel,
-            onBack = { screen = "profile" },
+            onBack = { screen = SCREEN_PROFILE },
             onLogout = onLogout
         )
 
-        "delete" -> UserDeleteAccountScreen(
+        SCREEN_DELETE -> UserDeleteAccountScreen(
             viewModel = userViewModel,
-            onBack = { screen = "profile" },
+            onBack = { screen = SCREEN_PROFILE },
             onExit = onLogout
         )
 
-        "obstacles" -> MapsNav(
-            onBackToProfile = {
-                screen = "profile"
-            },
-            onSaved = {}
+        SCREEN_OBSTACLES -> MapsNav(
+            onBackToProfile = { screen = SCREEN_PROFILE },
+            onSaved = { screen = SCREEN_PROFILE }
         )
 
-        "reviews" -> UserReviewsScreen(
+        SCREEN_MAP -> MapsNav(
+            onBackToProfile = { screen = SCREEN_PROFILE },
+            onSaved = { screen = SCREEN_PROFILE }
+        )
+
+        SCREEN_REVIEWS -> UserReviewsScreen(
             reviewsViewModel = reviewsViewModel,
-            onBack = { screen = "profile" },
+            onBack = { screen = SCREEN_PROFILE },
             onAddReview = {
                 selectedReview = null
-                screen = "review_form"
+                screen = SCREEN_REVIEW_FORM
             },
             onOpenDetails = {
                 selectedReview = it
-                screen = "review_details"
+                screen = SCREEN_REVIEW_DETAILS
             },
             onEditReview = {
                 selectedReview = it
-                screen = "review_form"
+                screen = SCREEN_REVIEW_FORM
             }
         )
 
-        "review_form" -> ReviewFormScreen(
+        SCREEN_REVIEW_FORM -> ReviewFormScreen(
             reviewsViewModel = reviewsViewModel,
             initialReview = selectedReview,
-            onBack = { screen = "reviews" },
+            onBack = { screen = SCREEN_REVIEWS },
             onSaved = {
                 selectedReview = null
-                screen = "reviews"
+                screen = SCREEN_REVIEWS
             }
         )
 
-        "review_details" -> selectedReview?.let { review ->
-            ReviewDetailsScreen(
-                review = review,
-                reviewsViewModel = reviewsViewModel,
-                onBack = { screen = "reviews" },
-                onEdit = { screen = "review_form" },
-                onDeleted = {
-                    selectedReview = null
-                    screen = "reviews"
+        SCREEN_REVIEW_DETAILS -> {
+            val review = selectedReview
+            if (review != null) {
+                ReviewDetailsScreen(
+                    review = review,
+                    reviewsViewModel = reviewsViewModel,
+                    onBack = { screen = SCREEN_REVIEWS },
+                    onEdit = { screen = SCREEN_REVIEW_FORM },
+                    onDeleted = {
+                        selectedReview = null
+                        screen = SCREEN_REVIEWS
+                    }
+                )
+            } else {
+                LaunchedEffect(Unit) {
+                    screen = SCREEN_REVIEWS
                 }
-            )
-        } ?: run {
-            LaunchedEffect(Unit) {
-                screen = "reviews"
             }
         }
     }
