@@ -139,7 +139,3 @@ app/src/main/java/com/example/goodroad/
     ├── user/
     └── viewmodel/
 ```
-
-## Схема клиентского приложения
-
-**надо добавить (а может и не надо)**
