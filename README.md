@@ -1,4 +1,6 @@
-![Превью](images/preview.png)
+<p align="center">
+  <img src="images/preview.png" alt="GoodRoad banner" width="974">
+</p>
 
 ## GoodRoad (Android client)
 
