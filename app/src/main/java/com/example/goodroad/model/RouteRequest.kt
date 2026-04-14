@@ -6,7 +6,7 @@ data class RouteRequest(
     val start: String,              // (lat,lon)
     val end: String,                // (lat,lon)
     @JsonProperty("user_id")
-    val userId: String,
+    val userId: String? = null,
 
     @JsonProperty("max_stairs")
     val maxStairsCount: Int? = null,        // сколько ступенек максимум

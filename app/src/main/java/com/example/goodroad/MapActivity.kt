@@ -53,6 +53,7 @@ class MapActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        supportActionBar?.hide()
         MapLibre.getInstance(this)
         setContentView(R.layout.activity_map)
 
@@ -136,13 +137,20 @@ class MapActivity : AppCompatActivity() {
                 return@launch
             }
 
-            drawRoute(RouteResponse(id = "test", paths = emptyList()))
+            val policies = api.getUserObstacles("") // надо узнать где токен
+            val allowedTypes = setOf("SAND", "GRAVEL")
 
             val request = RouteRequest(
                 start = "$startLat,$startLon",
                 end = "$endLat,$endLon",
-                userId = "" //userId //надо узнать откуда взять
+                avoidStairs = policies.find { it.obstacleType == "STAIRS" }?.selected == true,
+                maxCurbHeight = policies.find { it.obstacleType == "CURB" }?.maxAllowedSeverity?.toInt(),
+                maxSlopeAngle = policies.find { it.obstacleType == "ROAD_SLOPE" }?.maxAllowedSeverity?.toDouble(),
+                avoidBadRoad = policies.find { it.obstacleType == "POTHOLES" }?.selected == true,
+                avoidSurfaceTypes = policies.filter { it.selected && it.obstacleType in allowedTypes}.map{ it.obstacleType }
             )
+
+            //drawRoute(RouteResponse(id = "test", paths = emptyList()))
 
             try {
                 val response = api.getRoute(request)

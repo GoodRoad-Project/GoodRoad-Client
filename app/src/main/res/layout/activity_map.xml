@@ -17,9 +17,10 @@
         android:id="@+id/addressPanel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/background_light"
+        android:background="@color/surface_warm"
         android:orientation="horizontal"
         android:padding="10dp"
+        android:layout_marginTop="25dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -29,7 +30,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@color/background_light"
+            android:background="@drawable/rounded_edittext"
             android:hint="Введите адрес назначения"
             android:inputType="text"
             android:padding="10dp"
@@ -39,9 +40,11 @@
             android:id="@+id/setDestinationButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@color/safe_green"
+            android:background="@drawable/rounded_button"
             android:text="Построить"
-            android:textColor="@color/white_soft" />
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            android:textColor="@color/white_soft"
+            app:cornerRadius="16dp" />
 
     </LinearLayout>
 
