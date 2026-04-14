@@ -3,12 +3,14 @@ package com.example.goodroad.ui.auth
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.ui.theme.*
+import kotlinx.coroutines.delay
+
 @Composable
 fun AuthButton(
     text: String,
@@ -72,9 +74,15 @@ fun AuthFooter(
 
 @Composable
 fun AuthStatusText(
-    text: String?
+    text: String?,
+    onTimeout: (() -> Unit)? = null
 ) {
     if (text == null) return
+
+    LaunchedEffect(text) {
+        delay(5_000)
+        onTimeout?.invoke()
+    }
 
     Spacer(Modifier.height(12.dp))
     Text(
@@ -86,9 +94,15 @@ fun AuthStatusText(
 
 @Composable
 fun AuthSuccessText(
-    text: String?
+    text: String?,
+    onTimeout: (() -> Unit)? = null
 ) {
     if (text == null) return
+
+    LaunchedEffect(text) {
+        delay(5_000)
+        onTimeout?.invoke()
+    }
 
     Spacer(Modifier.height(12.dp))
     Text(

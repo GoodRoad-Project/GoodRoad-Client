@@ -1,15 +1,16 @@
 package com.example.goodroad.data.network
 
 import com.example.goodroad.BuildConfig
-import com.example.goodroad.data.auth.AuthApi
-import com.example.goodroad.data.user.UserApi
+import com.example.goodroad.data.auth.*
 import com.example.goodroad.data.moderator.ModeratorApi
-import okhttp3.Credentials
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
+import com.example.goodroad.data.obstacle.*
+import com.example.goodroad.data.review.*
+import com.example.goodroad.data.user.*
+import okhttp3.*
+import okhttp3.logging.*
+import retrofit2.*
+import retrofit2.converter.gson.*
+import java.util.concurrent.*
 
 object ApiClient {
 
@@ -21,8 +22,12 @@ object ApiClient {
     private var userPassword: String? = null
 
     fun updateCredentials(phone: String? = null, password: String? = null) {
-        if (!phone.isNullOrBlank()) userPhone = phone
-        if (!password.isNullOrBlank()) userPassword = password
+        if (!phone.isNullOrBlank()) {
+            userPhone = phone
+        }
+        if (!password.isNullOrBlank()) {
+            userPassword = password
+        }
     }
 
     fun clearCredentials() {
@@ -35,15 +40,12 @@ object ApiClient {
             .addInterceptor(logging)
             .addInterceptor { chain ->
                 val requestBuilder = chain.request().newBuilder()
-
                 val phone = userPhone
                 val password = userPassword
-
                 if (!phone.isNullOrBlank() && !password.isNullOrBlank()) {
                     val credential = Credentials.basic(phone, password)
                     requestBuilder.addHeader("Authorization", credential)
                 }
-
                 chain.proceed(requestBuilder.build())
             }
             .connectTimeout(20, TimeUnit.SECONDS)
@@ -69,5 +71,13 @@ object ApiClient {
 
     val moderatorApi: ModeratorApi by lazy {
         retrofit().create(ModeratorApi::class.java)
+    }
+
+    val obstacleApi: ObstacleApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        retrofit().create(ObstacleApi::class.java)
+    }
+
+    val reviewApi: ReviewApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        retrofit().create(ReviewApi::class.java)
     }
 }

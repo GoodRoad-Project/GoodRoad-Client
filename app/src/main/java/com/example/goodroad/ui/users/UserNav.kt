@@ -10,7 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.user.UserRepository
-import com.example.goodroad.ui.users.users.UserProfileScreen
+import com.example.goodroad.ui.user.UserProfileScreen
 import com.example.goodroad.ui.viewmodel.UserViewModel
 
 @Composable
@@ -62,6 +62,7 @@ fun UserNav(onLogout: () -> Unit) {
         onEdit = {},
         onDelete = {},
         onLogout = onLogout,
-        onSelectObstacles = {}
+        onSelectObstacles = {},
+        onOpenReviews = {}
     )
 }

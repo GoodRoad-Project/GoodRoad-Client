@@ -1,4 +1,4 @@
-package com.example.goodroad.ui.users.users
+package com.example.goodroad.ui.user
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,7 +20,8 @@ fun UserProfileScreen(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onLogout: () -> Unit,
-    onSelectObstacles: () -> Unit
+    onSelectObstacles: () -> Unit,
+    onOpenReviews: () -> Unit
 ) {
     val user by userViewModel.user
     val isLoading by userViewModel.isLoading
@@ -33,15 +34,9 @@ fun UserProfileScreen(
     }
 
     when {
-        isLoading -> {
+        isLoading && user == null -> {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
-            }
-        }
-
-        errorMessage != null -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Ошибка: $errorMessage", color = Color.Red)
             }
         }
 
@@ -57,7 +52,6 @@ fun UserProfileScreen(
                         .fillMaxSize()
                         .padding(24.dp)
                 ) {
-
                     UserDecor()
 
                     Text(
@@ -77,7 +71,6 @@ fun UserProfileScreen(
                         Column(
                             modifier = Modifier.padding(16.dp)
                         ) {
-
                             Text(
                                 text = "${u.firstName ?: ""} ${u.lastName ?: ""}",
                                 fontSize = 22.sp,
@@ -116,7 +109,17 @@ fun UserProfileScreen(
 
                     Spacer(Modifier.height(10.dp))
 
-                    AuthButton(text = "Редактировать", onClick = onEdit)
+                    AuthButton(
+                        text = "Мои отзывы",
+                        backgroundColor = SafeGreen,
+                        contentColor = WhiteSoft
+                    ) {
+                        onOpenReviews()
+                    }
+
+                    Spacer(Modifier.height(10.dp))
+
+                    AuthButton(text = "Редактировать профиль", onClick = onEdit)
 
                     Spacer(Modifier.height(10.dp))
 
@@ -128,6 +131,12 @@ fun UserProfileScreen(
                         userViewModel.logout { onLogout() }
                     }
                 }
+            }
+        }
+
+        errorMessage != null -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Ошибка: $errorMessage", color = Color.Red)
             }
         }
 

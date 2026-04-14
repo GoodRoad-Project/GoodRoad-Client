@@ -117,7 +117,8 @@ fun RegisterScreen(
                     tint = UrbanBrown
                 )
             },
-            warning = firstNameWarning
+            warning = firstNameWarning,
+            maxLength = NAME_MAX_LENGTH
         )
 
         Spacer(Modifier.height(12.dp))
@@ -143,7 +144,8 @@ fun RegisterScreen(
                     tint = UrbanBrown
                 )
             },
-            warning = lastNameWarning
+            warning = lastNameWarning,
+            maxLength = NAME_MAX_LENGTH
         )
 
         Spacer(Modifier.height(12.dp))
@@ -189,6 +191,12 @@ fun RegisterScreen(
             label = "Подтвердите пароль"
         )
 
-        AuthStatusText(text = error ?: errorText)
+        AuthStatusText(
+            text = error ?: errorText,
+            onTimeout = {
+                errorText = null
+                viewModel.clearError()
+            }
+        )
     }
 }
