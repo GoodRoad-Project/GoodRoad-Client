@@ -79,7 +79,7 @@ cp docker/.env.backend.example docker/.env.backend
 Из корня `GoodRoad-Client`:
 
 ```bash
-docker compose --env-file docker/.env.backend -f docker-compose.backend.yml up --build
+docker-compose up --build
 ```
 
 После запуска поднимутся PostgreSQL + PostGIS, а также backend GoodRoad на Spring Boot.
@@ -142,6 +142,4 @@ app/src/main/java/com/example/goodroad/
 
 ## Схема клиентского приложения
 
-Ниже приведена схема экранов и основных пользовательских переходов, которая используется как ориентир для клиентской части проекта. Зеленым обозначены блоки, реализованные к MVP.
-
-![Схема клиентского приложения](images/android_scheme.png)
+**надо добавить (а может и не надо)**
