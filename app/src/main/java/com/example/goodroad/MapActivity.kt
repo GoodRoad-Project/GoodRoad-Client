@@ -32,6 +32,13 @@ import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.sources.GeoJsonSource
 import org.maplibre.android.style.layers.PropertyFactory
+import com.example.goodroad.data.network.ApiClient
+import com.example.goodroad.data.obstacle.ObstacleApi
+import kotlin.collections.firstOrNull
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 
 class MapActivity : AppCompatActivity() {
     private lateinit var mapView: MapView
@@ -39,13 +46,16 @@ class MapActivity : AppCompatActivity() {
     private lateinit var addressEditText: EditText
     private lateinit var setDestinationButton: Button
 
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
+    }
     private var startLat: Double = 0.0
     private var startLon: Double = 0.0
 
     private val api: GoodRoadApi by lazy {
         Retrofit.Builder()
-            //.baseUrl("http://10.0.2.2:8080/")  // для эмулятора
-            .baseUrl("http://10.0.0.2:8080/")  // для моего телефона
+            .baseUrl("http://10.0.2.2:8080/")  // для эмулятора
+            //.baseUrl("http://10.0.0.2:8080/") // для моего телефона
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(GoodRoadApi::class.java)
@@ -67,7 +77,11 @@ class MapActivity : AppCompatActivity() {
 
         mapView.getMapAsync { map ->
             map.setStyle(Style.Builder().fromUri("https://tiles.stadiamaps.com/styles/alidade_smooth.json?api_key=a5972731-a9e9-4ebb-943b-2965bc3f9dca")) {
-                getUserLocation()
+                if (hasLocationPermission()) {
+                    getUserLocation()
+                } else {
+                    requestLocationPermission()
+                }
             }
         }
 
@@ -137,27 +151,32 @@ class MapActivity : AppCompatActivity() {
                 return@launch
             }
 
-            val policies = api.getUserObstacles("") // надо узнать где токен
+            val res = ApiClient.obstacleApi.getUserObstaclePolicies()
+            val policies = res.body()
             val allowedTypes = setOf("SAND", "GRAVEL")
 
-            val request = RouteRequest(
-                start = "$startLat,$startLon",
-                end = "$endLat,$endLon",
-                avoidStairs = policies.find { it.obstacleType == "STAIRS" }?.selected == true,
-                maxCurbHeight = policies.find { it.obstacleType == "CURB" }?.maxAllowedSeverity?.toInt(),
-                maxSlopeAngle = policies.find { it.obstacleType == "ROAD_SLOPE" }?.maxAllowedSeverity?.toDouble(),
-                avoidBadRoad = policies.find { it.obstacleType == "POTHOLES" }?.selected == true,
-                avoidSurfaceTypes = policies.filter { it.selected && it.obstacleType in allowedTypes}.map{ it.obstacleType }
-            )
+            if(policies != null) {
+                val request = RouteRequest(
+                    start = "$startLat,$startLon",
+                    end = "$endLat,$endLon",
+                    avoidStairs = policies.find { it.obstacleType == "STAIRS" }?.selected == true,
+                    maxCurbHeight = policies.find { it.obstacleType == "CURB" }?.maxAllowedSeverity?.toInt(),
+                    maxSlopeAngle = policies.find { it.obstacleType == "ROAD_SLOPE" }?.maxAllowedSeverity?.toDouble(),
+                    avoidBadRoad = policies.find { it.obstacleType == "POTHOLES" }?.selected == true,
+                    avoidSurfaceTypes = policies.filter { it.selected && it.obstacleType in allowedTypes }
+                        .map { it.obstacleType }
+                )
 
-            //drawRoute(RouteResponse(id = "test", paths = emptyList()))
+                //drawRoute(RouteResponse(id = "test", paths = emptyList()))
 
-            try {
-                val response = api.getRoute(request)
-                drawRoute(response)
-            } catch (e: Exception) {
-                Toast.makeText(this@MapActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
-                e.printStackTrace()
+                try {
+                    val response = api.getRoute(request)
+                    drawRoute(response)
+                } catch (e: Exception) {
+                    Toast.makeText(this@MapActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT)
+                        .show()
+                    e.printStackTrace()
+                }
             }
         }
     }
@@ -203,6 +222,36 @@ class MapActivity : AppCompatActivity() {
                     CameraUpdateFactory.newLatLngZoom(LatLng(startLat, startLon), 15.0),
                     1000
                 )
+            }
+        }
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestLocationPermission() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+            LOCATION_PERMISSION_REQUEST_CODE
+        )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getUserLocation()
+            } else {
+                Toast.makeText(this, "Без разрешения геолокация не будет работать", Toast.LENGTH_LONG).show()
             }
         }
     }

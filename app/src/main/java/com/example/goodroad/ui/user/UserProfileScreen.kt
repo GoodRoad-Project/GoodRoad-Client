@@ -12,6 +12,9 @@ import androidx.compose.ui.unit.sp
 import com.example.goodroad.ui.auth.AuthButton
 import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.viewmodel.UserViewModel
+import android.content.Intent
+import com.example.goodroad.MapActivity
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun UserProfileScreen(
@@ -99,11 +102,15 @@ fun UserProfileScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    val context = LocalContext.current
+
                     AuthButton(
                         text = "Перейти на карту",
                         backgroundColor = UrbanBrown,
                         contentColor = WhiteSoft
                     ) {
+                        val intent = Intent(context, MapActivity::class.java)
+                        context.startActivity(intent)
                     }
 
                     Spacer(Modifier.height(10.dp))
