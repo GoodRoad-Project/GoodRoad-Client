@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.GoodRoad" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">#4F87C9</item>
+        <item name="colorPrimaryDark">#3B6BA8</item>
+        <item name="colorAccent">#6FAE8A</item>
+    </style>
+</resources>
