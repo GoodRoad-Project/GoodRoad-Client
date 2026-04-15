@@ -42,21 +42,6 @@
 - Расширение системы баллов в игровом формате: выполнение заданий, связанных с волонтерством и сбором данных о доступности дорог и объектов;
 - Расширение модераторского сценария.
 
-## Наши продукты
-
-<table width="100%" style="table-layout: fixed;">
-  <colgroup>
-    <col width="60%" />
-  </colgroup>
-  <tr>
-    <th align="center"><strong>Приложение</strong></th>
-  </tr>
-  <tr>
-    <td align="center">
-      <em>Скоро тут появится ссылка</em>
-    </td>
-  </tr>
-</table>
 
 ## Как запустить backend в Docker
 На данный момент доступна локальная проверка клиентского приложения. Для этого рядом должен находиться серверный репозиторий [GoodRoad-Server](https://github.com/GoodRoad-Project/GoodRoadServer).
@@ -70,10 +55,10 @@ GoodRoad-Server/
 Из корня клиентского репозитория выполните:
 
 ```bash
-cp docker/.env.backend.example docker/.env.backend
+cp docker/.env.example docker/.env
 ```
 
-При необходимости можно изменить значения в `docker/.env.backend`.
+При необходимости можно изменить значения в `docker/.env`.
 
 ### 2. Запустите контейнеры
 Из корня `GoodRoad-Client`:
@@ -100,7 +85,7 @@ http://10.0.2.2:8080/
 | Язык | Kotlin | Основной язык клиентского приложения |
 | UI | Jetpack Compose, Material 3 | Построение экранов и компонентов интерфейса |
 | Навигация | Navigation Compose | Переходы между экранами и сценариями |
-| Состояние экрана | ViewModel, LiveData | Хранение состояния и обработка логики экранов |
+| Состояние экрана | ViewModel, StateFlow | Хранение состояния и обработка логики экранов |
 | Асинхронность | Kotlin Coroutines | Выполнение сетевых и фоновых операций |
 | Сеть | Retrofit, OkHttp | Работа с REST API |
 | JSON | Gson Converter | Сериализация и десериализация DTO |
