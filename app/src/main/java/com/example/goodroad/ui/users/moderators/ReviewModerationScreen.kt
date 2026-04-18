@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -73,8 +74,8 @@ fun ReviewModerationScreen(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = "Отзывы ожидающие проверки",
-                style = MaterialTheme.typography.bodyMedium,
+                text = "Отзывы, ожидающие проверки",
+                style = MaterialTheme.typography.bodyLarge,
                 color = UrbanBrown
             )
 
@@ -201,27 +202,29 @@ private fun ReviewModerationCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
+            Text(
+                text = buildAddressLine(review.address),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = UrbanBrown,
+                maxLines = if (isExpanded) Int.MAX_VALUE else 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(Modifier.height(8.dp))
+
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
+                .padding(start = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = buildAddressLine(review.address),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary,
-                        maxLines = if (isExpanded) Int.MAX_VALUE else 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = "Оценка: ${review.rating}/5",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = UrbanBrown
-                    )
-                }
+                Text(
+                    text = "Оценка: ${review.rating}/5",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = UrbanBrown
+                )
 
                 ModerationStatusChip(
                     takenInWork = review.takenInWork,
@@ -238,7 +241,7 @@ private fun ReviewModerationCard(
                 Text(
                     text = if (isExpanded) "Скрыть детали" else "Показать детали",
                     color = UrbanBrown,
-                    fontSize = 12.sp
+                    fontSize = 14.sp
                 )
                 Spacer(Modifier.width(4.dp))
                 Icon(
@@ -254,35 +257,55 @@ private fun ReviewModerationCard(
                 Divider(color = BorderWarm)
                 Spacer(Modifier.height(12.dp))
 
-
-                ReviewInfoRow("Координаты", "${review.latitude}, ${review.longitude}")
+                Text(
+                    text = "Координаты",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = UrbanBrown
+                )
                 Spacer(Modifier.height(8.dp))
-                ReviewInfoRow("Комментарий", review.comment?.ifBlank { "—" } ?: "—")
+                Text(
+                    text = "${review.latitude}, ${review.longitude}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextPrimary
+                )
                 Spacer(Modifier.height(8.dp))
 
-                if (review.obstacles.isNotEmpty()) {
+                Text(
+                    text = "Комментарий",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = UrbanBrown
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = review.comment?.ifBlank { "—" } ?: "—",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextPrimary
+                )
+                Spacer(Modifier.height(8.dp))
+
+                Text(
+                    text = "Препятствия",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = UrbanBrown
+                )
+                Spacer(Modifier.height(8.dp))
+                review.obstacles.forEach { obstacle ->
                     Text(
-                        text = "Препятствия",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = UrbanBrown
+                        text = "${obstacleLabel(obstacle.obstacleType)}: ${obstacleSeverityText(obstacle.severity.toInt())}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextPrimary
                     )
-                    review.obstacles.forEach { obstacle ->
-                        Text(
-                            text = "• ${obstacleLabel(obstacle.obstacleType)}: ${obstacleSeverityText(obstacle.severity.toInt())}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextPrimary
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(4.dp))
                 }
+                Spacer(Modifier.height(8.dp))
 
                 if (review.photoUrls.isNotEmpty()) {
                     Text(
                         text = "Фотографии (${review.photoUrls.size})",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.titleMedium,
                         color = UrbanBrown
                     )
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.height(8.dp))
                     ReviewPhotosStrip(review.photoUrls)
                     Spacer(Modifier.height(8.dp))
                 }
@@ -341,25 +364,32 @@ private fun ReviewModerationCard(
                     }
                 }
                 review.takenByMe -> {
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            ModerationActionButton(
+                                text = "Отклонить",
+                                backgroundColor = AlertRed,
+                                modifier = Modifier.weight(1f)
+                            ) { onReject() }
+
+                            ModerationActionButton(
+                                text = "Одобрить",
+                                backgroundColor = SafeGreen,
+                                modifier = Modifier.weight(1f)
+                            ) { onApprove() }
+                        }
+
                         ModerationActionButton(
-                            text = "Освободить",
+                            text = "Отказаться от модерации",
                             backgroundColor = UrbanBrown,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.fillMaxWidth()
                         ) { onRelease() }
-                        ModerationActionButton(
-                            text = "Отклонить",
-                            backgroundColor = AlertRed,
-                            modifier = Modifier.weight(1f)
-                        ) { onReject() }
-                        ModerationActionButton(
-                            text = "Одобрить",
-                            backgroundColor = SafeGreen,
-                            modifier = Modifier.weight(1f)
-                        ) { onApprove() }
                     }
                 }
                 else -> {
@@ -379,7 +409,7 @@ private fun ModerationStatusChip(takenInWork: Boolean, takenByMe: Boolean) {
     val (text, color) = when {
         takenByMe -> "В работе (вы)" to SafeGreen
         takenInWork -> "В работе" to AlertRed
-        else -> "Ожидает" to UrbanBrown
+        else -> "Ожидает модерации" to UrbanBrown
     }
 
     Surface(
@@ -439,7 +469,7 @@ private fun RejectReasonDialog(
                 modifier = Modifier.padding(20.dp)
             ) {
                 Text(
-                    text = "Причина отклонения",
+                    text = "Причина отклонения отзыва",
                     style = MaterialTheme.typography.titleLarge,
                     color = TextPrimary,
                     fontWeight = FontWeight.Bold
