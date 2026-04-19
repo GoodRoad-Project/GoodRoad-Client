@@ -24,7 +24,7 @@ fun AuthButton(
         enabled = enabled,
         modifier = Modifier
             .fillMaxWidth()
-            .height(54.dp),
+            .height(44.dp),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = backgroundColor,

@@ -202,7 +202,7 @@ fun ReviewActionButton(
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.height(56.dp),
+        modifier = modifier.height(44.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = backgroundColor,
             contentColor = WhiteSoft,
@@ -233,7 +233,7 @@ fun ReviewSquareActionButton(
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.height(64.dp),
+        modifier = modifier.height(44.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = backgroundColor,
             contentColor = WhiteSoft,
