@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import androidx.compose.ui.Modifier
+import com.example.goodroad.data.moderationReview.ModerationReviewRepository
 import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.user.UserRepository
 import com.example.goodroad.data.moderator.ModeratorRepository
@@ -17,6 +18,7 @@ import com.example.goodroad.ui.user.UserNav
 import com.example.goodroad.ui.users.moderators.*
 import com.example.goodroad.ui.viewmodel.UserViewModel
 import com.example.goodroad.ui.viewmodel.ModeratorViewModel
+import com.example.goodroad.ui.viewmodel.ReviewModerationViewModel
 
 @Composable
 fun AuthApp(
@@ -94,7 +96,7 @@ fun AuthApp(
                 AdminProfileScreen(
                     userViewModel = userViewModel,
                     onModerators = { navController.navigate("moderators") },
-                    onReviews = { navController.navigate("reviews") },
+                    onReviews = { navController.navigate("review_moderation") },
                     onLogout = {
                         navController.navigate(LOGIN_ROUTE) {
                             popUpTo("admin_home") { inclusive = true }
@@ -112,7 +114,7 @@ fun AuthApp(
 
                 ModeratorProfileScreen(
                     userViewModel = userViewModel,
-                    onReviews = { navController.navigate("reviews") },
+                    onReviews = { navController.navigate("review_moderation") },
                     onLogout = {
                         navController.navigate(LOGIN_ROUTE) {
                             popUpTo("moderator_home") { inclusive = true }
@@ -134,8 +136,16 @@ fun AuthApp(
                 )
             }
 
-            composable("reviews") {
+            composable("review_moderation") {
+                val moderationRepository = ModerationReviewRepository(ApiClient.moderationReviewApi)
+                val moderationViewModel: ReviewModerationViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return ReviewModerationViewModel(moderationRepository) as T
+                    }
+                })
+
                 ReviewModerationScreen(
+                    viewModel = moderationViewModel,
                     onBack = { navController.popBackStack() }
                 )
             }

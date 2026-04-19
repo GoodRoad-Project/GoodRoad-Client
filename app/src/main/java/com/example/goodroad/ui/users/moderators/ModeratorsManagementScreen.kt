@@ -80,7 +80,7 @@ fun ModeratorsManagementScreen(
                     .height(50.dp),
                 onClick = onBack
             ) {
-                Text("Назад")
+                Text("Назад в профиль")
             }
         }
     ) {
