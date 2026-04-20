@@ -152,8 +152,8 @@ class MapActivity : AppCompatActivity() {
 
             if(policies != null) {
                 val request = RouteRequest(
-                    start = "$startLat,$startLon",
-                    end = "$endLat,$endLon",
+                    start = "$startLon,$startLat",
+                    end = "$endLon,$endLat",
                     avoidStairs = policies.find { it.obstacleType == "STAIRS" }?.selected == true,
                     maxCurbHeight = policies.find { it.obstacleType == "CURB" }?.maxAllowedSeverity?.toInt(),
                     maxSlopeAngle = policies.find { it.obstacleType == "ROAD_SLOPE" }?.maxAllowedSeverity?.toDouble(),
