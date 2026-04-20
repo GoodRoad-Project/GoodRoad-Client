@@ -139,4 +139,5 @@ class LocationTracker (
             timestamp = time
         )
     }
+
 }

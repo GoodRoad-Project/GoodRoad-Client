@@ -23,6 +23,7 @@ data class PathResponse(
     val routeType: String = "fast",            // fast, safe, balanced
 )
 
+
 data class ObstacleResponse(
     val id: String,
 

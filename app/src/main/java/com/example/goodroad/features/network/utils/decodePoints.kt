@@ -10,4 +10,5 @@ fun decodePoints(encodedPoints: String): List<LocationPoint> {
             longitude = it.longitude
         )
     }
+
 }
