@@ -2,17 +2,13 @@ package com.example.goodroad.data.network
 
 import com.example.goodroad.BuildConfig
 import com.example.goodroad.data.auth.*
-import com.example.goodroad.data.moderator.ModeratorApi
-import com.example.goodroad.data.moderationReview.ModerationReviewApi
 import com.example.goodroad.data.obstacle.*
 import com.example.goodroad.data.review.*
 import com.example.goodroad.data.user.*
-import com.google.gson.GsonBuilder
 import okhttp3.*
 import okhttp3.logging.*
 import retrofit2.*
 import retrofit2.converter.gson.*
-import java.time.Instant
 import java.util.concurrent.*
 import com.example.goodroad.features.network.api.GoodRoadApi
 
@@ -58,27 +54,19 @@ object ApiClient {
             .build()
 
     private fun retrofit(): Retrofit {
-        val gson = GsonBuilder()
-            .registerTypeAdapter(Instant::class.java, InstantAdapter())
-            .create()
-
         return Retrofit.Builder()
             .baseUrl(BuildConfig.GOODROAD_SERVER_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create(gson))
+            .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 
-    val authApi: AuthApi by lazy {
+    val authApi: AuthApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         retrofit().create(AuthApi::class.java)
     }
 
-    val userApi: UserApi by lazy {
+    val userApi: UserApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         retrofit().create(UserApi::class.java)
-    }
-
-    val moderatorApi: ModeratorApi by lazy {
-        retrofit().create(ModeratorApi::class.java)
     }
 
     val obstacleApi: ObstacleApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
@@ -89,9 +77,6 @@ object ApiClient {
         retrofit().create(ReviewApi::class.java)
     }
 
-    val moderationReviewApi: ModerationReviewApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        retrofit().create(ModerationReviewApi::class.java)
-    }
     val routeApi: GoodRoadApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         retrofit().create(GoodRoadApi::class.java)
     }
