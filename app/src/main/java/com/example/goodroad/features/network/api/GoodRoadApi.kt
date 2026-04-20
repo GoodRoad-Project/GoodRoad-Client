@@ -14,12 +14,4 @@ import com.example.goodroad.obstacle.ReplacePolicyReq
 interface GoodRoadApi {
     @POST("/api/v1/routes")
     suspend fun getRoute(@Body request: RouteRequest): RouteResponse
-
-    @GET("obstacles")
-    suspend fun getObstaclesInBox(
-        @Query("minLat") minLat: Double,
-        @Query("maxLat") maxLat: Double,
-        @Query("minLon") minLon: Double,
-        @Query("maxLon") maxLon: Double
-    ): List<ObstacleMapItemResp>
 }

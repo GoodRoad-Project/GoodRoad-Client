@@ -53,12 +53,7 @@ class MapActivity : AppCompatActivity() {
     private var startLon: Double = 0.0
 
     private val api: GoodRoadApi by lazy {
-        Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080/")  // для эмулятора
-            //.baseUrl("http://10.0.0.2:8080/") // для моего телефона
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(GoodRoadApi::class.java)
+        ApiClient.routeApi
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
