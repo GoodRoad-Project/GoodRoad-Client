@@ -56,6 +56,8 @@ class MapActivity : AppCompatActivity() {
         ApiClient.routeApi
     }
 
+    private lateinit var backButton: Button
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
@@ -88,6 +90,12 @@ class MapActivity : AppCompatActivity() {
                 Toast.makeText(this, "Введите адрес назначения", Toast.LENGTH_SHORT).show()
             }
         }
+
+        backButton = findViewById(R.id.backButton)
+        backButton.setOnClickListener {
+            finish()
+        }
+
     }
 
     private fun getUserLocation() {

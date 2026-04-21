@@ -48,4 +48,17 @@
 
     </LinearLayout>
 
+    <Button
+        android:id="@+id/backButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Назад"
+        android:background="@drawable/rounded_button"
+        android:textColor="@color/white_soft"
+        android:padding="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="16dp" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
