@@ -73,7 +73,7 @@ class MapActivity : AppCompatActivity() {
         locationTracker = LocationTracker(this)
 
         mapView.getMapAsync { map ->
-            map.setStyle(Style.Builder().fromUri("https://tiles.stadiamaps.com/styles/alidade_smooth.json?api_key=a5972731-a9e9-4ebb-943b-2965bc3f9dca")) {
+            map.setStyle(Style.Builder().fromUri("https://tiles.openfreemap.org/styles/positron")) {
                 if (hasLocationPermission()) {
                     getUserLocation()
                 } else {
@@ -160,8 +160,8 @@ class MapActivity : AppCompatActivity() {
 
             if(policies != null) {
                 val request = RouteRequest(
-                    start = "$startLon,$startLat",
-                    end = "$endLon,$endLat",
+                    start = "$startLat,$startLon",
+                    end = "$endLat,$endLon",
                     avoidStairs = policies.find { it.obstacleType == "STAIRS" }?.selected == true,
                     maxCurbHeight = policies.find { it.obstacleType == "CURB" }?.maxAllowedSeverity?.toInt(),
                     maxSlopeAngle = policies.find { it.obstacleType == "ROAD_SLOPE" }?.maxAllowedSeverity?.toDouble(),
@@ -185,15 +185,27 @@ class MapActivity : AppCompatActivity() {
     }
 
     private fun drawRoute(response: RouteResponse) {
-        val path = response.paths.firstOrNull() ?: return
+        val path = response.paths.firstOrNull()
+        if (path == null) {
+            Toast.makeText(this, "Маршрут не найден", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val points = decodePoints(path.points)
+        if (points.isEmpty()) {
+            Toast.makeText(this, "Нет точек для отрисовки", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val latLngs = points.map { LatLng(it.latitude, it.longitude) }
 
         mapView.getMapAsync { map ->
             map.getStyle { style ->
                 style.removeLayer("route-layer")
                 style.removeSource("route-source")
 
-                val coordinates = points.joinToString(", ") {
+                // Создаём GeoJSON строку вручную
+                val coordinates = latLngs.joinToString(", ") {
                     "[${it.longitude}, ${it.latitude}]"
                 }
                 val geojson = """
@@ -215,16 +227,18 @@ class MapActivity : AppCompatActivity() {
                 val lineLayer = LineLayer("route-layer", "route-source").apply {
                     setProperties(
                         PropertyFactory.lineColor("#8B7AC6"),
-                        PropertyFactory.lineWidth(5f),
-                        PropertyFactory.lineOpacity(0.8f)
+                        PropertyFactory.lineWidth(6f),
+                        PropertyFactory.lineOpacity(0.9f)
                     )
                 }
                 style.addLayer(lineLayer)
 
-                map.animateCamera(
-                    CameraUpdateFactory.newLatLngZoom(LatLng(startLat, startLon), 15.0),
-                    1000
-                )
+                if (latLngs.isNotEmpty()) {
+                    map.animateCamera(
+                        CameraUpdateFactory.newLatLngZoom(latLngs.first(), 14.0),
+                        1000
+                    )
+                }
             }
         }
     }
