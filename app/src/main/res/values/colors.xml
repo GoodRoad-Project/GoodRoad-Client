@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary_blue">#4F87C9</color>
+    <color name="safe_green">#6FAE8A</color>
+    <color name="inclusive_violet">#8B7AC6</color>
+    <color name="alert_red">#D56B63</color>
+
+    <color name="urban_brown">#A28A72</color>
+
+    <color name="background_light">#F7F5F0</color>
+    <color name="surface_warm">#EEE7DD</color>
+    <color name="border_warm">#D8CEC0</color>
+
+    <color name="map_background">#F3EFE7</color>
+    <color name="buildings">#DCCFBE</color>
+    <color name="water">#BFDCF3</color>
+    <color name="parks">#CFE3C8</color>
+
+    <color name="safe_route">#4E9B6F</color>
+    <color name="balanced_route">#4F87C9</color>
+    <color name="fast_route">#7C6BCB</color>
+    <color name="obstacle">#D56B63</color>
+
+    <color name="text_primary">#2F2B28</color>
+    <color name="text_secondary">#7A6F66</color>
+    <color name="white_soft">#FFFBF7</color>
+
+    <color name="gray_button">#9E9E9E</color>
+</resources>

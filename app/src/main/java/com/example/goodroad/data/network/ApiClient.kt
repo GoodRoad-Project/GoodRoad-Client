@@ -14,6 +14,7 @@ import retrofit2.*
 import retrofit2.converter.gson.*
 import java.time.Instant
 import java.util.concurrent.*
+import com.example.goodroad.features.network.api.GoodRoadApi
 
 object ApiClient {
 
@@ -91,4 +92,9 @@ object ApiClient {
     val moderationReviewApi: ModerationReviewApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         retrofit().create(ModerationReviewApi::class.java)
     }
+
+    val routeApi: GoodRoadApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        retrofit().create(GoodRoadApi::class.java)
+    }
 }
+
