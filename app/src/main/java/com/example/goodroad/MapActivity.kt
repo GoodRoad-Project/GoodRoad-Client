@@ -1,11 +1,8 @@
 package com.example.goodroad
 
-import android.location.Address
 import org.maplibre.android.camera.CameraUpdateFactory
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.goodroad.features.location.LocationTracker
 import kotlinx.coroutines.launch
@@ -19,21 +16,15 @@ import android.widget.Toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Locale
-import com.example.goodroad.model.RouteRequest
-import com.example.goodroad.model.RouteResponse
+import com.example.goodroad.data.network.route.RouteRequest
+import com.example.goodroad.data.network.route.RouteResponse
 import com.example.goodroad.features.network.api.GoodRoadApi
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import com.example.goodroad.features.network.utils.decodePoints
-import com.example.goodroad.model.PathResponse
 import org.maplibre.android.geometry.LatLng
-import com.google.maps.android.PolyUtil
-import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.sources.GeoJsonSource
 import org.maplibre.android.style.layers.PropertyFactory
 import com.example.goodroad.data.network.ApiClient
-import com.example.goodroad.data.obstacle.ObstacleApi
 import kotlin.collections.firstOrNull
 import android.Manifest
 import android.content.pm.PackageManager

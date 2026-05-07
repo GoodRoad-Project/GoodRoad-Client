@@ -1,16 +1,19 @@
 package com.example.goodroad.data.network
 
 import com.example.goodroad.BuildConfig
-import com.example.goodroad.data.auth.*
+import com.example.goodroad.modules.auth.data.*
 import com.example.goodroad.data.obstacle.*
-import com.example.goodroad.data.review.*
-import com.example.goodroad.data.user.*
+import com.example.goodroad.modules.review.data.*
+import com.example.goodroad.modules.user.data.*
 import okhttp3.*
 import okhttp3.logging.*
 import retrofit2.*
 import retrofit2.converter.gson.*
 import java.util.concurrent.*
 import com.example.goodroad.features.network.api.GoodRoadApi
+import com.example.goodroad.modules.auth.data.AuthApi
+import com.example.goodroad.modules.review.data.ReviewApi
+import com.example.goodroad.modules.user.data.UserApi
 
 object ApiClient {
 
