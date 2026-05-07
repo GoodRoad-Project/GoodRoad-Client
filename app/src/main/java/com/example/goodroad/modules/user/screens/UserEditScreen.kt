@@ -26,9 +26,7 @@ import androidx.compose.ui.graphics.SolidColor
 import com.example.goodroad.ui.AuthButton
 import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.AuthSuccessText
-import com.example.goodroad.ui.PasswordField
-import com.example.goodroad.ui.PhoneField
-import com.example.goodroad.ui.PlainField
+import com.example.goodroad.ui.fields.*
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.validation.CYRILLIC_WARNING
 import com.example.goodroad.validation.NAME_MAX_LENGTH

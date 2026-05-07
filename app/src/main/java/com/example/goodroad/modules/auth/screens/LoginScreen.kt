@@ -16,8 +16,7 @@ import com.example.goodroad.ui.AuthButton
 import com.example.goodroad.ui.AuthFooter
 import com.example.goodroad.ui.AuthScreenFrame
 import com.example.goodroad.ui.AuthStatusText
-import com.example.goodroad.ui.PasswordField
-import com.example.goodroad.ui.PhoneField
+import com.example.goodroad.ui.fields.*
 import com.example.goodroad.validation.PHONE_FORMAT_WARNING
 import com.example.goodroad.validation.formatPhoneForRequest
 import com.example.goodroad.validation.isAllowedDigitsInput

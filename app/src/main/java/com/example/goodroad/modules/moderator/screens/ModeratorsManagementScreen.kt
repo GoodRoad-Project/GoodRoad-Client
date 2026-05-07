@@ -8,8 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.moderator.data.ModeratorView
 import com.example.goodroad.ui.AuthScreenFrame
-import com.example.goodroad.ui.PhoneField
-import com.example.goodroad.ui.PasswordField
+import com.example.goodroad.ui.fields.*
 import com.example.goodroad.validation.PHONE_FORMAT_WARNING
 import com.example.goodroad.validation.formatPhoneForRequest
 import com.example.goodroad.validation.isAllowedDigitsInput
@@ -18,7 +17,6 @@ import com.example.goodroad.modules.moderator.presentation.ModeratorViewModel
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
-import com.example.goodroad.ui.PlainField
 import com.example.goodroad.ui.theme.UrbanBrown
 
 @Composable

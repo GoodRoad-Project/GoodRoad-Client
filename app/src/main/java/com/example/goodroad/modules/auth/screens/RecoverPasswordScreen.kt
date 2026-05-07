@@ -19,9 +19,7 @@ import com.example.goodroad.ui.AuthFooter
 import com.example.goodroad.ui.AuthScreenFrame
 import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.AuthSuccessText
-import com.example.goodroad.ui.PasswordField
-import com.example.goodroad.ui.PhoneField
-import com.example.goodroad.ui.PlainField
+import com.example.goodroad.ui.fields.*
 import com.example.goodroad.ui.theme.UrbanBrown
 import com.example.goodroad.modules.auth.presentation.AuthViewModel
 import com.example.goodroad.validation.CYRILLIC_WARNING

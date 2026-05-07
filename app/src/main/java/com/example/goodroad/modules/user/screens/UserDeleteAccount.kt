@@ -7,7 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.ui.AuthButton
 import com.example.goodroad.ui.AuthStatusText
-import com.example.goodroad.ui.PasswordField
+import com.example.goodroad.ui.fields.*
 import com.example.goodroad.ui.theme.*
 import com.example.goodroad.modules.user.presentation.UserViewModel
 import kotlinx.coroutines.delay

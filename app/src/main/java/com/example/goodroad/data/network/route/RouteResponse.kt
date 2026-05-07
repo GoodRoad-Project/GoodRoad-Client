@@ -1,59 +1,67 @@
 package com.example.goodroad.data.network.route
 
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.google.gson.annotations.SerializedName
 
 data class RouteResponse(
+
     val id: String,                          // уникальный ID маршрута
+
     val paths: List<PathResponse>,           // варианты маршрутов
+
     val info: ResponseInfo? = null
 )
 
 data class PathResponse(
+
     val distance: Double,
+
     val time: Long,
 
-    @JsonProperty("points_encoded")
+    @SerializedName("points_encoded")
     val pointsEncoded: Boolean = true,
+
     val points: String,
 
     val obstacles: List<ObstacleResponse> = emptyList(),
 
-    @JsonProperty("route_type")
-    val routeType: String = "fast",            // fast, safe, balanced
+    @SerializedName("route_type")
+    val routeType: String = "fast",          // fast, safe, balanced
 )
 
-
 data class ObstacleResponse(
+
     val id: String,
 
-    @JsonProperty("lat")
+    @SerializedName("lat")
     val latitude: Double,
 
-    @JsonProperty("lon")
+    @SerializedName("lon")
     val longitude: Double,
 
-    val type: String,                           // STAIRS, CURB и т.д.
+    val type: String,                        // STAIRS, CURB и т.д.
 
     val details: ObstacleDetailsResponse? = null
 )
 
 data class ObstacleDetailsResponse(
-    @JsonProperty("step_count")
-    val stepCount: Int? = null,                  // для лестниц
 
-    @JsonProperty("height_cm")
-    val heightCm: Int? = null,                    // для бордюров
+    @SerializedName("step_count")
+    val stepCount: Int? = null,              // для лестниц
 
-    @JsonProperty("angle_degrees")
-    val angleDegrees: Double? = null,              // для уклонов
+    @SerializedName("height_cm")
+    val heightCm: Int? = null,               // для бордюров
 
-    @JsonProperty("has_ramp")
-    val hasRamp: Boolean? = null,                  // есть пандус
+    @SerializedName("angle_degrees")
+    val angleDegrees: Double? = null,        // для уклонов
 
-    @JsonProperty("surface_type")
-    val surfaceType: String? = null                 // покрытие
+    @SerializedName("has_ramp")
+    val hasRamp: Boolean? = null,            // есть пандус
+
+    @SerializedName("surface_type")
+    val surfaceType: String? = null          // покрытие
 )
 
 data class ResponseInfo(
+
     val took: Double
 )

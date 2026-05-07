@@ -22,7 +22,7 @@ import com.example.goodroad.modules.review.data.UpsertReviewReq
 import com.example.goodroad.modules.review.presentation.ReviewsViewModel
 import com.example.goodroad.ui.AuthButton
 import com.example.goodroad.ui.AuthStatusText
-import com.example.goodroad.ui.PlainField
+import com.example.goodroad.ui.fields.*
 import com.example.goodroad.ui.ReviewObstacleTypes
 import com.example.goodroad.ui.ReviewPhotosStrip
 import com.example.goodroad.ui.SeveritySelector
