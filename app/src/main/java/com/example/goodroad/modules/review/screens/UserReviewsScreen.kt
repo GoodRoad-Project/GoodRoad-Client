@@ -9,7 +9,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.unit.*
 import com.example.goodroad.modules.review.data.ReviewCardResp
 import com.example.goodroad.modules.review.presentation.ReviewsViewModel
-import com.example.goodroad.ui.AuthButton
+import com.example.goodroad.ui.buttons.*
 import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.AuthSuccessText
 import com.example.goodroad.ui.ReviewActionButton
@@ -92,14 +92,14 @@ fun UserReviewsScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            AuthButton(text = "Добавить отзыв") {
+            PrimaryButton(text = "Добавить отзыв") {
                 reviewsViewModel.clearMessages()
                 onAddReview()
             }
 
             Spacer(Modifier.height(10.dp))
 
-            AuthButton(
+            PrimaryButton(
                 text = "Назад в профиль",
                 backgroundColor = UrbanBrown
             ) {

@@ -5,7 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.goodroad.ui.AuthButton
+import com.example.goodroad.ui.buttons.*
 import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.fields.*
 import com.example.goodroad.ui.theme.*
@@ -59,7 +59,7 @@ fun UserDeleteAccountScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        AuthButton(
+        PrimaryButton(
             text = "Удалить аккаунт",
             enabled = !isLoading
         ) {
@@ -70,7 +70,7 @@ fun UserDeleteAccountScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        AuthButton(
+        PrimaryButton(
             text = "Назад в профиль",
             backgroundColor = UrbanBrown,
             contentColor = WhiteSoft,

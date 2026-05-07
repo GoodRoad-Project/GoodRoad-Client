@@ -23,7 +23,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.SolidColor
-import com.example.goodroad.ui.AuthButton
+import com.example.goodroad.ui.buttons.*
 import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.AuthSuccessText
 import com.example.goodroad.ui.fields.*
@@ -322,7 +322,7 @@ fun UserEditScreen(
 
         Spacer(Modifier.height(20.dp))
 
-        AuthButton(
+        PrimaryButton(
             text = if (isLoading) "Сохраняем..." else "Сохранить",
             enabled = canSave
         ) {
@@ -330,14 +330,14 @@ fun UserEditScreen(
             if (firstNameNormalized == null) {
                 firstNameWarning = CYRILLIC_WARNING
                 errorText = "Имя должно содержать только кириллицу"
-                return@AuthButton
+                return@PrimaryButton
             }
 
             val lastNameNormalized = normalizeRequiredCyrillic(lastName)
             if (lastNameNormalized == null) {
                 lastNameWarning = CYRILLIC_WARNING
                 errorText = "Фамилия должна содержать только кириллицу"
-                return@AuthButton
+                return@PrimaryButton
             }
 
             val phoneDigits =
@@ -346,7 +346,7 @@ fun UserEditScreen(
             if (phone.isNotBlank() && phoneDigits == null) {
                 phoneWarning = PHONE_FORMAT_WARNING
                 errorText = "Некорректный телефон"
-                return@AuthButton
+                return@PrimaryButton
             }
 
             val oldPass = oldPassword.takeIf { it.isNotBlank() }
@@ -356,11 +356,11 @@ fun UserEditScreen(
             if (!newPass.isNullOrBlank() || !confirmPass.isNullOrBlank() || !oldPass.isNullOrBlank()) {
                 if (oldPass.isNullOrBlank() || newPass.isNullOrBlank() || confirmPass.isNullOrBlank()) {
                     errorText = "Для смены пароля заполните все три поля"
-                    return@AuthButton
+                    return@PrimaryButton
                 }
                 if (newPass != confirmPass) {
                     errorText = "Новые пароли не совпадают"
-                    return@AuthButton
+                    return@PrimaryButton
                 }
             }
 
@@ -381,7 +381,7 @@ fun UserEditScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        AuthButton(
+        PrimaryButton(
             text = "Назад в профиль",
             backgroundColor = UrbanBrown,
             contentColor = WhiteSoft,

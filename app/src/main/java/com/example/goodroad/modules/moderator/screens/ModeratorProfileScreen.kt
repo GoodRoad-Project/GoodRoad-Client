@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.goodroad.ui.AuthButton
+import com.example.goodroad.ui.buttons.*
 import com.example.goodroad.modules.user.presentation.UserViewModel
 import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.UserDecor
@@ -94,7 +94,7 @@ fun ModeratorProfileScreen(
 
                     Spacer(Modifier.height(30.dp))
 
-                    AuthButton(
+                    PrimaryButton(
                         text = "Отзывы",
                         backgroundColor = UrbanBrown,
                         contentColor = WhiteSoft
@@ -104,7 +104,7 @@ fun ModeratorProfileScreen(
 
                     Spacer(Modifier.height(20.dp))
 
-                    AuthButton(text = "Выйти") {
+                    PrimaryButton(text = "Выйти") {
                         userViewModel.logout { onLogout() }
                     }
                 }

@@ -12,7 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.ui.theme.UrbanBrown
 import com.example.goodroad.modules.auth.presentation.AuthViewModel
 import com.example.goodroad.modules.auth.data.AuthResp
-import com.example.goodroad.ui.AuthButton
+import com.example.goodroad.ui.buttons.*
 import com.example.goodroad.ui.AuthFooter
 import com.example.goodroad.ui.AuthScreenFrame
 import com.example.goodroad.ui.AuthStatusText
@@ -51,7 +51,7 @@ fun LoginScreen(
     AuthScreenFrame(
         title = "Вход",
         action = {
-            AuthButton(
+            PrimaryButton(
                 text = if (loading) "Входим..." else "Войти",
                 enabled = !loading
             ) {
@@ -64,7 +64,7 @@ fun LoginScreen(
                         } else null
 
                     errorText = "Заполните телефон и пароль"
-                    return@AuthButton
+                    return@PrimaryButton
                 }
 
                 errorText = null

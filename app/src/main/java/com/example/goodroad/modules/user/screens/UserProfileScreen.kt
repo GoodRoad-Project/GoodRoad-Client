@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.goodroad.ui.AuthButton
+import com.example.goodroad.ui.buttons.*
 import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.modules.user.presentation.UserViewModel
@@ -109,7 +109,7 @@ fun UserProfileScreen(
 
                     Spacer(Modifier.height(20.dp))
 
-                    AuthButton(
+                    PrimaryButton(
                         text = "Выбрать препятствия",
                         backgroundColor = UrbanBrown,
                         contentColor = WhiteSoft
@@ -121,7 +121,7 @@ fun UserProfileScreen(
 
                     val context = LocalContext.current
 
-                    AuthButton(
+                    PrimaryButton(
                         text = "Перейти на карту",
                         backgroundColor = UrbanBrown,
                         contentColor = WhiteSoft
@@ -132,7 +132,7 @@ fun UserProfileScreen(
 
                     Spacer(Modifier.height(10.dp))
 
-                    AuthButton(
+                    PrimaryButton(
                         text = "Мои отзывы",
                         backgroundColor = SafeGreen,
                         contentColor = WhiteSoft
@@ -142,15 +142,15 @@ fun UserProfileScreen(
 
                     Spacer(Modifier.height(10.dp))
 
-                    AuthButton(text = "Редактировать профиль", onClick = onEdit)
+                    PrimaryButton(text = "Редактировать профиль", onClick = onEdit)
 
                     Spacer(Modifier.height(10.dp))
 
-                    AuthButton(text = "Удалить аккаунт", onClick = onDelete)
+                    PrimaryButton(text = "Удалить аккаунт", onClick = onDelete)
 
                     Spacer(Modifier.height(10.dp))
 
-                    AuthButton(text = "Выйти") {
+                    PrimaryButton(text = "Выйти") {
                         userViewModel.logout { onLogout() }
                     }
                 }

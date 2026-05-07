@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.goodroad.modules.moderationReview.data.ReviewForModeration
-import com.example.goodroad.ui.AuthButton
+import com.example.goodroad.ui.buttons.*
 import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.AuthSuccessText
 import com.example.goodroad.ui.ReviewInfoRow
@@ -176,7 +176,7 @@ fun ReviewModerationScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            AuthButton(
+            PrimaryButton(
                 text = "Назад в профиль",
                 backgroundColor = UrbanBrown
             ) {

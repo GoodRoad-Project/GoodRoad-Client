@@ -14,7 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.goodroad.ui.AuthButton
+import com.example.goodroad.ui.buttons.*
 import com.example.goodroad.ui.AuthFooter
 import com.example.goodroad.ui.AuthScreenFrame
 import com.example.goodroad.ui.AuthStatusText
@@ -55,7 +55,7 @@ fun RecoverPasswordScreen(
         title = "Смена пароля",
         subtitle = "Для восстановления введите имя, фамилию, номер телефона и новый пароль.",
         action = {
-            AuthButton(
+            PrimaryButton(
                 text = "Сменить пароль",
                 enabled = recoverResult != true
             ) {
@@ -63,7 +63,7 @@ fun RecoverPasswordScreen(
                 if (firstNameNormalized == null) {
                     firstNameWarning = CYRILLIC_WARNING
                     errorText = "Имя обязательно и должно содержать только кириллицу, пробел и -"
-                    return@AuthButton
+                    return@PrimaryButton
                 }
 
                 val lastNameNormalized = normalizeRequiredCyrillic(lastName)
@@ -71,19 +71,19 @@ fun RecoverPasswordScreen(
                     lastNameWarning = CYRILLIC_WARNING
                     errorText =
                         "Фамилия обязательна и должна содержать только кириллицу, пробел и -"
-                    return@AuthButton
+                    return@PrimaryButton
                 }
 
                 val phoneDigits = normalizeRequiredRussianPhone(phone)
                 if (phoneDigits == null || newPassword.isBlank() || confirmPassword.isBlank()) {
                     phoneWarning = PHONE_FORMAT_WARNING
                     errorText = "Заполните все поля"
-                    return@AuthButton
+                    return@PrimaryButton
                 }
 
                 if (newPassword != confirmPassword) {
                     errorText = "Пароли не совпадают"
-                    return@AuthButton
+                    return@PrimaryButton
                 }
 
                 errorText = null

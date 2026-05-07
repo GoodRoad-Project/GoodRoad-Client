@@ -8,8 +8,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.*
-import com.example.goodroad.ui.AuthButton
+import com.example.goodroad.ui.buttons.*
 import com.example.goodroad.ui.theme.*
+
 @Composable
 fun RoleStubScreen(
     title: String,
@@ -31,7 +32,7 @@ fun RoleStubScreen(
                 color = TextPrimary
             )
             Spacer(Modifier.height(20.dp))
-            AuthButton(
+            PrimaryButton(
                 text = "Выйти",
                 onClick = onLogout
             )

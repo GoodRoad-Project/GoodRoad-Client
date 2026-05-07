@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.BuildConfig
-import com.example.goodroad.ui.AuthButton
+import com.example.goodroad.ui.buttons.*
 import com.example.goodroad.ui.AuthFooter
 import com.example.goodroad.ui.AuthScreenFrame
 import com.example.goodroad.ui.AuthStatusText
@@ -58,7 +58,7 @@ fun RegisterScreen(
     AuthScreenFrame(
         title = "Создать аккаунт",
         action = {
-            AuthButton(
+            PrimaryButton(
                 text = if (loading) "Создаем..." else "Зарегистрироваться",
                 enabled = !loading
             ) {
@@ -66,7 +66,7 @@ fun RegisterScreen(
                 if (firstNameNormalized == null) {
                     firstNameWarning = CYRILLIC_WARNING
                     errorText = "Имя обязательно и должно содержать только кириллицу, пробел и -"
-                    return@AuthButton
+                    return@PrimaryButton
                 }
 
                 val lastNameNormalized = normalizeRequiredCyrillic(lastName)
@@ -74,25 +74,25 @@ fun RegisterScreen(
                     lastNameWarning = CYRILLIC_WARNING
                     errorText =
                         "Фамилия обязательна и должна содержать только кириллицу, пробел и -"
-                    return@AuthButton
+                    return@PrimaryButton
                 }
 
                 val phoneDigits = normalizeRequiredRussianPhone(phone)
                 if (phoneDigits == null || password.isBlank()) {
                     phoneWarning = PHONE_FORMAT_WARNING
                     errorText = "Телефон и пароль обязательны"
-                    return@AuthButton
+                    return@PrimaryButton
                 }
 
                 if (password != confirmPassword) {
                     errorText = "Пароли не совпадают"
-                    return@AuthButton
+                    return@PrimaryButton
                 }
 
                 if (BuildConfig.MOCK_AUTH) {
                     errorText = null
                     onRegisterSuccess("USER")
-                    return@AuthButton
+                    return@PrimaryButton
                 }
 
                 viewModel.register(

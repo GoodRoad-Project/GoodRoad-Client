@@ -1,7 +1,7 @@
 package com.example.goodroad.modules.maps.screens
 
 import androidx.compose.foundation.*
-import com.example.goodroad.ui.AuthButton
+import com.example.goodroad.ui.buttons.*
 import com.example.goodroad.ui.UserDecor
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -210,7 +210,7 @@ fun ObstacleSelectScreen(
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                AuthButton(
+                PrimaryButton(
                     text = if (isSaving) "Сохраняем..." else "Сохранить",
                     enabled = !isSaving && !isLoading
                 ) {
@@ -234,7 +234,7 @@ fun ObstacleSelectScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                AuthButton(
+                PrimaryButton(
                     text = "Назад в профиль",
                     backgroundColor = UrbanBrown,
                     contentColor = WhiteSoft,

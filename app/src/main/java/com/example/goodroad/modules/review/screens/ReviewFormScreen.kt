@@ -20,7 +20,7 @@ import com.example.goodroad.modules.review.data.ReviewCardResp
 import com.example.goodroad.modules.review.data.ReviewObstacle
 import com.example.goodroad.modules.review.data.UpsertReviewReq
 import com.example.goodroad.modules.review.presentation.ReviewsViewModel
-import com.example.goodroad.ui.AuthButton
+import com.example.goodroad.ui.buttons.*
 import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.fields.*
 import com.example.goodroad.ui.ReviewObstacleTypes
@@ -295,7 +295,7 @@ fun ReviewFormScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            AuthButton(
+            PrimaryButton(
                 text = when {
                     isPhotoUploading -> "Загружаем фото..."
                     submitInProgress -> "Сохраняем..."
@@ -367,7 +367,7 @@ fun ReviewFormScreen(
 
             Spacer(Modifier.height(10.dp))
 
-            AuthButton(
+            PrimaryButton(
                 text = "Назад к отзывам",
                 backgroundColor = UrbanBrown
             ) {

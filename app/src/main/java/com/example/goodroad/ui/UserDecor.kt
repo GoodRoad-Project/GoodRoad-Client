@@ -23,7 +23,6 @@ fun UserDecor() {
             .fillMaxWidth()
             .height(230.dp)
             .statusBarsPadding()
-//            .padding(horizontal = 18.dp, vertical = 12.dp)
             .clip(RoundedCornerShape(32.dp))
             .background(SurfaceWarm)
     ) {
