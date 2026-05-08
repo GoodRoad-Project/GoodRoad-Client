@@ -1,6 +1,4 @@
-package com.example.goodroad.obstacle
-
-// data/obstacles/ObstacleModels.kt
+package com.example.goodroad.data.obstacle.model
 
 import java.time.Instant
 

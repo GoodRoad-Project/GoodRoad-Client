@@ -1,12 +1,9 @@
 package com.example.goodroad.data.network
 
 import com.example.goodroad.BuildConfig
-//import com.example.goodroad.data.auth.*
 import com.example.goodroad.modules.moderator.data.ModeratorApi
 import com.example.goodroad.modules.moderationReview.data.ModerationReviewApi
 import com.example.goodroad.data.obstacle.*
-//import com.example.goodroad.data.review.*
-//import com.example.goodroad.data.user.*
 import com.google.gson.GsonBuilder
 import okhttp3.*
 import okhttp3.logging.*

@@ -3,16 +3,18 @@ package com.example.goodroad.modules.maps.presentation
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.goodroad.data.obstacle.ObstaclePolicyItem
 import com.example.goodroad.data.obstacle.ObstacleRepository
-import com.example.goodroad.data.obstacle.ReplaceObstaclePolicyReq
+import com.example.goodroad.data.obstacle.model.PolicyItem
+import com.example.goodroad.data.obstacle.model.ReplacePolicyReq
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 
-class MapsViewModel(private val repository: ObstacleRepository) : ViewModel() {
+class MapsViewModel(
+    private val repository: ObstacleRepository
+) : ViewModel() {
 
-    var policies = mutableStateOf<List<ObstaclePolicyItem>>(emptyList())
+    var policies = mutableStateOf<List<PolicyItem>>(emptyList())
         private set
 
     var isLoading = mutableStateOf(false)
@@ -42,17 +44,19 @@ class MapsViewModel(private val repository: ObstacleRepository) : ViewModel() {
         }
     }
 
-    fun savePolicies(items: List<ObstaclePolicyItem>, onSuccess: () -> Unit) {
+    fun savePolicies(items: List<PolicyItem>, onSuccess: () -> Unit) {
         viewModelScope.launch {
             isSaving.value = true
             errorMessage.value = null
             successMessage.value = null
 
             try {
-                val req = ReplaceObstaclePolicyReq(items)
+                val req = ReplacePolicyReq(items)
                 policies.value = repository.replaceUserObstaclePolicies(req)
+
                 successMessage.value = "Настройки препятствий сохранены"
                 onSuccess()
+
             } catch (e: Exception) {
                 errorMessage.value = mapObstacleError(e)
             } finally {
@@ -75,7 +79,9 @@ class MapsViewModel(private val repository: ObstacleRepository) : ViewModel() {
                 500 -> "Сервер временно недоступен"
                 else -> "Не удалось сохранить настройки препятствий"
             }
+
             is IOException -> "Проверьте подключение к интернету"
+
             else -> e.message ?: "Неизвестная ошибка"
         }
     }

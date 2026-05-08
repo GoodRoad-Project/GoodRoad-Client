@@ -7,7 +7,6 @@ import com.example.goodroad.data.network.*
 import com.example.goodroad.data.obstacle.*
 import com.example.goodroad.modules.maps.presentation.MapsViewModel
 import com.example.goodroad.modules.maps.screens.ObstacleSelectScreen
-//import com.example.goodroad.ui.viewmodel.*
 
 @Composable
 fun MapsNav(

@@ -1,4 +1,4 @@
-package com.example.goodroad.obstacle
+package com.example.goodroad.data.obstacle.model
 
 data class PolicyItem(
     val obstacleType: String,

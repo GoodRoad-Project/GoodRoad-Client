@@ -1,16 +1,14 @@
 package com.example.goodroad.modules.maps.screens
 
 import androidx.compose.foundation.*
-import com.example.goodroad.ui.buttons.*
-import com.example.goodroad.ui.UserDecor
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.unit.*
-import com.example.goodroad.data.obstacle.*
-import com.example.goodroad.ui.AuthStatusText
-import com.example.goodroad.ui.AuthSuccessText
+import com.example.goodroad.data.obstacle.model.PolicyItem
+import com.example.goodroad.ui.*
+import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.*
 import com.example.goodroad.modules.maps.presentation.MapsViewModel
 
@@ -25,7 +23,8 @@ private val ServerObstacleOptions = listOf(
     ObstacleOption("ROAD_SLOPE", "Наклон дороги"),
     ObstacleOption("POTHOLES", "Ямы"),
     ObstacleOption("SAND", "Песок"),
-    ObstacleOption("GRAVEL", "Гравий"))
+    ObstacleOption("GRAVEL", "Гравий")
+)
 
 @Composable
 fun ObstacleSelectScreen(
@@ -126,6 +125,7 @@ fun ObstacleSelectScreen(
                             .fillMaxWidth()
                             .padding(vertical = 8.dp)
                     ) {
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -203,6 +203,7 @@ fun ObstacleSelectScreen(
                     text = errorMessage,
                     onTimeout = mapsViewModel::clearMessages
                 )
+
                 AuthSuccessText(
                     text = successMessage,
                     onTimeout = mapsViewModel::clearMessages
@@ -214,9 +215,11 @@ fun ObstacleSelectScreen(
                     text = if (isSaving) "Сохраняем..." else "Сохранить",
                     enabled = !isSaving && !isLoading
                 ) {
+
                     val items = ServerObstacleOptions.map { obstacle ->
                         val selected = selectedMap[obstacle.obstacleType] == true
-                        ObstaclePolicyItem(
+
+                        PolicyItem(
                             obstacleType = obstacle.obstacleType,
                             selected = selected,
                             maxAllowedSeverity = if (selected) {
