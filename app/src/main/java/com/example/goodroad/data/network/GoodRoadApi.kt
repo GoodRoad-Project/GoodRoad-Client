@@ -1,4 +1,4 @@
-package com.example.goodroad.features.network.api
+package com.example.goodroad.data.network
 
 import com.example.goodroad.data.network.route.RouteRequest
 import com.example.goodroad.data.network.route.RouteResponse

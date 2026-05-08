@@ -1,24 +1,16 @@
-package com.example.goodroad.features.location
+package com.example.goodroad.ui.errors
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.provider.Settings
 import androidx.appcompat.app.AlertDialog
-import com.google.android.gms.common.api.ResolvableApiException
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.LocationSettingsRequest
-import com.google.android.gms.location.Priority
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
-import com.example.goodroad.features.location.LocationError
-import android.net.Uri
+import com.example.goodroad.data.network.location.LocationError
 
 class LocationErrorHandler (
     private val context: Context
 ) {
-    fun GetErrorMessage(error: LocationError): String {
+    fun getErrorMessage(error: LocationError): String {
         return when(error) {
             is LocationError.PermissionsDenied -> {
                 "Нет разрешения на доступ геолокации. Разрешите доступ в настройках"
@@ -32,11 +24,11 @@ class LocationErrorHandler (
         }
     }
 
-    fun ShowErrorDialog(
+    fun showErrorDialog(
         error: LocationError,
         onPositiveClick: (() -> Unit)? = null
     ) {
-        val message = GetErrorMessage(error)
+        val message = getErrorMessage(error)
 
         val builder = AlertDialog.Builder(context)
             .setTitle("Ошибка геолокации")

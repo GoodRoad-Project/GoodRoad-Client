@@ -4,7 +4,7 @@ import org.maplibre.android.camera.CameraUpdateFactory
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.goodroad.features.location.LocationTracker
+import com.example.goodroad.data.network.location.LocationTracker
 import kotlinx.coroutines.launch
 import org.maplibre.android.MapLibre
 import org.maplibre.android.maps.MapView
@@ -18,8 +18,8 @@ import kotlinx.coroutines.withContext
 import java.util.Locale
 import com.example.goodroad.data.network.route.RouteRequest
 import com.example.goodroad.data.network.route.RouteResponse
-import com.example.goodroad.features.network.api.GoodRoadApi
-import com.example.goodroad.features.network.utils.decodePoints
+import com.example.goodroad.data.network.GoodRoadApi
+import com.example.goodroad.data.network.utils.decodePoints
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.sources.GeoJsonSource

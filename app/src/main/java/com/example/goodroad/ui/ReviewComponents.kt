@@ -184,7 +184,7 @@ fun ReviewCardSummary(review: ReviewCardResp) {
         Spacer(Modifier.height(8.dp))
         ReviewInfoRow("Оценка", review.rating.toString())
         Spacer(Modifier.height(8.dp))
-        ReviewInfoRow("Баллы", review.awardedPoints.toString())
+        ReviewInfoRow("Баллы за отзыв", review.awardedPoints.toString())
         Spacer(Modifier.height(8.dp))
         ReviewInfoRow("Дата", formatReviewDate(review.createdAt))
         Spacer(Modifier.height(12.dp))

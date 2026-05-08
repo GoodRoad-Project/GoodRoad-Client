@@ -1,9 +1,10 @@
-package com.example.goodroad.features.location
+package com.example.goodroad.data.network.location
 
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
+import android.location.LocationManager
 import androidx.core.content.ContextCompat
 import com.example.goodroad.domain.model.LocationPoint
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -72,8 +73,8 @@ class LocationTracker (
             return@callbackFlow
         }
 
-        val locationManager = ctx.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager
-        if (!locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)) {
+        val locationManager = ctx.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             close(LocationError.GPSDisabled)
             return@callbackFlow
         }

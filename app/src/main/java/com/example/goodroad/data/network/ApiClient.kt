@@ -11,7 +11,7 @@ import retrofit2.*
 import retrofit2.converter.gson.*
 import java.time.Instant
 import java.util.concurrent.*
-import com.example.goodroad.features.network.api.GoodRoadApi
+import com.example.goodroad.data.network.GoodRoadApi
 import com.example.goodroad.modules.auth.data.AuthApi
 import com.example.goodroad.modules.review.data.ReviewApi
 import com.example.goodroad.modules.user.data.UserApi
