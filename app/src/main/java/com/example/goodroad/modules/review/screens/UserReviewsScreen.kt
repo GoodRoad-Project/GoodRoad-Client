@@ -94,39 +94,36 @@ fun UserReviewsScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                when {
-                    isLoading -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    when {
+                        isLoading -> {
                             CircularProgressIndicator()
                         }
-                    }
 
-                    reviews.isEmpty() -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
+                        reviews.isEmpty() -> {
                             Text(
                                 text = "Пока нет ни одного отзыва",
                                 color = UrbanBrown
                             )
                         }
-                    }
 
-                    else -> {
-                        LazyColumn(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(reviews, key = { it.id }) { review ->
-                                ReviewListItem(
-                                    review = review,
-                                    onOpenDetails = { onOpenDetails(review) },
-                                    onEdit = { onEditReview(review) }
-                                )
+                        else -> {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(reviews, key = { it.id }) { review ->
+                                    ReviewListItem(
+                                        review = review,
+                                        onOpenDetails = { onOpenDetails(review) },
+                                        onEdit = { onEditReview(review) }
+                                    )
+                                }
                             }
                         }
                     }

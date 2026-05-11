@@ -41,7 +41,8 @@ import androidx.lifecycle.LifecycleOwner
 
 @Composable
 fun MapRouteScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -64,17 +65,12 @@ fun MapRouteScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) {
-            loadUserLocation()
-        } else {
-            Toast.makeText(context, "Нет доступа к геолокации", Toast.LENGTH_SHORT).show()
-        }
+        if (granted) loadUserLocation()
+        else Toast.makeText(context, "Нет доступа к геолокации", Toast.LENGTH_SHORT).show()
     }
 
     val mapView = remember {
-        MapView(context).apply {
-            onCreate(Bundle())
-        }
+        MapView(context).apply { onCreate(Bundle()) }
     }
 
     DisposableEffect(lifecycleOwner, mapView) {
@@ -117,11 +113,8 @@ fun MapRouteScreen(
                     Manifest.permission.ACCESS_FINE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
 
-                if (hasPermission) {
-                    loadUserLocation()
-                } else {
-                    permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                }
+                if (hasPermission) loadUserLocation()
+                else permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
     }
@@ -129,7 +122,6 @@ fun MapRouteScreen(
     fun drawRoute(response: RouteResponse) {
         val path = response.paths.firstOrNull() ?: return
         val points = decodePoints(path.points)
-
         if (points.isEmpty()) return
 
         val latLngs = points.map { LatLng(it.latitude, it.longitude) }
@@ -180,8 +172,7 @@ fun MapRouteScreen(
             if (!styleReady || mapLibreMap == null) return@launch
             if (startLat == 0.0 || startLon == 0.0) return@launch
 
-            val res = ApiClient.obstacleApi.getUserObstaclePolicies()
-            val policies = res.body() ?: return@launch
+            val policies = ApiClient.obstacleApi.getUserObstaclePolicies().body() ?: return@launch
 
             val request = RouteRequest(
                 start = "$startLat,$startLon",
@@ -209,25 +200,36 @@ fun MapRouteScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        Card(
+        Surface(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            tonalElevation = 6.dp,
+            shadowElevation = 8.dp,
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+
+                if (onBack != null) {
+                    TextButton(onClick = onBack) {
+                        Text("Назад")
+                    }
+                }
+
                 OutlinedTextField(
                     value = address,
                     onValueChange = { address = it },
                     modifier = Modifier.weight(1f),
-                    label = { Text("Адрес") },
-                    singleLine = true
+                    singleLine = true,
+                    placeholder = { Text("Адрес") }
                 )
 
                 Button(
@@ -246,6 +248,5 @@ fun MapRouteScreen(
                 }
             }
         }
-
     }
 }
