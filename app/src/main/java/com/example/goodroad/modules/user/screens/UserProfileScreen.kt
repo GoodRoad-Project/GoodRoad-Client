@@ -1,21 +1,35 @@
 package com.example.goodroad.ui.user
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.goodroad.ui.buttons.*
-import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.UserDecor
+import com.example.goodroad.ui.buttons.PrimaryButton
+import com.example.goodroad.ui.theme.BackgroundLight
+import com.example.goodroad.ui.theme.SafeGreen
+import com.example.goodroad.ui.theme.TextPrimary
+import com.example.goodroad.ui.theme.UrbanBrown
+import com.example.goodroad.ui.theme.WhiteSoft
 import com.example.goodroad.modules.user.presentation.UserViewModel
-import android.content.Intent
-import com.example.goodroad.MapActivity
-import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun UserProfileScreen(
@@ -23,9 +37,7 @@ fun UserProfileScreen(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onLogout: () -> Unit,
-    onSelectObstacles: () -> Unit,
-    onOpenMap: () -> Unit,
-    onOpenReviews: () -> Unit
+    onSelectObstacles: () -> Unit
 ) {
     val user by userViewModel.user
     val isLoading by userViewModel.isLoading
@@ -117,40 +129,25 @@ fun UserProfileScreen(
                         onSelectObstacles()
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    val context = LocalContext.current
+                    Spacer(Modifier.height(10.dp))
 
                     PrimaryButton(
-                        text = "Перейти на карту",
-                        backgroundColor = UrbanBrown,
-                        contentColor = WhiteSoft
-                    ) {
-                        val intent = Intent(context, MapActivity::class.java)
-                        context.startActivity(intent)
-                    }
+                        text = "Редактировать профиль",
+                        onClick = onEdit
+                    )
 
                     Spacer(Modifier.height(10.dp))
 
                     PrimaryButton(
-                        text = "Мои отзывы",
-                        backgroundColor = SafeGreen,
-                        contentColor = WhiteSoft
+                        text = "Удалить аккаунт",
+                        onClick = onDelete
+                    )
+
+                    Spacer(Modifier.height(10.dp))
+
+                    PrimaryButton(
+                        text = "Выйти"
                     ) {
-                        onOpenReviews()
-                    }
-
-                    Spacer(Modifier.height(10.dp))
-
-                    PrimaryButton(text = "Редактировать профиль", onClick = onEdit)
-
-                    Spacer(Modifier.height(10.dp))
-
-                    PrimaryButton(text = "Удалить аккаунт", onClick = onDelete)
-
-                    Spacer(Modifier.height(10.dp))
-
-                    PrimaryButton(text = "Выйти") {
                         userViewModel.logout { onLogout() }
                     }
                 }

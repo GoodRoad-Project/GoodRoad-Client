@@ -1,7 +1,17 @@
 package com.example.goodroad.modules.user.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -11,25 +21,33 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.goodroad.data.network.ApiClient
+import com.example.goodroad.modules.maps.navigation.MapsNav
+import com.example.goodroad.modules.maps.screens.MapRouteScreen
 import com.example.goodroad.modules.review.data.ReviewCardResp
 import com.example.goodroad.modules.review.data.ReviewRepository
-import com.example.goodroad.modules.user.data.UserRepository
-import com.example.goodroad.modules.maps.navigation.MapsNav
+import com.example.goodroad.modules.review.presentation.ReviewsViewModel
 import com.example.goodroad.modules.review.screens.ReviewDetailsScreen
 import com.example.goodroad.modules.review.screens.ReviewFormScreen
 import com.example.goodroad.modules.review.screens.UserReviewsScreen
-import com.example.goodroad.modules.user.screens.UserEditScreen
-import com.example.goodroad.modules.review.presentation.ReviewsViewModel
+import com.example.goodroad.modules.user.data.UserRepository
 import com.example.goodroad.modules.user.presentation.UserViewModel
+import com.example.goodroad.modules.user.screens.UserEditScreen
+import com.example.goodroad.ui.user.UserDeleteAccountScreen
+import com.example.goodroad.ui.user.UserProfileScreen
 
+private const val SCREEN_MAP = "map"
 private const val SCREEN_PROFILE = "profile"
 private const val SCREEN_EDIT = "edit"
 private const val SCREEN_DELETE = "delete"
 private const val SCREEN_OBSTACLES = "obstacles"
-private const val SCREEN_MAP = "map"
 private const val SCREEN_REVIEWS = "reviews"
 private const val SCREEN_REVIEW_FORM = "review_form"
 private const val SCREEN_REVIEW_DETAILS = "review_details"
+
+private enum class BottomTab {
+    REVIEWS,
+    PROFILE
+}
 
 @Composable
 fun UserNav(
@@ -53,7 +71,9 @@ fun UserNav(
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ReviewsViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return ReviewsViewModel(ReviewRepository(reviewApi, userApi)) as T
+                return ReviewsViewModel(
+                    ReviewRepository(reviewApi, userApi)
+                ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }
@@ -62,88 +82,169 @@ fun UserNav(
     val userViewModel: UserViewModel = viewModel(factory = userFactory)
     val reviewsViewModel: ReviewsViewModel = viewModel(factory = reviewsFactory)
 
-    var screen by rememberSaveable { mutableStateOf(SCREEN_PROFILE) }
+    var currentTab by rememberSaveable { mutableStateOf<BottomTab?>(null) }
+    var screen by rememberSaveable { mutableStateOf(SCREEN_MAP) }
     var selectedReview by remember { mutableStateOf<ReviewCardResp?>(null) }
 
-    when (screen) {
-        SCREEN_PROFILE -> com.example.goodroad.ui.user.UserProfileScreen(
-            userViewModel = userViewModel,
-            onEdit = { screen = SCREEN_EDIT },
-            onDelete = { screen = SCREEN_DELETE },
-            onLogout = onLogout,
-            onSelectObstacles = { screen = SCREEN_OBSTACLES },
-            onOpenMap = { screen = SCREEN_MAP },
-            onOpenReviews = {
-                selectedReview = null
-                screen = SCREEN_REVIEWS
-            }
-        )
-
-        SCREEN_EDIT -> UserEditScreen(
-            userViewModel = userViewModel,
-            onBack = { screen = SCREEN_PROFILE },
-            onLogout = onLogout
-        )
-
-        SCREEN_DELETE -> com.example.goodroad.ui.user.UserDeleteAccountScreen(
-            viewModel = userViewModel,
-            onBack = { screen = SCREEN_PROFILE },
-            onExit = onLogout
-        )
-
-        SCREEN_OBSTACLES -> MapsNav(
-            onBackToProfile = { screen = SCREEN_PROFILE },
-            onSaved = { screen = SCREEN_PROFILE }
-        )
-
-        SCREEN_MAP -> MapsNav(
-            onBackToProfile = { screen = SCREEN_PROFILE },
-            onSaved = { screen = SCREEN_PROFILE }
-        )
-
-        SCREEN_REVIEWS -> UserReviewsScreen(
-            reviewsViewModel = reviewsViewModel,
-            onBack = { screen = SCREEN_PROFILE },
-            onAddReview = {
-                selectedReview = null
-                screen = SCREEN_REVIEW_FORM
-            },
-            onOpenDetails = {
-                selectedReview = it
-                screen = SCREEN_REVIEW_DETAILS
-            },
-            onEditReview = {
-                selectedReview = it
-                screen = SCREEN_REVIEW_FORM
-            }
-        )
-
-        SCREEN_REVIEW_FORM -> ReviewFormScreen(
-            reviewsViewModel = reviewsViewModel,
-            initialReview = selectedReview,
-            onBack = { screen = SCREEN_REVIEWS },
-            onSaved = {
-                selectedReview = null
-                screen = SCREEN_REVIEWS
-            }
-        )
-
-        SCREEN_REVIEW_DETAILS -> {
-            val review = selectedReview
-            if (review != null) {
-                ReviewDetailsScreen(
-                    review = review,
-                    reviewsViewModel = reviewsViewModel,
-                    onBack = { screen = SCREEN_REVIEWS },
-                    onEdit = { screen = SCREEN_REVIEW_FORM },
-                    onDeleted = {
-                        selectedReview = null
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    selected = currentTab == BottomTab.REVIEWS,
+                    onClick = {
+                        currentTab = BottomTab.REVIEWS
                         screen = SCREEN_REVIEWS
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Отзывы"
+                        )
+                    },
+                    label = {
+                        Text("Отзывы")
                     }
                 )
-            } else {
-                LaunchedEffect(Unit) {
-                    screen = SCREEN_REVIEWS
+
+                NavigationBarItem(
+                    selected = currentTab == BottomTab.PROFILE,
+                    onClick = {
+                        currentTab = BottomTab.PROFILE
+                        screen = SCREEN_PROFILE
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Профиль"
+                        )
+                    },
+                    label = {
+                        Text("Профиль")
+                    }
+                )
+            }
+        }
+    ) { padding ->
+        Box(
+            modifier = androidx.compose.ui.Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            when (screen) {
+                SCREEN_MAP -> {
+                    MapRouteScreen()
+                }
+
+                SCREEN_PROFILE -> {
+                    UserProfileScreen(
+                        userViewModel = userViewModel,
+                        onEdit = {
+                            screen = SCREEN_EDIT
+                        },
+                        onDelete = {
+                            screen = SCREEN_DELETE
+                        },
+                        onLogout = onLogout,
+                        onSelectObstacles = {
+                            screen = SCREEN_OBSTACLES
+                        }
+                    )
+                }
+
+                SCREEN_EDIT -> {
+                    UserEditScreen(
+                        userViewModel = userViewModel,
+                        onBack = {
+                            screen = SCREEN_PROFILE
+                        },
+                        onLogout = onLogout
+                    )
+                }
+
+                SCREEN_DELETE -> {
+                    UserDeleteAccountScreen(
+                        viewModel = userViewModel,
+                        onBack = {
+                            screen = SCREEN_PROFILE
+                        },
+                        onExit = onLogout
+                    )
+                }
+
+                SCREEN_OBSTACLES -> {
+                    MapsNav(
+                        onBackToProfile = {
+                            screen = SCREEN_PROFILE
+                        },
+                        onSaved = {
+                            screen = SCREEN_MAP
+                            currentTab = null
+                        }
+                    )
+                }
+
+                SCREEN_REVIEWS -> {
+                    UserReviewsScreen(
+                        reviewsViewModel = reviewsViewModel,
+                        onBack = {
+                            screen = SCREEN_MAP
+                            currentTab = null
+                        },
+                        onAddReview = {
+                            selectedReview = null
+                            screen = SCREEN_REVIEW_FORM
+                        },
+                        onOpenDetails = {
+                            selectedReview = it
+                            screen = SCREEN_REVIEW_DETAILS
+                        },
+                        onEditReview = {
+                            selectedReview = it
+                            screen = SCREEN_REVIEW_FORM
+                        }
+                    )
+                }
+
+                SCREEN_REVIEW_FORM -> {
+                    ReviewFormScreen(
+                        reviewsViewModel = reviewsViewModel,
+                        initialReview = selectedReview,
+                        onBack = {
+                            screen = SCREEN_REVIEWS
+                            currentTab = BottomTab.REVIEWS
+                        },
+                        onSaved = {
+                            selectedReview = null
+                            screen = SCREEN_REVIEWS
+                            currentTab = BottomTab.REVIEWS
+                        }
+                    )
+                }
+
+                SCREEN_REVIEW_DETAILS -> {
+                    val review = selectedReview
+                    if (review != null) {
+                        ReviewDetailsScreen(
+                            review = review,
+                            reviewsViewModel = reviewsViewModel,
+                            onBack = {
+                                screen = SCREEN_REVIEWS
+                                currentTab = BottomTab.REVIEWS
+                            },
+                            onEdit = {
+                                screen = SCREEN_REVIEW_FORM
+                                currentTab = BottomTab.REVIEWS
+                            },
+                            onDeleted = {
+                                selectedReview = null
+                                screen = SCREEN_REVIEWS
+                                currentTab = BottomTab.REVIEWS
+                            }
+                        )
+                    } else {
+                        screen = SCREEN_REVIEWS
+                        currentTab = BottomTab.REVIEWS
+                    }
                 }
             }
         }
