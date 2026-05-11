@@ -41,8 +41,10 @@ enum class BottomTab {
     PROFILE
 }
 
-enum class OverlayScreen {
-    NONE,
+enum class AppScreen {
+    MAP,
+    REVIEWS,
+    PROFILE,
     EDIT_PROFILE,
     DELETE_PROFILE,
     REVIEW_FORM,
@@ -75,41 +77,48 @@ fun UserNav(
     val reviewsViewModel: ReviewsViewModel = viewModel(factory = reviewsFactory)
 
     var currentTab by rememberSaveable { mutableStateOf(BottomTab.MAP) }
-    var overlayScreen by remember { mutableStateOf(OverlayScreen.NONE) }
+    var appScreen by rememberSaveable { mutableStateOf(AppScreen.MAP) }
     var selectedReview by remember { mutableStateOf<ReviewCardResp?>(null) }
+
+    val showBottomBar = when (appScreen) {
+        AppScreen.MAP, AppScreen.REVIEWS, AppScreen.PROFILE -> true
+        else -> false
+    }
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    selected = currentTab == BottomTab.MAP,
-                    onClick = {
-                        currentTab = BottomTab.MAP
-                        overlayScreen = OverlayScreen.NONE
-                    },
-                    icon = { Text("🗺") },
-                    label = { Text("Карта") }
-                )
+            if (showBottomBar) {
+                NavigationBar {
+                    NavigationBarItem(
+                        selected = currentTab == BottomTab.MAP,
+                        onClick = {
+                            currentTab = BottomTab.MAP
+                            appScreen = AppScreen.MAP
+                        },
+                        icon = { Text("🗺") },
+                        label = { Text("Карта") }
+                    )
 
-                NavigationBarItem(
-                    selected = currentTab == BottomTab.REVIEWS,
-                    onClick = {
-                        currentTab = BottomTab.REVIEWS
-                        overlayScreen = OverlayScreen.NONE
-                    },
-                    icon = { Icon(Icons.Default.Star, null) },
-                    label = { Text("Отзывы") }
-                )
+                    NavigationBarItem(
+                        selected = currentTab == BottomTab.REVIEWS,
+                        onClick = {
+                            currentTab = BottomTab.REVIEWS
+                            appScreen = AppScreen.REVIEWS
+                        },
+                        icon = { Icon(Icons.Default.Star, null) },
+                        label = { Text("Отзывы") }
+                    )
 
-                NavigationBarItem(
-                    selected = currentTab == BottomTab.PROFILE,
-                    onClick = {
-                        currentTab = BottomTab.PROFILE
-                        overlayScreen = OverlayScreen.NONE
-                    },
-                    icon = { Icon(Icons.Default.Person, null) },
-                    label = { Text("Профиль") }
-                )
+                    NavigationBarItem(
+                        selected = currentTab == BottomTab.PROFILE,
+                        onClick = {
+                            currentTab = BottomTab.PROFILE
+                            appScreen = AppScreen.PROFILE
+                        },
+                        icon = { Icon(Icons.Default.Person, null) },
+                        label = { Text("Профиль") }
+                    )
+                }
             }
         }
     ) { padding ->
@@ -119,88 +128,105 @@ fun UserNav(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            when (currentTab) {
-                BottomTab.MAP -> {
+            when (appScreen) {
+                AppScreen.MAP -> {
                     MapRouteScreen()
                 }
 
-                BottomTab.REVIEWS -> {
+                AppScreen.REVIEWS -> {
                     UserReviewsScreen(
                         reviewsViewModel = reviewsViewModel,
                         onAddReview = {
                             selectedReview = null
-                            overlayScreen = OverlayScreen.REVIEW_FORM
+                            appScreen = AppScreen.REVIEW_FORM
                         },
                         onOpenDetails = {
                             selectedReview = it
-                            overlayScreen = OverlayScreen.REVIEW_DETAILS
+                            appScreen = AppScreen.REVIEW_DETAILS
                         },
                         onEditReview = {
                             selectedReview = it
-                            overlayScreen = OverlayScreen.REVIEW_FORM
+                            appScreen = AppScreen.REVIEW_FORM
                         }
                     )
                 }
 
-                BottomTab.PROFILE -> {
+                AppScreen.PROFILE -> {
                     UserProfileScreen(
                         userViewModel = userViewModel,
-                        onEdit = { overlayScreen = OverlayScreen.EDIT_PROFILE },
-                        onDelete = { overlayScreen = OverlayScreen.DELETE_PROFILE },
+                        onEdit = {
+                            appScreen = AppScreen.EDIT_PROFILE
+                        },
+                        onDelete = {
+                            appScreen = AppScreen.DELETE_PROFILE
+                        },
                         onLogout = onLogout,
                         onSelectObstacles = {}
                     )
                 }
-            }
 
-            when (overlayScreen) {
-                OverlayScreen.EDIT_PROFILE -> {
+                AppScreen.EDIT_PROFILE -> {
                     UserEditScreen(
                         userViewModel = userViewModel,
-                        onBack = { overlayScreen = OverlayScreen.NONE },
+                        onBack = {
+                            appScreen = AppScreen.PROFILE
+                            currentTab = BottomTab.PROFILE
+                        },
                         onLogout = onLogout
                     )
                 }
 
-                OverlayScreen.DELETE_PROFILE -> {
+                AppScreen.DELETE_PROFILE -> {
                     UserDeleteAccountScreen(
                         viewModel = userViewModel,
-                        onBack = { overlayScreen = OverlayScreen.NONE },
+                        onBack = {
+                            appScreen = AppScreen.PROFILE
+                            currentTab = BottomTab.PROFILE
+                        },
                         onExit = onLogout
                     )
                 }
 
-                OverlayScreen.REVIEW_FORM -> {
+                AppScreen.REVIEW_FORM -> {
                     ReviewFormScreen(
                         reviewsViewModel = reviewsViewModel,
                         initialReview = selectedReview,
-                        onBack = { overlayScreen = OverlayScreen.NONE },
+                        onBack = {
+                            appScreen = AppScreen.REVIEWS
+                            currentTab = BottomTab.REVIEWS
+                        },
                         onSaved = {
                             selectedReview = null
-                            overlayScreen = OverlayScreen.NONE
+                            appScreen = AppScreen.REVIEWS
+                            currentTab = BottomTab.REVIEWS
                         }
                     )
                 }
 
-                OverlayScreen.REVIEW_DETAILS -> {
+                AppScreen.REVIEW_DETAILS -> {
                     val review = selectedReview
                     if (review != null) {
                         ReviewDetailsScreen(
                             review = review,
                             reviewsViewModel = reviewsViewModel,
-                            onBack = { overlayScreen = OverlayScreen.NONE },
-                            onEdit = { overlayScreen = OverlayScreen.REVIEW_FORM },
+                            onBack = {
+                                appScreen = AppScreen.REVIEWS
+                                currentTab = BottomTab.REVIEWS
+                            },
+                            onEdit = {
+                                appScreen = AppScreen.REVIEW_FORM
+                            },
                             onDeleted = {
                                 selectedReview = null
-                                overlayScreen = OverlayScreen.NONE
+                                appScreen = AppScreen.REVIEWS
+                                currentTab = BottomTab.REVIEWS
                             }
                         )
                     } else {
-                        overlayScreen = OverlayScreen.NONE
+                        appScreen = AppScreen.REVIEWS
+                        currentTab = BottomTab.REVIEWS
                     }
                 }
-
-                OverlayScreen.NONE -> Unit
             }
         }
     }

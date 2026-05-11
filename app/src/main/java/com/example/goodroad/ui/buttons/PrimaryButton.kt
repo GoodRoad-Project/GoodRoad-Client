@@ -15,7 +15,7 @@ import com.example.goodroad.ui.theme.SafeGreen
 @Composable
 fun PrimaryButton(
     text: String,
-    modifier: Modifier = Modifier, // ✔️ ВАЖНО
+    modifier: Modifier = Modifier,
     backgroundColor: Color = SafeGreen,
     contentColor: Color = BackgroundLight,
     enabled: Boolean = true,
