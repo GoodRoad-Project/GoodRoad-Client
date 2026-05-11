@@ -215,32 +215,37 @@ fun MapRouteScreen(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Маршрут")
-
                 OutlinedTextField(
                     value = address,
                     onValueChange = { address = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Адрес") }
+                    modifier = Modifier.weight(1f),
+                    label = { Text("Адрес") },
+                    singleLine = true
                 )
 
-                Button(onClick = {
-                    scope.launch {
-                        val geo = withContext(Dispatchers.IO) {
-                            Geocoder(context).getFromLocationName(address, 1)
-                        }
+                Button(
+                    onClick = {
+                        scope.launch {
+                            val geo = withContext(Dispatchers.IO) {
+                                Geocoder(context).getFromLocationName(address, 1)
+                            }
 
-                        val dest = geo?.firstOrNull() ?: return@launch
-                        buildRoute(dest.latitude, dest.longitude)
+                            val dest = geo?.firstOrNull() ?: return@launch
+                            buildRoute(dest.latitude, dest.longitude)
+                        }
                     }
-                }) {
+                ) {
                     Text("Построить")
                 }
             }
         }
+
     }
 }
