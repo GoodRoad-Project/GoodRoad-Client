@@ -17,11 +17,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.goodroad.data.network.ApiClient
-import com.example.goodroad.modules.maps.navigation.MapsNav
 import com.example.goodroad.modules.maps.screens.MapRouteScreen
 import com.example.goodroad.modules.review.data.ReviewCardResp
 import com.example.goodroad.modules.review.data.ReviewRepository
@@ -35,18 +35,18 @@ import com.example.goodroad.modules.user.screens.UserEditScreen
 import com.example.goodroad.ui.user.UserDeleteAccountScreen
 import com.example.goodroad.ui.user.UserProfileScreen
 
-private const val SCREEN_MAP = "map"
-private const val SCREEN_PROFILE = "profile"
-private const val SCREEN_EDIT = "edit"
-private const val SCREEN_DELETE = "delete"
-private const val SCREEN_OBSTACLES = "obstacles"
-private const val SCREEN_REVIEWS = "reviews"
-private const val SCREEN_REVIEW_FORM = "review_form"
-private const val SCREEN_REVIEW_DETAILS = "review_details"
-
-private enum class BottomTab {
+enum class BottomTab {
+    MAP,
     REVIEWS,
     PROFILE
+}
+
+enum class OverlayScreen {
+    NONE,
+    EDIT_PROFILE,
+    DELETE_PROFILE,
+    REVIEW_FORM,
+    REVIEW_DETAILS
 }
 
 @Composable
@@ -59,193 +59,148 @@ fun UserNav(
 
     val userFactory = object : ViewModelProvider.Factory {
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(UserViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return UserViewModel(UserRepository(userApi)) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
+            return UserViewModel(UserRepository(userApi)) as T
         }
     }
 
     val reviewsFactory = object : ViewModelProvider.Factory {
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(ReviewsViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return ReviewsViewModel(
-                    ReviewRepository(reviewApi, userApi)
-                ) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
+            return ReviewsViewModel(
+                ReviewRepository(reviewApi, userApi)
+            ) as T
         }
     }
 
     val userViewModel: UserViewModel = viewModel(factory = userFactory)
     val reviewsViewModel: ReviewsViewModel = viewModel(factory = reviewsFactory)
 
-    var currentTab by rememberSaveable { mutableStateOf<BottomTab?>(null) }
-    var screen by rememberSaveable { mutableStateOf(SCREEN_MAP) }
+    var currentTab by rememberSaveable { mutableStateOf(BottomTab.MAP) }
+    var overlayScreen by remember { mutableStateOf(OverlayScreen.NONE) }
     var selectedReview by remember { mutableStateOf<ReviewCardResp?>(null) }
 
     Scaffold(
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
+                    selected = currentTab == BottomTab.MAP,
+                    onClick = {
+                        currentTab = BottomTab.MAP
+                        overlayScreen = OverlayScreen.NONE
+                    },
+                    icon = { Text("🗺") },
+                    label = { Text("Карта") }
+                )
+
+                NavigationBarItem(
                     selected = currentTab == BottomTab.REVIEWS,
                     onClick = {
                         currentTab = BottomTab.REVIEWS
-                        screen = SCREEN_REVIEWS
+                        overlayScreen = OverlayScreen.NONE
                     },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = "Отзывы"
-                        )
-                    },
-                    label = {
-                        Text("Отзывы")
-                    }
+                    icon = { Icon(Icons.Default.Star, null) },
+                    label = { Text("Отзывы") }
                 )
 
                 NavigationBarItem(
                     selected = currentTab == BottomTab.PROFILE,
                     onClick = {
                         currentTab = BottomTab.PROFILE
-                        screen = SCREEN_PROFILE
+                        overlayScreen = OverlayScreen.NONE
                     },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Профиль"
-                        )
-                    },
-                    label = {
-                        Text("Профиль")
-                    }
+                    icon = { Icon(Icons.Default.Person, null) },
+                    label = { Text("Профиль") }
                 )
             }
         }
     ) { padding ->
+
         Box(
-            modifier = androidx.compose.ui.Modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            when (screen) {
-                SCREEN_MAP -> {
+            when (currentTab) {
+                BottomTab.MAP -> {
                     MapRouteScreen()
                 }
 
-                SCREEN_PROFILE -> {
-                    UserProfileScreen(
-                        userViewModel = userViewModel,
-                        onEdit = {
-                            screen = SCREEN_EDIT
+                BottomTab.REVIEWS -> {
+                    UserReviewsScreen(
+                        reviewsViewModel = reviewsViewModel,
+                        onAddReview = {
+                            selectedReview = null
+                            overlayScreen = OverlayScreen.REVIEW_FORM
                         },
-                        onDelete = {
-                            screen = SCREEN_DELETE
+                        onOpenDetails = {
+                            selectedReview = it
+                            overlayScreen = OverlayScreen.REVIEW_DETAILS
                         },
-                        onLogout = onLogout,
-                        onSelectObstacles = {
-                            screen = SCREEN_OBSTACLES
+                        onEditReview = {
+                            selectedReview = it
+                            overlayScreen = OverlayScreen.REVIEW_FORM
                         }
                     )
                 }
 
-                SCREEN_EDIT -> {
+                BottomTab.PROFILE -> {
+                    UserProfileScreen(
+                        userViewModel = userViewModel,
+                        onEdit = { overlayScreen = OverlayScreen.EDIT_PROFILE },
+                        onDelete = { overlayScreen = OverlayScreen.DELETE_PROFILE },
+                        onLogout = onLogout,
+                        onSelectObstacles = {}
+                    )
+                }
+            }
+
+            when (overlayScreen) {
+                OverlayScreen.EDIT_PROFILE -> {
                     UserEditScreen(
                         userViewModel = userViewModel,
-                        onBack = {
-                            screen = SCREEN_PROFILE
-                        },
+                        onBack = { overlayScreen = OverlayScreen.NONE },
                         onLogout = onLogout
                     )
                 }
 
-                SCREEN_DELETE -> {
+                OverlayScreen.DELETE_PROFILE -> {
                     UserDeleteAccountScreen(
                         viewModel = userViewModel,
-                        onBack = {
-                            screen = SCREEN_PROFILE
-                        },
+                        onBack = { overlayScreen = OverlayScreen.NONE },
                         onExit = onLogout
                     )
                 }
 
-                SCREEN_OBSTACLES -> {
-                    MapsNav(
-                        onBackToProfile = {
-                            screen = SCREEN_PROFILE
-                        },
-                        onSaved = {
-                            screen = SCREEN_MAP
-                            currentTab = null
-                        }
-                    )
-                }
-
-                SCREEN_REVIEWS -> {
-                    UserReviewsScreen(
-                        reviewsViewModel = reviewsViewModel,
-                        onBack = {
-                            screen = SCREEN_MAP
-                            currentTab = null
-                        },
-                        onAddReview = {
-                            selectedReview = null
-                            screen = SCREEN_REVIEW_FORM
-                        },
-                        onOpenDetails = {
-                            selectedReview = it
-                            screen = SCREEN_REVIEW_DETAILS
-                        },
-                        onEditReview = {
-                            selectedReview = it
-                            screen = SCREEN_REVIEW_FORM
-                        }
-                    )
-                }
-
-                SCREEN_REVIEW_FORM -> {
+                OverlayScreen.REVIEW_FORM -> {
                     ReviewFormScreen(
                         reviewsViewModel = reviewsViewModel,
                         initialReview = selectedReview,
-                        onBack = {
-                            screen = SCREEN_REVIEWS
-                            currentTab = BottomTab.REVIEWS
-                        },
+                        onBack = { overlayScreen = OverlayScreen.NONE },
                         onSaved = {
                             selectedReview = null
-                            screen = SCREEN_REVIEWS
-                            currentTab = BottomTab.REVIEWS
+                            overlayScreen = OverlayScreen.NONE
                         }
                     )
                 }
 
-                SCREEN_REVIEW_DETAILS -> {
+                OverlayScreen.REVIEW_DETAILS -> {
                     val review = selectedReview
                     if (review != null) {
                         ReviewDetailsScreen(
                             review = review,
                             reviewsViewModel = reviewsViewModel,
-                            onBack = {
-                                screen = SCREEN_REVIEWS
-                                currentTab = BottomTab.REVIEWS
-                            },
-                            onEdit = {
-                                screen = SCREEN_REVIEW_FORM
-                                currentTab = BottomTab.REVIEWS
-                            },
+                            onBack = { overlayScreen = OverlayScreen.NONE },
+                            onEdit = { overlayScreen = OverlayScreen.REVIEW_FORM },
                             onDeleted = {
                                 selectedReview = null
-                                screen = SCREEN_REVIEWS
-                                currentTab = BottomTab.REVIEWS
+                                overlayScreen = OverlayScreen.NONE
                             }
                         )
                     } else {
-                        screen = SCREEN_REVIEWS
-                        currentTab = BottomTab.REVIEWS
+                        overlayScreen = OverlayScreen.NONE
                     }
                 }
+
+                OverlayScreen.NONE -> Unit
             }
         }
     }

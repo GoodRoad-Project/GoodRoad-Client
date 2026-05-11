@@ -146,7 +146,7 @@ fun UserProfileScreen(
                     Spacer(Modifier.height(10.dp))
 
                     PrimaryButton(
-                        text = "Выйти"
+                        text = "Выйти из аккаунта"
                     ) {
                         userViewModel.logout { onLogout() }
                     }

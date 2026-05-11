@@ -15,6 +15,7 @@ import com.example.goodroad.ui.theme.SafeGreen
 @Composable
 fun PrimaryButton(
     text: String,
+    modifier: Modifier = Modifier, // ✔️ ВАЖНО
     backgroundColor: Color = SafeGreen,
     contentColor: Color = BackgroundLight,
     enabled: Boolean = true,
@@ -23,7 +24,7 @@ fun PrimaryButton(
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(44.dp),
         shape = RoundedCornerShape(16.dp),
