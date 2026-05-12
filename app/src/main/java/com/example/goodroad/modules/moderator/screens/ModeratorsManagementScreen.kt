@@ -1,6 +1,8 @@
 package com.example.goodroad.modules.moderator.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,9 +16,6 @@ import com.example.goodroad.validation.formatPhoneForRequest
 import com.example.goodroad.validation.isAllowedDigitsInput
 import com.example.goodroad.validation.normalizeRequiredRussianPhone
 import com.example.goodroad.modules.moderator.presentation.ModeratorViewModel
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Icon
 import com.example.goodroad.ui.theme.UrbanBrown
 
 @Composable
@@ -51,14 +50,29 @@ fun ModeratorsManagementScreen(
 
     var showAddDialog by remember { mutableStateOf(false) }
     var selectedForDelete by remember { mutableStateOf<ModeratorView?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         viewModel.loadModerators()
     }
 
+    val filteredModerators = remember(moderators, searchQuery) {
+        if (searchQuery.isBlank()) {
+            moderators
+        } else {
+            moderators.filter { moderator ->
+                val fullName = listOfNotNull(
+                    moderator.firstName,
+                    moderator.lastName
+                ).joinToString(" ")
+
+                fullName.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
+
     AuthScreenFrame(
         title = "Модераторы",
-
         action = {
             Button(
                 onClick = { showAddDialog = true },
@@ -69,7 +83,6 @@ fun ModeratorsManagementScreen(
                 Text("+ Добавить модератора")
             }
         },
-
         footer = {
             Button(
                 modifier = Modifier
@@ -85,7 +98,7 @@ fun ModeratorsManagementScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp)
+                .padding(horizontal = 12.dp, vertical = 6.dp)
         ) {
 
             if (isLoading) {
@@ -105,20 +118,46 @@ fun ModeratorsManagementScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("Поиск модераторов") },
+                singleLine = true,
+                shape = MaterialTheme.shapes.large,
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null
+                    )
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                )
+            )
 
-            if (moderators.isEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (filteredModerators.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Нет модераторов")
+                    Text(
+                        if (searchQuery.isBlank())
+                            "Нет модераторов"
+                        else
+                            "Ничего не найдено"
+                    )
                 }
             } else {
 
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
-                    moderators.forEach { moderator ->
+                    filteredModerators.forEach { moderator ->
 
                         val isAdmin = moderator.role == "MODERATOR_ADMIN"
                         val isDisabled = !moderator.active
@@ -257,19 +296,13 @@ fun ModeratorsManagementScreen(
 
                     NameField(
                         value = firstName,
-                        onValueChange = {
-                            firstName = it
-                            errorText = null
-                        },
+                        onValueChange = { firstName = it },
                         label = "Имя"
                     )
 
                     NameField(
                         value = lastName,
-                        onValueChange = {
-                            lastName = it
-                            errorText = null
-                        },
+                        onValueChange = { lastName = it },
                         label = "Фамилия"
                     )
 
@@ -277,7 +310,6 @@ fun ModeratorsManagementScreen(
                         value = phone,
                         onValueChange = { value ->
                             phone = value
-                            errorText = null
 
                             phoneWarning = when {
                                 value.isEmpty() -> null
@@ -293,10 +325,7 @@ fun ModeratorsManagementScreen(
 
                     PasswordField(
                         value = password,
-                        onValueChange = {
-                            password = it
-                            errorText = null
-                        },
+                        onValueChange = { password = it },
                         label = "Пароль"
                     )
 

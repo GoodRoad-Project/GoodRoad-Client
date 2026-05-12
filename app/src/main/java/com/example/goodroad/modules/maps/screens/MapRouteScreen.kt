@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -60,13 +59,16 @@ fun MapRouteScreen(
     var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
     var styleReady by remember { mutableStateOf(false) }
 
+    var message by remember { mutableStateOf<String?>(null) }
+    var isLoadingMessage by remember { mutableStateOf(false) }
+
     lateinit var loadUserLocation: () -> Unit
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) loadUserLocation()
-        else Toast.makeText(context, "Нет доступа к геолокации", Toast.LENGTH_SHORT).show()
+        else message = "Нет доступа к геолокации"
     }
 
     val mapView = remember {
@@ -95,6 +97,8 @@ fun MapRouteScreen(
             if (loc != null) {
                 startLat = loc.latitude
                 startLon = loc.longitude
+            } else {
+                message = "Не удалось определить местоположение"
             }
         }
     }
@@ -128,6 +132,7 @@ fun MapRouteScreen(
         val map = mapLibreMap ?: return
 
         map.getStyle { style ->
+
             style.removeLayer("route-layer")
             style.removeSource("route-source")
 
@@ -164,15 +169,22 @@ fun MapRouteScreen(
                 CameraUpdateFactory.newLatLngZoom(latLngs.first(), 14.0),
                 1000
             )
+
+            message = "Маршрут построен"
+            isLoadingMessage = false
         }
     }
 
     fun buildRoute(endLat: Double, endLon: Double) {
         scope.launch {
+
             if (!styleReady || mapLibreMap == null) return@launch
             if (startLat == 0.0 || startLon == 0.0) return@launch
 
             val policies = ApiClient.obstacleApi.getUserObstaclePolicies().body() ?: return@launch
+
+            message = "Поиск маршрута..."
+            isLoadingMessage = true
 
             val request = RouteRequest(
                 start = "$startLat,$startLon",
@@ -188,7 +200,8 @@ fun MapRouteScreen(
                 val response = api.getRoute(request)
                 drawRoute(response)
             } catch (e: Exception) {
-                Toast.makeText(context, e.message ?: "Ошибка", Toast.LENGTH_SHORT).show()
+                message = e.message ?: "Ошибка построения маршрута"
+                isLoadingMessage = false
             }
         }
     }
@@ -235,16 +248,52 @@ fun MapRouteScreen(
                 Button(
                     onClick = {
                         scope.launch {
+                            message = "Поиск адреса..."
+                            isLoadingMessage = true
+
                             val geo = withContext(Dispatchers.IO) {
-                                Geocoder(context).getFromLocationName(address, 1)
+                                try {
+                                    Geocoder(context).getFromLocationName(address, 1)
+                                } catch (e: Exception) {
+                                    null
+                                }
                             }
 
-                            val dest = geo?.firstOrNull() ?: return@launch
+                            val dest = geo?.firstOrNull()
+                            if (dest == null) {
+                                message = "Адрес не найден. Попробуйте точнее."
+                                isLoadingMessage = false
+                                return@launch
+                            }
+
                             buildRoute(dest.latitude, dest.longitude)
                         }
                     }
                 ) {
                     Text("Построить")
+                }
+            }
+        }
+
+        if (message != null) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 90.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                tonalElevation = 6.dp,
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isLoadingMessage) {
+                        CircularProgressIndicator(modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                    }
+
+                    Text(message ?: "")
                 }
             }
         }

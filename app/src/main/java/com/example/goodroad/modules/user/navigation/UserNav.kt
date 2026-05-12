@@ -2,6 +2,7 @@ package com.example.goodroad.modules.user.navigation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -90,7 +91,7 @@ fun UserNav(
                         currentTab = BottomTab.MAP
                         overlayScreen = OverlayScreen.NONE
                     },
-                    icon = { Icon(Icons.Default.Person, null) },
+                    icon = { Icon(Icons.Default.Map, null) },
                     label = { Text("Карта") }
                 )
 
