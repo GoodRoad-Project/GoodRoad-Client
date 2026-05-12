@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.moderator.data.ModeratorView
 import com.example.goodroad.ui.AuthScreenFrame
@@ -17,6 +18,8 @@ import com.example.goodroad.validation.isAllowedDigitsInput
 import com.example.goodroad.validation.normalizeRequiredRussianPhone
 import com.example.goodroad.modules.moderator.presentation.ModeratorViewModel
 import com.example.goodroad.ui.theme.UrbanBrown
+
+private val Green = Color(0xFF2E7D32)
 
 @Composable
 private fun NameField(
@@ -98,7 +101,7 @@ fun ModeratorsManagementScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 6.dp)
+                .padding(horizontal = 12.dp, vertical = 0.dp)
         ) {
 
             if (isLoading) {
@@ -132,10 +135,13 @@ fun ModeratorsManagementScreen(
                     )
                 },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                    focusedBorderColor = Green,
+                    unfocusedBorderColor = Green,
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    cursorColor = Green,
+                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                 )
             )
 
