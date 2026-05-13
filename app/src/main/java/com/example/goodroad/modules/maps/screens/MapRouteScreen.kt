@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -17,12 +18,15 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.network.GoodRoadApi
 import com.example.goodroad.data.network.location.LocationTracker
 import com.example.goodroad.data.network.route.RouteRequest
 import com.example.goodroad.data.network.route.RouteResponse
 import com.example.goodroad.data.network.utils.decodePoints
+import com.example.goodroad.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,14 +39,13 @@ import org.maplibre.android.maps.Style
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.android.style.sources.GeoJsonSource
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
 
 @Composable
 fun MapRouteScreen(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null
 ) {
+
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
@@ -53,6 +56,7 @@ fun MapRouteScreen(
     val api: GoodRoadApi = remember { ApiClient.routeApi }
 
     var address by rememberSaveable { mutableStateOf("") }
+
     var startLat by remember { mutableStateOf(0.0) }
     var startLon by remember { mutableStateOf(0.0) }
 
@@ -67,20 +71,39 @@ fun MapRouteScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) loadUserLocation()
-        else message = "Нет доступа к геолокации"
+
+        if (granted) {
+            loadUserLocation()
+        } else {
+            message = "Нет доступа к геолокации"
+        }
     }
 
     val mapView = remember {
-        MapView(context).apply { onCreate(Bundle()) }
+        MapView(context).apply {
+            onCreate(Bundle())
+        }
     }
 
     DisposableEffect(lifecycleOwner, mapView) {
+
         val observer = object : DefaultLifecycleObserver {
-            override fun onStart(owner: LifecycleOwner) = mapView.onStart()
-            override fun onResume(owner: LifecycleOwner) = mapView.onResume()
-            override fun onPause(owner: LifecycleOwner) = mapView.onPause()
-            override fun onStop(owner: LifecycleOwner) = mapView.onStop()
+
+            override fun onStart(owner: LifecycleOwner) {
+                mapView.onStart()
+            }
+
+            override fun onResume(owner: LifecycleOwner) {
+                mapView.onResume()
+            }
+
+            override fun onPause(owner: LifecycleOwner) {
+                mapView.onPause()
+            }
+
+            override fun onStop(owner: LifecycleOwner) {
+                mapView.onStop()
+            }
         }
 
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -92,11 +115,16 @@ fun MapRouteScreen(
     }
 
     loadUserLocation = {
+
         scope.launch {
+
             val loc = locationTracker.getCurrentLocation()
+
             if (loc != null) {
+
                 startLat = loc.latitude
                 startLon = loc.longitude
+
             } else {
                 message = "Не удалось определить местоположение"
             }
@@ -104,12 +132,17 @@ fun MapRouteScreen(
     }
 
     LaunchedEffect(mapView) {
+
         mapView.getMapAsync { map ->
+
             mapLibreMap = map
 
             map.setStyle(
-                Style.Builder().fromUri("https://tiles.openfreemap.org/styles/positron")
+                Style.Builder().fromUri(
+                    "https://tiles.openfreemap.org/styles/positron"
+                )
             ) {
+
                 styleReady = true
 
                 val hasPermission = ContextCompat.checkSelfPermission(
@@ -117,18 +150,29 @@ fun MapRouteScreen(
                     Manifest.permission.ACCESS_FINE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
 
-                if (hasPermission) loadUserLocation()
-                else permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                if (hasPermission) {
+                    loadUserLocation()
+                } else {
+                    permissionLauncher.launch(
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+                }
             }
         }
     }
 
     fun drawRoute(response: RouteResponse) {
+
         val path = response.paths.firstOrNull() ?: return
+
         val points = decodePoints(path.points)
+
         if (points.isEmpty()) return
 
-        val latLngs = points.map { LatLng(it.latitude, it.longitude) }
+        val latLngs = points.map {
+            LatLng(it.latitude, it.longitude)
+        }
+
         val map = mapLibreMap ?: return
 
         map.getStyle { style ->
@@ -153,12 +197,15 @@ fun MapRouteScreen(
                 }
             """.trimIndent()
 
-            style.addSource(GeoJsonSource("route-source", geojson))
+            style.addSource(
+                GeoJsonSource("route-source", geojson)
+            )
 
             style.addLayer(
                 LineLayer("route-layer", "route-source").apply {
+
                     setProperties(
-                        PropertyFactory.lineColor("#8B7AC6"),
+                        PropertyFactory.lineColor("#887058"),
                         PropertyFactory.lineWidth(6f),
                         PropertyFactory.lineOpacity(0.9f)
                     )
@@ -166,7 +213,10 @@ fun MapRouteScreen(
             )
 
             map.animateCamera(
-                CameraUpdateFactory.newLatLngZoom(latLngs.first(), 14.0),
+                CameraUpdateFactory.newLatLngZoom(
+                    latLngs.first(),
+                    14.0
+                ),
                 1000
             )
 
@@ -176,12 +226,17 @@ fun MapRouteScreen(
     }
 
     fun buildRoute(endLat: Double, endLon: Double) {
+
         scope.launch {
 
             if (!styleReady || mapLibreMap == null) return@launch
             if (startLat == 0.0 || startLon == 0.0) return@launch
 
-            val policies = ApiClient.obstacleApi.getUserObstaclePolicies().body() ?: return@launch
+            val policies = ApiClient
+                .obstacleApi
+                .getUserObstaclePolicies()
+                .body()
+                ?: return@launch
 
             message = "Поиск маршрута..."
             isLoadingMessage = true
@@ -189,24 +244,47 @@ fun MapRouteScreen(
             val request = RouteRequest(
                 start = "$startLat,$startLon",
                 end = "$endLat,$endLon",
-                avoidStairs = policies.any { it.obstacleType == "STAIRS" && it.selected },
-                maxCurbHeight = policies.find { it.obstacleType == "CURB" }?.maxAllowedSeverity?.toInt(),
-                maxSlopeAngle = policies.find { it.obstacleType == "ROAD_SLOPE" }?.maxAllowedSeverity?.toDouble(),
-                avoidBadRoad = policies.any { it.obstacleType == "POTHOLES" && it.selected },
-                avoidSurfaceTypes = policies.filter { it.selected }.map { it.obstacleType }
+
+                avoidStairs = policies.any {
+                    it.obstacleType == "STAIRS" && it.selected
+                },
+
+                maxCurbHeight = policies
+                    .find { it.obstacleType == "CURB" }
+                    ?.maxAllowedSeverity
+                    ?.toInt(),
+
+                maxSlopeAngle = policies
+                    .find { it.obstacleType == "ROAD_SLOPE" }
+                    ?.maxAllowedSeverity
+                    ?.toDouble(),
+
+                avoidBadRoad = policies.any {
+                    it.obstacleType == "POTHOLES" && it.selected
+                },
+
+                avoidSurfaceTypes = policies
+                    .filter { it.selected }
+                    .map { it.obstacleType }
             )
 
             try {
+
                 val response = api.getRoute(request)
+
                 drawRoute(response)
+
             } catch (e: Exception) {
+
                 message = e.message ?: "Ошибка построения маршрута"
                 isLoadingMessage = false
             }
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier.fillMaxSize()
+    ) {
 
         AndroidView(
             factory = { mapView },
@@ -217,83 +295,166 @@ fun MapRouteScreen(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            tonalElevation = 6.dp,
-            shadowElevation = 8.dp,
-            shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+
+            shadowElevation = 10.dp,
+
+            shape = RoundedCornerShape(22.dp),
+
+            color = SurfaceWarm
         ) {
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+
                 verticalAlignment = Alignment.CenterVertically,
+
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
 
                 if (onBack != null) {
-                    TextButton(onClick = onBack) {
+
+                    TextButton(
+                        onClick = onBack,
+
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = UrbanBrown
+                        )
+                    ) {
                         Text("Назад")
                     }
                 }
 
                 OutlinedTextField(
                     value = address,
-                    onValueChange = { address = it },
+
+                    onValueChange = {
+                        address = it
+                    },
+
                     modifier = Modifier.weight(1f),
+
                     singleLine = true,
-                    placeholder = { Text("Адрес") }
+
+                    placeholder = {
+                        Text(
+                            "Введите адрес",
+                            color = TextSecondary
+                        )
+                    },
+
+                    colors = OutlinedTextFieldDefaults.colors(
+
+                        focusedContainerColor = WhiteSoft,
+                        unfocusedContainerColor = WhiteSoft,
+
+                        focusedBorderColor = UrbanBrown,
+                        unfocusedBorderColor = BorderWarm,
+
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+
+                        cursorColor = UrbanBrown
+                    ),
+
+                    shape = RoundedCornerShape(16.dp)
                 )
 
                 Button(
                     onClick = {
+
                         scope.launch {
+
                             message = "Поиск адреса..."
                             isLoadingMessage = true
 
                             val geo = withContext(Dispatchers.IO) {
+
                                 try {
-                                    Geocoder(context).getFromLocationName(address, 1)
+
+                                    Geocoder(context)
+                                        .getFromLocationName(address, 1)
+
                                 } catch (e: Exception) {
                                     null
                                 }
                             }
 
                             val dest = geo?.firstOrNull()
+
                             if (dest == null) {
-                                message = "Адрес не найден. Попробуйте точнее."
+
+                                message = "Адрес не найден"
                                 isLoadingMessage = false
+
                                 return@launch
                             }
 
-                            buildRoute(dest.latitude, dest.longitude)
+                            buildRoute(
+                                dest.latitude,
+                                dest.longitude
+                            )
                         }
-                    }
+                    },
+
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = UrbanBrown,
+                        contentColor = WhiteSoft
+                    ),
+
+                    shape = RoundedCornerShape(16.dp),
+
+                    contentPadding = PaddingValues(
+                        horizontal = 18.dp,
+                        vertical = 14.dp
+                    )
                 ) {
-                    Text("Построить")
+
+                    Text("Маршрут")
                 }
             }
         }
 
         if (message != null) {
+
             Surface(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = 90.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                tonalElevation = 6.dp,
-                shape = MaterialTheme.shapes.medium
+                    .padding(top = 100.dp),
+
+                color = SurfaceWarm,
+
+                shadowElevation = 8.dp,
+
+                shape = RoundedCornerShape(18.dp)
             ) {
+
                 Row(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier.padding(
+                        horizontal = 14.dp,
+                        vertical = 12.dp
+                    ),
+
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
                     if (isLoadingMessage) {
-                        CircularProgressIndicator(modifier = Modifier.size(18.dp))
+
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = UrbanBrown,
+                            strokeWidth = 2.dp
+                        )
+
                         Spacer(Modifier.width(8.dp))
                     }
 
-                    Text(message ?: "")
+                    Text(
+                        text = message ?: "",
+                        color = TextPrimary
+                    )
                 }
             }
         }
