@@ -6,6 +6,6 @@ import retrofit2.http.Body
 import retrofit2.http.POST
 
 interface GoodRoadApi {
-    @POST("/api/v1/routes")
+    @POST("/routes")
     suspend fun getRoute(@Body request: RouteRequest): RouteResponse
 }

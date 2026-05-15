@@ -83,7 +83,6 @@ fun ModeratorsManagementScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Контент с весом 1 - занимает всё свободное место
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -149,7 +148,6 @@ fun ModeratorsManagementScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Фиксированные кнопки внизу
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -165,7 +163,6 @@ fun ModeratorsManagementScreen(
         }
     }
 
-    // Диалоги без изменений
     if (showAddDialog) {
         AddModeratorDialog(
             onDismiss = { showAddDialog = false },
