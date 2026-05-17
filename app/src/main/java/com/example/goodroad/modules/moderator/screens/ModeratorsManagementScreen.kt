@@ -129,58 +129,62 @@ fun ModeratorsManagementScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                contentAlignment = Alignment.Center
             ) {
                 when {
                     isLoading -> CircularProgressIndicator(color = UrbanBrown)
                     error != null -> Text(error!!, color = MaterialTheme.colorScheme.error)
                     else -> {
-                        LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        Column(
+                            modifier = Modifier.fillMaxSize()
                         ) {
-                            item {
-                                OutlinedTextField(
-                                    value = searchQuery,
-                                    onValueChange = { searchQuery = it },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { Text("Поиск модераторов") },
-                                    singleLine = true,
-                                    shape = MaterialTheme.shapes.large,
-                                    leadingIcon = {
-                                        Icon(Icons.Default.Person, null)
-                                    },
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = SafeGreen,
-                                        unfocusedBorderColor = SafeGreen,
-                                        focusedContainerColor = Color.White,
-                                        unfocusedContainerColor = Color.White,
-                                        cursorColor = SafeGreen,
-                                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground
-                                    )
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text("Поиск модераторов") },
+                                singleLine = true,
+                                shape = MaterialTheme.shapes.large,
+                                leadingIcon = {
+                                    Icon(Icons.Default.Person, null)
+                                },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = SafeGreen,
+                                    unfocusedBorderColor = SafeGreen,
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color.White,
+                                    cursorColor = SafeGreen,
+                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                                 )
-                            }
+                            )
 
-                            if (filteredModerators.isEmpty()) {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillParentMaxSize()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            if (searchQuery.isBlank()) "Нет модераторов"
-                                            else "Ничего не найдено"
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            LazyColumn(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                if (filteredModerators.isEmpty()) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillParentMaxSize()
+                                                .padding(16.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                if (searchQuery.isBlank()) "Нет модераторов"
+                                                else "Ничего не найдено"
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    items(filteredModerators, key = { it.id }) { moderator ->
+                                        ModeratorCard(
+                                            moderator = moderator,
+                                            onDelete = { selectedForDelete = moderator }
                                         )
                                     }
-                                }
-                            } else {
-                                items(filteredModerators, key = { it.id }) { moderator ->
-                                    ModeratorCard(
-                                        moderator = moderator,
-                                        onDelete = { selectedForDelete = moderator }
-                                    )
                                 }
                             }
                         }
@@ -236,7 +240,7 @@ fun ModeratorsManagementScreen(
                         selectedForDelete = null
                     }
                 ) {
-                    Text("Удалить")
+                    Text("Отключить")
                 }
             },
             dismissButton = {
@@ -245,7 +249,7 @@ fun ModeratorsManagementScreen(
                 }
             },
             title = { Text("Удаление") },
-            text = { Text("Удалить этого модератора?") }
+            text = { Text("Отключить этого модератора?") }
         )
     }
 }
@@ -353,7 +357,7 @@ private fun ModeratorCard(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "УДАЛИТЬ",
+                                text = "ОТКЛЮЧИТЬ",
                                 color = AlertRed,
                                 style = MaterialTheme.typography.labelMedium
                             )
