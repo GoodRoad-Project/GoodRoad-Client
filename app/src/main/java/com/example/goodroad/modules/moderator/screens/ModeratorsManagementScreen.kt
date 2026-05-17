@@ -1,12 +1,42 @@
 package com.example.goodroad.modules.moderator.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -14,11 +44,23 @@ import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.moderator.data.ModeratorView
 import com.example.goodroad.modules.moderator.presentation.ModeratorViewModel
 import com.example.goodroad.ui.buttons.PrimaryButton
-import com.example.goodroad.ui.fields.*
-import com.example.goodroad.ui.theme.*
-import com.example.goodroad.validation.*
-
-private val Green = Color(0xFF2E7D32)
+import com.example.goodroad.ui.fields.PasswordField
+import com.example.goodroad.ui.fields.PhoneField
+import com.example.goodroad.ui.fields.PlainField
+import androidx.compose.foundation.layout.size
+import com.example.goodroad.ui.theme.AlertRed
+import com.example.goodroad.ui.theme.BackgroundLight
+import com.example.goodroad.ui.theme.BorderWarm
+import com.example.goodroad.ui.theme.InclusiveViolet
+import com.example.goodroad.ui.theme.SafeGreen
+import com.example.goodroad.ui.theme.SurfaceWarm
+import com.example.goodroad.ui.theme.TextPrimary
+import com.example.goodroad.ui.theme.UrbanBrown
+import com.example.goodroad.ui.theme.WarningOrange
+import com.example.goodroad.validation.PHONE_FORMAT_WARNING
+import com.example.goodroad.validation.formatPhoneForRequest
+import com.example.goodroad.validation.isAllowedDigitsInput
+import com.example.goodroad.validation.normalizeRequiredRussianPhone
 
 @Composable
 private fun NameField(
@@ -108,11 +150,11 @@ fun ModeratorsManagementScreen(
                                         Icon(Icons.Default.Person, null)
                                     },
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = Green,
-                                        unfocusedBorderColor = Green,
+                                        focusedBorderColor = SafeGreen,
+                                        unfocusedBorderColor = SafeGreen,
                                         focusedContainerColor = Color.White,
                                         unfocusedContainerColor = Color.White,
-                                        cursorColor = Green,
+                                        cursorColor = SafeGreen,
                                         focusedTextColor = MaterialTheme.colorScheme.onBackground,
                                         unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                                     )
@@ -186,7 +228,9 @@ fun ModeratorsManagementScreen(
             onDismissRequest = { selectedForDelete = null },
             confirmButton = {
                 Button(
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
                     onClick = {
                         viewModel.disableModerator(moderator.id)
                         selectedForDelete = null
@@ -216,31 +260,106 @@ private fun ModeratorCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(2.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = SurfaceWarm
+        ),
+        border = BorderStroke(1.dp, BorderWarm),
+        elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = listOfNotNull(moderator.firstName, moderator.lastName)
                         .joinToString(" ")
-                        .ifBlank { "Без имени" }
+                        .ifBlank { "Без имени" },
+                    style = MaterialTheme.typography.titleLarge,
+                    color = TextPrimary
                 )
-                Text(text = moderator.role ?: "", color = MaterialTheme.colorScheme.primary)
-                Text(text = if (moderator.active) "ACTIVE" else "DISABLED")
+
+                Spacer(Modifier.height(4.dp))
+
+                Text(
+                    text = when (moderator.role) {
+                        "MODERATOR_ADMIN" -> "Администратор"
+                        "MODERATOR" -> "Модератор"
+                        else -> moderator.role ?: ""
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = UrbanBrown
+                )
             }
+
+            Spacer(Modifier.width(12.dp))
+
             when {
-                isAdmin -> Text("ADMIN", color = MaterialTheme.colorScheme.primary)
-                isDisabled -> Text("DISABLED", color = MaterialTheme.colorScheme.error)
-                else -> Button(
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    onClick = onDelete
-                ) { Text("Удалить") }
+                isAdmin -> {
+                    Surface(
+                        modifier = Modifier.size(width = 128.dp, height = 40.dp),
+                        color = InclusiveViolet.copy(alpha = 0.22f),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, InclusiveViolet)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "АДМИН",
+                                color = InclusiveViolet,
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
+                }
+
+                isDisabled -> {
+                    Surface(
+                        modifier = Modifier.size(width = 128.dp, height = 40.dp),
+                        color = WarningOrange.copy(alpha = 0.22f),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, WarningOrange)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "ОТКЛЮЧЕН",
+                                color = WarningOrange,
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
+                }
+
+                else -> {
+                    Surface(
+                        modifier = Modifier
+                            .size(width = 128.dp, height = 40.dp)
+                            .clickable { onDelete() },
+                        color = AlertRed.copy(alpha = 0.22f),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, AlertRed)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "УДАЛИТЬ",
+                                color = AlertRed,
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -270,7 +389,12 @@ private fun AddModeratorDialog(
                         return@Button
                     }
                     errorText = null
-                    onAdd(firstName.trim(), lastName.trim(), formatPhoneForRequest(phoneDigits), password)
+                    onAdd(
+                        firstName.trim(),
+                        lastName.trim(),
+                        formatPhoneForRequest(phoneDigits),
+                        password
+                    )
                 }
             ) {
                 Text("Создать")
@@ -282,8 +406,16 @@ private fun AddModeratorDialog(
         title = { Text("Добавить модератора") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                NameField(value = firstName, onValueChange = { firstName = it }, label = "Имя")
-                NameField(value = lastName, onValueChange = { lastName = it }, label = "Фамилия")
+                NameField(
+                    value = firstName,
+                    onValueChange = { firstName = it },
+                    label = "Имя"
+                )
+                NameField(
+                    value = lastName,
+                    onValueChange = { lastName = it },
+                    label = "Фамилия"
+                )
                 PhoneField(
                     value = phone,
                     onValueChange = { value ->
@@ -299,9 +431,16 @@ private fun AddModeratorDialog(
                     label = "Телефон",
                     warning = phoneWarning
                 )
-                PasswordField(value = password, onValueChange = { password = it }, label = "Пароль")
+                PasswordField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = "Пароль"
+                )
                 if (!errorText.isNullOrBlank()) {
-                    Text(text = errorText!!, color = MaterialTheme.colorScheme.error)
+                    Text(
+                        text = errorText!!,
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
             }
         }
