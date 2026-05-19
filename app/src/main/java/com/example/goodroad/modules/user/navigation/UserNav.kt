@@ -60,7 +60,7 @@ fun UserNav(
     val reviewsFactory = object : ViewModelProvider.Factory {
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
             return ReviewsViewModel(
-                ReviewRepository(reviewApi, userApi)
+                ReviewRepository(reviewApi)
             ) as T
         }
     }

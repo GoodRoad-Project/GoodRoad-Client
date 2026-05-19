@@ -9,6 +9,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import com.example.goodroad.modules.user.presentation.UserViewModel
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
@@ -81,23 +85,60 @@ fun UserProfileScreen(
                             containerColor = UrbanBrown.copy(alpha = 0.08f)
                         )
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "${u.firstName ?: ""} ${u.lastName ?: ""}".trim(),
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = UrbanBrown
-                            )
 
-                            Spacer(Modifier.height(6.dp))
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = "${u.firstName ?: ""} ${u.lastName ?: ""}".trim(),
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = UrbanBrown
+                                )
 
-                            Text(
-                                text = "Роль: ${u.role ?: ""}",
-                                fontSize = 16.sp,
-                                color = UrbanBrown.copy(alpha = 0.8f)
-                            )
+                                Spacer(Modifier.height(6.dp))
+
+                                Text(
+                                    text = "Роль: ${u.role ?: ""}",
+                                    fontSize = 16.sp,
+                                    color = UrbanBrown.copy(alpha = 0.8f)
+                                )
+                            }
+
+                            if (!u.photoUrl.isNullOrBlank()) {
+
+                                AsyncImage(
+                                    model = u.photoUrl,
+                                    contentDescription = "Фото профиля",
+                                    modifier = Modifier
+                                        .size(90.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+
+                            } else {
+
+                                Surface(
+                                    modifier = Modifier.size(90.dp),
+                                    shape = CircleShape,
+                                    color = WhiteSoft
+                                ) {
+                                    Box(
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "👤",
+                                            fontSize = 32.sp
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -107,6 +148,7 @@ fun UserProfileScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
+
                         PrimaryButton(
                             text = "Выбрать препятствия",
                             backgroundColor = UrbanBrown,

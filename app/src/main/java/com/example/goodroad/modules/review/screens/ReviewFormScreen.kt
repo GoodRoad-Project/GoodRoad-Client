@@ -1,39 +1,72 @@
 package com.example.goodroad.modules.review.screens
 
-import android.content.*
-import android.location.*
-import androidx.activity.compose.*
-import androidx.activity.result.contract.*
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.*
-import androidx.compose.material.icons.*
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.*
-import androidx.compose.ui.platform.*
-import androidx.compose.ui.text.input.*
-import androidx.compose.ui.unit.*
+import android.content.Context
+import android.location.Address
+import android.location.Geocoder
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Photo
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.review.data.ReviewAddress
 import com.example.goodroad.modules.review.data.ReviewCardResp
 import com.example.goodroad.modules.review.data.ReviewObstacle
 import com.example.goodroad.modules.review.data.UpsertReviewReq
 import com.example.goodroad.modules.review.presentation.ReviewsViewModel
-import com.example.goodroad.ui.buttons.*
 import com.example.goodroad.ui.AuthStatusText
-import com.example.goodroad.ui.fields.*
 import com.example.goodroad.ui.ReviewObstacleTypes
 import com.example.goodroad.ui.ReviewPhotosStrip
 import com.example.goodroad.ui.SeveritySelector
-import com.example.goodroad.ui.obstacleLabel
-import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.UserDecor
+import com.example.goodroad.ui.buttons.PrimaryButton
+import com.example.goodroad.ui.fields.PlainField
+import com.example.goodroad.ui.obstacleLabel
+import com.example.goodroad.ui.theme.BackgroundLight
+import com.example.goodroad.ui.theme.BorderWarm
+import com.example.goodroad.ui.theme.SafeGreen
+import com.example.goodroad.ui.theme.TextPrimary
+import com.example.goodroad.ui.theme.UrbanBrown
 import com.example.goodroad.validation.COMMENT_MAX_LENGTH
 import com.example.goodroad.validation.COORDINATE_MAX_LENGTH
 import com.example.goodroad.validation.PLACE_NAME_MAX_LENGTH
-import kotlinx.coroutines.*
-import java.util.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Locale
 
 @Composable
 fun ReviewFormScreen(
@@ -53,6 +86,7 @@ fun ReviewFormScreen(
     var rating by remember(reviewKey) { mutableStateOf(initialReview?.rating?.toInt()) }
     var comment by remember(reviewKey) { mutableStateOf(initialReview?.comment ?: "") }
     var formError by remember(reviewKey) { mutableStateOf<String?>(null) }
+
     val photoUrls = remember(reviewKey) {
         mutableStateListOf<String>().apply {
             addAll(initialReview?.photoUrls.orEmpty())
@@ -90,7 +124,9 @@ fun ReviewFormScreen(
     ) { uris ->
         if (uris.isNotEmpty()) {
             reviewsViewModel.uploadReviewPhotos(context, uris) { uploadedUrls ->
-                photoUrls.addAll(uploadedUrls)
+                uploadedUrls
+                    .filter { it.isNotBlank() }
+                    .forEach { photoUrls.add(it) }
             }
         }
     }
@@ -267,7 +303,7 @@ fun ReviewFormScreen(
                 border = BorderStroke(1.dp, BorderWarm)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Photo,
+                    imageVector = Icons.Filled.Photo,
                     contentDescription = null,
                     tint = UrbanBrown
                 )
@@ -347,7 +383,7 @@ fun ReviewFormScreen(
                                 )
                             },
                             comment = comment.trim().ifBlank { null },
-                            photoUrls = photoUrls.toList()
+                            photoUrls = photoUrls.filter { it.isNotBlank() }
                         )
 
                         sentToViewModel = true
