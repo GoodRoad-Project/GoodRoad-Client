@@ -51,7 +51,6 @@ import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.ReviewObstacleTypes
 import com.example.goodroad.ui.ReviewPhotosStrip
 import com.example.goodroad.ui.SeveritySelector
-import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.fields.PlainField
 import com.example.goodroad.ui.obstacleLabel
@@ -141,8 +140,6 @@ fun ReviewFormScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
-            UserDecor()
-
             Text(
                 text = if (isEdit) "Редактирование отзыва" else "Новый отзыв",
                 style = MaterialTheme.typography.headlineLarge,

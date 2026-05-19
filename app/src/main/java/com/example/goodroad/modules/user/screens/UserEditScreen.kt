@@ -24,7 +24,6 @@ import coil.compose.AsyncImage
 import com.example.goodroad.modules.user.presentation.UserViewModel
 import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.AuthSuccessText
-import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.fields.PasswordField
 import com.example.goodroad.ui.fields.PhoneField
@@ -113,7 +112,6 @@ fun UserEditScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
-            UserDecor()
 
             Text(
                 text = "Редактирование профиля",

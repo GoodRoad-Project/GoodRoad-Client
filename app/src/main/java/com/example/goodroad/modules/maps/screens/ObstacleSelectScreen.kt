@@ -76,11 +76,9 @@ fun ObstacleSelectScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
+                    .padding(bottom = 140.dp)
                     .padding(24.dp)
             ) {
-
-                UserDecor()
-
                 Text(
                     text = "Выбор препятствий",
                     style = MaterialTheme.typography.headlineLarge,
@@ -211,6 +209,33 @@ fun ObstacleSelectScreen(
 
                 Spacer(modifier = Modifier.height(30.dp))
 
+
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(6.dp)
+                    .align(Alignment.CenterEnd)
+                    .background(UrbanBrown.copy(alpha = 0.25f))
+            )
+
+            Box(
+                modifier = Modifier
+                    .width(6.dp)
+                    .height(60.dp)
+                    .offset(y = (scrollState.value * 0.2f).dp)
+                    .align(Alignment.TopEnd)
+                    .background(UrbanBrown)
+            )
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .background(BackgroundLight)
+                    .padding(16.dp)
+            ) {
+
                 PrimaryButton(
                     text = if (isSaving) "Сохраняем..." else "Сохранить",
                     enabled = !isSaving && !isLoading
@@ -224,9 +249,7 @@ fun ObstacleSelectScreen(
                             selected = selected,
                             maxAllowedSeverity = if (selected) {
                                 (severityMap[obstacle.obstacleType] ?: 1).toShort()
-                            } else {
-                                null
-                            }
+                            } else null
                         )
                     }
 
@@ -246,23 +269,6 @@ fun ObstacleSelectScreen(
                     onBackToProfile()
                 }
             }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(6.dp)
-                    .align(Alignment.CenterEnd)
-                    .background(UrbanBrown.copy(alpha = 0.25f))
-            )
-
-            Box(
-                modifier = Modifier
-                    .width(6.dp)
-                    .height(60.dp)
-                    .offset(y = (scrollState.value * 0.2f).dp)
-                    .align(Alignment.TopEnd)
-                    .background(UrbanBrown)
-            )
         }
     }
 }

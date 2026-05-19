@@ -55,9 +55,6 @@ fun UserReviewsScreen(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
-
-            UserDecor()
-
             Text(
                 text = "Мои отзывы",
                 style = MaterialTheme.typography.headlineLarge,
