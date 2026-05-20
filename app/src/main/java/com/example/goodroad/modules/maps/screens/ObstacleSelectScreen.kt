@@ -257,17 +257,6 @@ fun ObstacleSelectScreen(
                         onSaved()
                     }
                 }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                PrimaryButton(
-                    text = "Назад в профиль",
-                    backgroundColor = UrbanBrown,
-                    contentColor = WhiteSoft,
-                    enabled = !isSaving
-                ) {
-                    onBackToProfile()
-                }
             }
         }
     }

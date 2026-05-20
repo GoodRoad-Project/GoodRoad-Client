@@ -380,15 +380,6 @@ fun UserEditScreen(
                 confirmNewPassword = ""
                 errorText = null
             }
-
-            Spacer(Modifier.height(12.dp))
-
-            PrimaryButton(
-                text = "Назад в профиль",
-                backgroundColor = UrbanBrown,
-                contentColor = WhiteSoft,
-                onClick = onBack
-            )
         }
     }
 }

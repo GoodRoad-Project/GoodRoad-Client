@@ -397,15 +397,6 @@ fun ReviewFormScreen(
                     }
                 }
             }
-
-            Spacer(Modifier.height(10.dp))
-
-            PrimaryButton(
-                text = "Назад к отзывам",
-                backgroundColor = UrbanBrown
-            ) {
-                onBack()
-            }
         }
     }
 }
