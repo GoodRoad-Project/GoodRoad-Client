@@ -42,6 +42,9 @@ class MapActivity : AppCompatActivity() {
     }
     private var startLat: Double = 0.0
     private var startLon: Double = 0.0
+    private var fastRoute: PathResponse? = null
+    private var balancedRoute: PathResponse? = null
+    private var safeRoute: PathResponse? = null
 
     private val api: GoodRoadApi by lazy {
         ApiClient.routeApi
@@ -147,25 +150,46 @@ class MapActivity : AppCompatActivity() {
 
             val res = ApiClient.obstacleApi.getUserObstaclePolicies()
             val policies = res.body()
-            val allowedTypes = setOf("SAND", "GRAVEL")
 
             if(policies != null) {
                 val request = RouteRequest(
                     start = "$startLat,$startLon",
                     end = "$endLat,$endLon",
-                    avoidStairs = policies.find { it.obstacleType == "STAIRS" }?.selected == true,
-                    maxCurbHeight = policies.find { it.obstacleType == "CURB" }?.maxAllowedSeverity?.toInt(),
-                    maxSlopeAngle = policies.find { it.obstacleType == "ROAD_SLOPE" }?.maxAllowedSeverity?.toDouble(),
-                    avoidBadRoad = policies.find { it.obstacleType == "POTHOLES" }?.selected == true,
-                    avoidSurfaceTypes = policies.filter { it.selected && it.obstacleType in allowedTypes }
-                        .map { it.obstacleType }
+                    maxStairsSeverity = policies.find { it.obstacleType == "STAIRS" }?.maxAllowedSeverity,
+                    maxCurbSeverity = policies.find { it.obstacleType == "CURB" }?.maxAllowedSeverity,
+                    maxSlopeSeverity = policies.find { it.obstacleType == "ROAD_SLOPE" }?.maxAllowedSeverity,
+                    maxPotholesSeverity = policies.find { it.obstacleType == "POTHOLES" }?.maxAllowedSeverity,
+                    maxSandSeverity = policies.find { it.obstacleType == "SAND" }?.maxAllowedSeverity,
+                    maxGravelSeverity = policies.find { it.obstacleType == "GRAVEL" }?.maxAllowedSeverity
                 )
 
                 //drawRoute(RouteResponse(id = "test", paths = emptyList()))
 
                 try {
                     val response = api.getRoute(request)
-                    drawRoute(response)
+
+                    fastRoute = response.paths.find { it.routeType == "fast" }
+                    balancedRoute = response.paths.find { it.routeType == "balanced" }
+                    safeRoute = response.paths.find { it.routeType == "safe" }
+
+                    if (safeRoute != null) {
+                        drawRoute(safeRoute)
+                    } else {
+                        Toast.makeText(this@MapActivity, "Безопасный маршрут не найден", Toast.LENGTH_SHORT).show()
+                    }
+
+                    if (balancedRoute != null) {
+                        drawRoute(balancedRoute)
+                    } else {
+                        Toast.makeText(this@MapActivity, "Сбалансированный маршрут не найден", Toast.LENGTH_SHORT).show()
+                    }
+
+                    if (fastRoute != null) {
+                        drawRoute(fastRoute)
+                    } else {
+                        Toast.makeText(this@MapActivity, "Быстрый маршрут не найден", Toast.LENGTH_SHORT).show()
+                    }
+
                 } catch (e: Exception) {
                     Toast.makeText(this@MapActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT)
                         .show()
