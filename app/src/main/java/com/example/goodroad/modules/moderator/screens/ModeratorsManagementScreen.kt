@@ -100,12 +100,17 @@ fun ModeratorsManagementScreen(
     }
 
     val filteredModerators = remember(moderators, searchQuery) {
-        if (searchQuery.isBlank()) moderators
-        else moderators.filter { moderator ->
-            listOfNotNull(moderator.firstName, moderator.lastName)
-                .joinToString(" ")
-                .contains(searchQuery, ignoreCase = true)
-        }
+        moderators
+            .filter { it.role != "MODERATOR_ADMIN" }
+            .filter { moderator ->
+                if (searchQuery.isBlank()) {
+                    true
+                } else {
+                    listOfNotNull(moderator.firstName, moderator.lastName)
+                        .joinToString(" ")
+                        .contains(searchQuery, ignoreCase = true)
+                }
+            }
     }
 
     Surface(
