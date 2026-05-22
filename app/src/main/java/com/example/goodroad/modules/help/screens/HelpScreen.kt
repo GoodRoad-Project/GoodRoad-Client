@@ -9,11 +9,13 @@ import com.example.goodroad.modules.help.presentation.HelpViewModel
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.*
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun HelpScreen(
     helpViewModel: HelpViewModel,
-    onCreateRequest: () -> Unit
+    onCreateRequest: () -> Unit,
+    onMyRequests: () -> Unit
 ) {
 
     Surface(
@@ -31,33 +33,33 @@ fun HelpScreen(
 
             Text(
                 text = "Помощь волонтёров",
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary
+                style = MaterialTheme.typography.headlineLarge
             )
 
             Spacer(Modifier.height(20.dp))
 
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor =
-                        UrbanBrown.copy(alpha = 0.08f)
+                    containerColor = UrbanBrown.copy(alpha = 0.06f)
                 )
             ) {
 
                 Column(
-                    modifier = Modifier.padding(18.dp)
+                    modifier = Modifier.padding(16.dp)
                 ) {
 
                     Text(
-                        "Нужна помощь в сопровождении маршрута?"
+                        text = "Нуждаетесь в сопровождении?",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = UrbanBrown
                     )
 
-                    Spacer(
-                        Modifier.height(8.dp)
-                    )
+                    Spacer(Modifier.height(6.dp))
 
                     Text(
-                        "Здесь можно оставить заявку для волонтёра"
+                        text = "Оставьте заявку для волонтёра, и вам помогут с маршрутом, передвижением или сопровождением.",
+                        style = MaterialTheme.typography.bodyLarge
                     )
                 }
             }
@@ -67,6 +69,13 @@ fun HelpScreen(
             PrimaryButton(
                 text = "Оставить заявку",
                 onClick = onCreateRequest
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            PrimaryButton(
+                text = "Мои заявки",
+                onClick = onMyRequests
             )
         }
     }

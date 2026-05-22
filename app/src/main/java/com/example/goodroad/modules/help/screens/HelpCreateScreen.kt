@@ -159,18 +159,6 @@ fun HelpCreateScreen(
             Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
-                value = specialNotes,
-                onValueChange = { specialNotes = it },
-                label = { Text("Особые условия (что важно учитывать)") },
-                placeholder = { Text("Например: инвалидная коляска, тихая среда, медленный темп") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                minLines = 2
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            OutlinedTextField(
                 value = comment,
                 onValueChange = { comment = it },
                 label = { Text("Комментарий") },

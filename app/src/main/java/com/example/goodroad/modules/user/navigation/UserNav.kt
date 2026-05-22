@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -27,10 +26,11 @@ import com.example.goodroad.modules.user.screens.UserEditScreen
 import com.example.goodroad.ui.user.UserDeleteAccountScreen
 import com.example.goodroad.ui.user.UserProfileScreen
 import androidx.compose.material.icons.filled.VolunteerActivism
-
+import com.example.goodroad.modules.help.screens.UserRequestsScreen
 import com.example.goodroad.modules.help.presentation.HelpViewModel
 import com.example.goodroad.modules.help.screens.HelpScreen
 import com.example.goodroad.modules.help.screens.HelpCreateScreen
+import androidx.compose.ui.Modifier
 
 enum class BottomTab {
     MAP,
@@ -46,7 +46,8 @@ enum class OverlayScreen {
     REVIEW_FORM,
     REVIEW_DETAILS,
     OBSTACLES,
-    HELP_CREATE
+    HELP_CREATE,
+    HELP_MY_REQUESTS
 }
 
 @Composable
@@ -80,7 +81,6 @@ fun UserNav(
         }
     }
 
-    // ✅ NEW: HELP VM FACTORY
     val helpFactory = object : ViewModelProvider.Factory {
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
             return HelpViewModel() as T
@@ -90,8 +90,6 @@ fun UserNav(
     val userViewModel: UserViewModel = viewModel(factory = userFactory)
     val reviewsViewModel: ReviewsViewModel = viewModel(factory = reviewsFactory)
     val mapsViewModel: MapsViewModel = viewModel(factory = mapsFactory)
-
-    // ✅ NEW
     val helpViewModel: HelpViewModel = viewModel(factory = helpFactory)
 
     var currentTab by rememberSaveable { mutableStateOf(BottomTab.MAP) }
@@ -182,11 +180,13 @@ fun UserNav(
                     }
 
                     BottomTab.HELP -> {
-
                         HelpScreen(
                             helpViewModel = helpViewModel,
                             onCreateRequest = {
                                 overlayScreen = OverlayScreen.HELP_CREATE
+                            },
+                            onMyRequests = {
+                                overlayScreen = OverlayScreen.HELP_MY_REQUESTS
                             }
                         )
                     }
@@ -242,9 +242,7 @@ fun UserNav(
                             review = review,
                             reviewsViewModel = reviewsViewModel,
                             onBack = { overlayScreen = OverlayScreen.NONE },
-                            onEdit = {
-                                overlayScreen = OverlayScreen.REVIEW_FORM
-                            },
+                            onEdit = { overlayScreen = OverlayScreen.REVIEW_FORM },
                             onDeleted = {
                                 selectedReview = null
                                 overlayScreen = OverlayScreen.NONE
@@ -264,16 +262,15 @@ fun UserNav(
                 }
 
                 OverlayScreen.HELP_CREATE -> {
-
                     HelpCreateScreen(
                         helpViewModel = helpViewModel,
-                        onBack = {
-                            overlayScreen = OverlayScreen.NONE
-                        },
-                        onCreated = {
-                            overlayScreen = OverlayScreen.NONE
-                        }
+                        onBack = { overlayScreen = OverlayScreen.NONE },
+                        onCreated = { overlayScreen = OverlayScreen.NONE }
                     )
+                }
+
+                OverlayScreen.HELP_MY_REQUESTS -> {
+                    UserRequestsScreen(helpViewModel = helpViewModel)
                 }
 
                 OverlayScreen.NONE -> Unit
