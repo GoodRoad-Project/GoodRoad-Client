@@ -5,14 +5,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.obstacle.ObstacleRepository
+import com.example.goodroad.modules.help.presentation.HelpViewModel
+import com.example.goodroad.modules.help.screens.HelpCreateScreen
+import com.example.goodroad.modules.help.screens.HelpScreen
+import com.example.goodroad.modules.help.screens.UserRequestsScreen
 import com.example.goodroad.modules.maps.presentation.MapsViewModel
 import com.example.goodroad.modules.maps.screens.MapRouteScreen
 import com.example.goodroad.modules.maps.screens.ObstacleSelectScreen
@@ -25,12 +31,7 @@ import com.example.goodroad.modules.user.presentation.UserViewModel
 import com.example.goodroad.modules.user.screens.UserEditScreen
 import com.example.goodroad.ui.user.UserDeleteAccountScreen
 import com.example.goodroad.ui.user.UserProfileScreen
-import androidx.compose.material.icons.filled.VolunteerActivism
-import com.example.goodroad.modules.help.screens.UserRequestsScreen
-import com.example.goodroad.modules.help.presentation.HelpViewModel
-import com.example.goodroad.modules.help.screens.HelpScreen
-import com.example.goodroad.modules.help.screens.HelpCreateScreen
-import androidx.compose.ui.Modifier
+import com.example.goodroad.ui.user.screens.VolunteerApplicationFormScreen
 
 enum class BottomTab {
     MAP,
@@ -47,7 +48,8 @@ enum class OverlayScreen {
     REVIEW_DETAILS,
     OBSTACLES,
     HELP_CREATE,
-    HELP_MY_REQUESTS
+    HELP_MY_REQUESTS,
+    VOLUNTEER_APPLICATION
 }
 
 @Composable
@@ -199,6 +201,9 @@ fun UserNav(
                             onLogout = onLogout,
                             onSelectObstacles = {
                                 overlayScreen = OverlayScreen.OBSTACLES
+                            },
+                            onBecomeVolunteer = {
+                                overlayScreen = OverlayScreen.VOLUNTEER_APPLICATION
                             }
                         )
                     }
@@ -271,6 +276,13 @@ fun UserNav(
 
                 OverlayScreen.HELP_MY_REQUESTS -> {
                     UserRequestsScreen(helpViewModel = helpViewModel)
+                }
+
+                OverlayScreen.VOLUNTEER_APPLICATION -> {
+                    VolunteerApplicationFormScreen(
+                        onBack = { overlayScreen = OverlayScreen.NONE },
+                        onSubmitted = { overlayScreen = OverlayScreen.NONE }
+                    )
                 }
 
                 OverlayScreen.NONE -> Unit

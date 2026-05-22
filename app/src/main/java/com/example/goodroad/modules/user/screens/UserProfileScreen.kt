@@ -1,17 +1,17 @@
 package com.example.goodroad.ui.user
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import com.example.goodroad.modules.user.presentation.UserViewModel
 import com.example.goodroad.ui.UserDecor
@@ -24,7 +24,8 @@ fun UserProfileScreen(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onLogout: () -> Unit,
-    onSelectObstacles: () -> Unit
+    onSelectObstacles: () -> Unit,
+    onBecomeVolunteer: () -> Unit = {}
 ) {
     val user by userViewModel.user
     val isLoading by userViewModel.isLoading
@@ -91,7 +92,6 @@ fun UserProfileScreen(
                                 .padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-
                             Column(
                                 modifier = Modifier.weight(1f)
                             ) {
@@ -112,7 +112,6 @@ fun UserProfileScreen(
                             }
 
                             if (!u.photoUrl.isNullOrBlank()) {
-
                                 AsyncImage(
                                     model = u.photoUrl,
                                     contentDescription = "Фото профиля",
@@ -121,9 +120,7 @@ fun UserProfileScreen(
                                         .clip(CircleShape),
                                     contentScale = ContentScale.Crop
                                 )
-
                             } else {
-
                                 Surface(
                                     modifier = Modifier.size(90.dp),
                                     shape = CircleShape,
@@ -148,13 +145,20 @@ fun UserProfileScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-
                         PrimaryButton(
                             text = "Выбрать препятствия",
                             backgroundColor = UrbanBrown,
                             contentColor = WhiteSoft
                         ) {
                             onSelectObstacles()
+                        }
+
+                        PrimaryButton(
+                            text = "Стать волонтёром",
+                            backgroundColor = UrbanBrown,
+                            contentColor = WhiteSoft
+                        ) {
+                            onBecomeVolunteer()
                         }
 
                         PrimaryButton(
