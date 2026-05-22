@@ -26,10 +26,16 @@ import com.example.goodroad.modules.user.presentation.UserViewModel
 import com.example.goodroad.modules.user.screens.UserEditScreen
 import com.example.goodroad.ui.user.UserDeleteAccountScreen
 import com.example.goodroad.ui.user.UserProfileScreen
+import androidx.compose.material.icons.filled.VolunteerActivism
+
+import com.example.goodroad.modules.help.presentation.HelpViewModel
+import com.example.goodroad.modules.help.screens.HelpScreen
+import com.example.goodroad.modules.help.screens.HelpCreateScreen
 
 enum class BottomTab {
     MAP,
     REVIEWS,
+    HELP,
     PROFILE
 }
 
@@ -39,7 +45,8 @@ enum class OverlayScreen {
     DELETE_PROFILE,
     REVIEW_FORM,
     REVIEW_DETAILS,
-    OBSTACLES
+    OBSTACLES,
+    HELP_CREATE
 }
 
 @Composable
@@ -73,9 +80,19 @@ fun UserNav(
         }
     }
 
+    // ✅ NEW: HELP VM FACTORY
+    val helpFactory = object : ViewModelProvider.Factory {
+        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+            return HelpViewModel() as T
+        }
+    }
+
     val userViewModel: UserViewModel = viewModel(factory = userFactory)
     val reviewsViewModel: ReviewsViewModel = viewModel(factory = reviewsFactory)
     val mapsViewModel: MapsViewModel = viewModel(factory = mapsFactory)
+
+    // ✅ NEW
+    val helpViewModel: HelpViewModel = viewModel(factory = helpFactory)
 
     var currentTab by rememberSaveable { mutableStateOf(BottomTab.MAP) }
     var overlayScreen by remember { mutableStateOf(OverlayScreen.NONE) }
@@ -103,6 +120,20 @@ fun UserNav(
                     },
                     icon = { Icon(Icons.Default.Star, null) },
                     label = { Text("Отзывы") }
+                )
+
+                NavigationBarItem(
+                    selected = currentTab == BottomTab.HELP,
+                    onClick = {
+                        currentTab = BottomTab.HELP
+                        overlayScreen = OverlayScreen.NONE
+                    },
+                    icon = {
+                        Icon(Icons.Default.VolunteerActivism, null)
+                    },
+                    label = {
+                        Text("Помощь")
+                    }
                 )
 
                 NavigationBarItem(
@@ -146,6 +177,16 @@ fun UserNav(
                             onEditReview = {
                                 selectedReview = it
                                 overlayScreen = OverlayScreen.REVIEW_FORM
+                            }
+                        )
+                    }
+
+                    BottomTab.HELP -> {
+
+                        HelpScreen(
+                            helpViewModel = helpViewModel,
+                            onCreateRequest = {
+                                overlayScreen = OverlayScreen.HELP_CREATE
                             }
                         )
                     }
@@ -219,6 +260,19 @@ fun UserNav(
                         mapsViewModel = mapsViewModel,
                         onBackToProfile = { overlayScreen = OverlayScreen.NONE },
                         onSaved = { overlayScreen = OverlayScreen.NONE }
+                    )
+                }
+
+                OverlayScreen.HELP_CREATE -> {
+
+                    HelpCreateScreen(
+                        helpViewModel = helpViewModel,
+                        onBack = {
+                            overlayScreen = OverlayScreen.NONE
+                        },
+                        onCreated = {
+                            overlayScreen = OverlayScreen.NONE
+                        }
                     )
                 }
 
