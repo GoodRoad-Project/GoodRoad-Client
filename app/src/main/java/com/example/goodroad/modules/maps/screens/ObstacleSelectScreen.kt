@@ -76,11 +76,9 @@ fun ObstacleSelectScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(scrollState)
+                    .padding(bottom = 140.dp)
                     .padding(24.dp)
             ) {
-
-                UserDecor()
-
                 Text(
                     text = "Выбор препятствий",
                     style = MaterialTheme.typography.headlineLarge,
@@ -211,40 +209,7 @@ fun ObstacleSelectScreen(
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                PrimaryButton(
-                    text = if (isSaving) "Сохраняем..." else "Сохранить",
-                    enabled = !isSaving && !isLoading
-                ) {
 
-                    val items = ServerObstacleOptions.map { obstacle ->
-                        val selected = selectedMap[obstacle.obstacleType] == true
-
-                        PolicyItem(
-                            obstacleType = obstacle.obstacleType,
-                            selected = selected,
-                            maxAllowedSeverity = if (selected) {
-                                (severityMap[obstacle.obstacleType] ?: 1).toShort()
-                            } else {
-                                null
-                            }
-                        )
-                    }
-
-                    mapsViewModel.savePolicies(items) {
-                        onSaved()
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                PrimaryButton(
-                    text = "Назад в профиль",
-                    backgroundColor = UrbanBrown,
-                    contentColor = WhiteSoft,
-                    enabled = !isSaving
-                ) {
-                    onBackToProfile()
-                }
             }
 
             Box(
@@ -263,6 +228,36 @@ fun ObstacleSelectScreen(
                     .align(Alignment.TopEnd)
                     .background(UrbanBrown)
             )
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .background(BackgroundLight)
+                    .padding(16.dp)
+            ) {
+
+                PrimaryButton(
+                    text = if (isSaving) "Сохраняем..." else "Сохранить",
+                    enabled = !isSaving && !isLoading
+                ) {
+
+                    val items = ServerObstacleOptions.map { obstacle ->
+                        val selected = selectedMap[obstacle.obstacleType] == true
+
+                        PolicyItem(
+                            obstacleType = obstacle.obstacleType,
+                            selected = selected,
+                            maxAllowedSeverity = if (selected) {
+                                (severityMap[obstacle.obstacleType] ?: 1).toShort()
+                            } else null
+                        )
+                    }
+
+                    mapsViewModel.savePolicies(items) {
+                        onSaved()
+                    }
+                }
+            }
         }
     }
 }

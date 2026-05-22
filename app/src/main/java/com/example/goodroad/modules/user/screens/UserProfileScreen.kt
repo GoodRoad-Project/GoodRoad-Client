@@ -9,13 +9,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.goodroad.ui.buttons.*
-import com.example.goodroad.ui.theme.*
-import com.example.goodroad.ui.UserDecor
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import com.example.goodroad.modules.user.presentation.UserViewModel
-import android.content.Intent
-import com.example.goodroad.MapActivity
-import androidx.compose.ui.platform.LocalContext
+import com.example.goodroad.ui.UserDecor
+import com.example.goodroad.ui.buttons.PrimaryButton
+import com.example.goodroad.ui.theme.*
 
 @Composable
 fun UserProfileScreen(
@@ -23,9 +24,7 @@ fun UserProfileScreen(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onLogout: () -> Unit,
-    onSelectObstacles: () -> Unit,
-    onOpenMap: () -> Unit,
-    onOpenReviews: () -> Unit
+    onSelectObstacles: () -> Unit
 ) {
     val user by userViewModel.user
     val isLoading by userViewModel.isLoading
@@ -45,9 +44,7 @@ fun UserProfileScreen(
         }
 
         userViewModel.isDeleted -> {
-            LaunchedEffect(Unit) {
-                onLogout()
-            }
+            LaunchedEffect(Unit) { onLogout() }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
@@ -71,6 +68,7 @@ fun UserProfileScreen(
                         .fillMaxSize()
                         .padding(24.dp)
                 ) {
+
                     UserDecor()
 
                     Text(
@@ -82,76 +80,98 @@ fun UserProfileScreen(
                     Spacer(Modifier.height(20.dp))
 
                     Card(
+                        modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
                             containerColor = UrbanBrown.copy(alpha = 0.08f)
-                        ),
-                        modifier = Modifier.fillMaxWidth()
+                        )
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "${u.firstName ?: ""} ${u.lastName ?: ""}".trim(),
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = UrbanBrown
-                            )
 
-                            Spacer(Modifier.height(6.dp))
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = "${u.firstName ?: ""} ${u.lastName ?: ""}".trim(),
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = UrbanBrown
+                                )
 
-                            Text(
-                                text = "Роль: ${u.role ?: ""}",
-                                fontSize = 16.sp,
-                                color = UrbanBrown.copy(alpha = 0.8f)
-                            )
+                                Spacer(Modifier.height(6.dp))
+
+                                Text(
+                                    text = "Роль: ${u.role ?: ""}",
+                                    fontSize = 16.sp,
+                                    color = UrbanBrown.copy(alpha = 0.8f)
+                                )
+                            }
+
+                            if (!u.photoUrl.isNullOrBlank()) {
+
+                                AsyncImage(
+                                    model = u.photoUrl,
+                                    contentDescription = "Фото профиля",
+                                    modifier = Modifier
+                                        .size(90.dp)
+                                        .clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+
+                            } else {
+
+                                Surface(
+                                    modifier = Modifier.size(90.dp),
+                                    shape = CircleShape,
+                                    color = WhiteSoft
+                                ) {
+                                    Box(
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "👤",
+                                            fontSize = 32.sp
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
 
-                    Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.weight(1f))
 
-                    PrimaryButton(
-                        text = "Выбрать препятствия",
-                        backgroundColor = UrbanBrown,
-                        contentColor = WhiteSoft
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        onSelectObstacles()
-                    }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                        PrimaryButton(
+                            text = "Выбрать препятствия",
+                            backgroundColor = UrbanBrown,
+                            contentColor = WhiteSoft
+                        ) {
+                            onSelectObstacles()
+                        }
 
-                    val context = LocalContext.current
+                        PrimaryButton(
+                            text = "Редактировать профиль",
+                            onClick = onEdit
+                        )
 
-                    PrimaryButton(
-                        text = "Перейти на карту",
-                        backgroundColor = UrbanBrown,
-                        contentColor = WhiteSoft
-                    ) {
-                        val intent = Intent(context, MapActivity::class.java)
-                        context.startActivity(intent)
-                    }
+                        PrimaryButton(
+                            text = "Удалить аккаунт",
+                            onClick = onDelete
+                        )
 
-                    Spacer(Modifier.height(10.dp))
-
-                    PrimaryButton(
-                        text = "Мои отзывы",
-                        backgroundColor = SafeGreen,
-                        contentColor = WhiteSoft
-                    ) {
-                        onOpenReviews()
-                    }
-
-                    Spacer(Modifier.height(10.dp))
-
-                    PrimaryButton(text = "Редактировать профиль", onClick = onEdit)
-
-                    Spacer(Modifier.height(10.dp))
-
-                    PrimaryButton(text = "Удалить аккаунт", onClick = onDelete)
-
-                    Spacer(Modifier.height(10.dp))
-
-                    PrimaryButton(text = "Выйти") {
-                        userViewModel.logout { onLogout() }
+                        PrimaryButton(
+                            text = "Выйти из аккаунта"
+                        ) {
+                            userViewModel.logout { onLogout() }
+                        }
                     }
                 }
             }

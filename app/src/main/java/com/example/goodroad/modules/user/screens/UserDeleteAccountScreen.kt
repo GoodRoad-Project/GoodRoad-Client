@@ -67,17 +67,5 @@ fun UserDeleteAccountScreen(
                 onExit()
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        PrimaryButton(
-            text = "Назад в профиль",
-            backgroundColor = UrbanBrown,
-            contentColor = WhiteSoft,
-            onClick = {
-                viewModel.clearMessages()
-                onBack()
-            }
-        )
     }
 }

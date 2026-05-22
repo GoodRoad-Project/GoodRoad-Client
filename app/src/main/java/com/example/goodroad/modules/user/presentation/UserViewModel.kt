@@ -125,28 +125,40 @@ class UserViewModel(
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null
+            successMessage.value = null
+
+            var tempFile: File? = null
 
             try {
                 val resolver = context.contentResolver
                 val mimeType = resolver.getType(uri) ?: "image/*"
 
-                val file = File.createTempFile("avatar", ".tmp", context.cacheDir)
+                tempFile = File.createTempFile("avatar", ".tmp", context.cacheDir)
 
                 resolver.openInputStream(uri)?.use { input ->
-                    file.outputStream().use { it.write(input.readBytes()) }
-                }
+                    tempFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                } ?: throw IllegalStateException("Не удалось прочитать файл")
 
-                val body = file.asRequestBody(mimeType.toMediaTypeOrNull())
-                val part = MultipartBody.Part.createFormData("file", file.name, body)
+                val body = tempFile.asRequestBody(mimeType.toMediaTypeOrNull())
+                val part = MultipartBody.Part.createFormData("file", tempFile.name, body)
 
                 val response = repository.uploadAvatar(part)
                     ?: throw IllegalStateException("Сервер не вернул фото")
 
+                val current = user.value
+                if (current != null) {
+                    user.value = current.copy(photoUrl = response.photoUrl)
+                }
+
+                successMessage.value = "Фото профиля обновлено"
                 onSuccess(response.photoUrl)
 
             } catch (e: Exception) {
                 errorMessage.value = mapUserError(e)
             } finally {
+                tempFile?.delete()
                 isLoading.value = false
             }
         }
