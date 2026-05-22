@@ -3,9 +3,9 @@ package com.example.goodroad.modules.moderator.data
 import com.example.goodroad.data.network.ApiClient
 import retrofit2.HttpException
 
-class ModeratorRepository {
-
-    private val api = ApiClient.moderatorApi
+class ModeratorRepository(
+    private val api: ModeratorApi = ApiClient.moderatorApi
+) {
 
     suspend fun getModerators(): List<ModeratorView> {
         val response = api.getModerators()

@@ -4,9 +4,9 @@ import com.example.goodroad.data.network.ApiClient
 import retrofit2.HttpException
 import java.io.IOException
 
-class AuthRepository {
-
-    private val api = ApiClient.authApi
+class AuthRepository(
+    private val api: AuthApi = ApiClient.authApi
+) {
 
     suspend fun loginUser(phone: String, password: String): AuthResp {
         return try {
