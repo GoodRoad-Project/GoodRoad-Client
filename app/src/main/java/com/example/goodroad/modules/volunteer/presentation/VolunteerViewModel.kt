@@ -192,8 +192,27 @@ class VolunteerViewModel(
                 onSuccess()
 
             } catch (e: Exception) {
-                errorMessage.value = e.message ?: "Ошибка отправки заявки"
-            } finally {
+
+                val message = when (e) {
+
+                    is HttpException -> {
+                        when (e.code()) {
+                            400 -> "Ошибка в заполненных данных"
+                            403 -> "Нет прав для выполнения действия"
+                            404 -> "Объект не найден"
+                            409 -> "Заявка уже существует или уже отправлена"
+                            else -> "Ошибка сервера (${e.code()})"
+                        }
+                    }
+
+                    is IOException -> "Ошибка сети. Проверьте интернет"
+
+                    else -> e.message ?: "Ошибка отправки заявки"
+                }
+
+                errorMessage.value = message
+            }
+            finally {
                 tempFiles.forEach { it.delete() }
                 isLoading.value = false
             }

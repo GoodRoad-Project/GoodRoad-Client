@@ -67,6 +67,8 @@ fun VolunteerApplicationFormScreen(
                 verticalArrangement = Arrangement.Center
             ) {
 
+                UserDecor();
+
                 Text(
                     text = "Заявка отправлена",
                     style = MaterialTheme.typography.headlineLarge,
@@ -75,7 +77,10 @@ fun VolunteerApplicationFormScreen(
 
                 Spacer(Modifier.height(12.dp))
 
-                Text("Мы рассмотрим её и свяжемся с вами")
+                Text(
+                    text = "Мы рассмотрим её и свяжемся с вами в течение недели!",
+                    style = MaterialTheme.typography.titleLarge
+                )
 
                 Spacer(Modifier.height(24.dp))
 
@@ -108,8 +113,14 @@ fun VolunteerApplicationFormScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                if (error != null) Text(error!!, color = MaterialTheme.colorScheme.error)
-                if (success != null) Text(success!!, color = MaterialTheme.colorScheme.primary)
+                ErrorBlock(error)
+
+                if (success != null) {
+                    Text(
+                        success!!,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
 
                 Spacer(Modifier.height(12.dp))
 
@@ -157,13 +168,11 @@ fun VolunteerApplicationFormScreen(
 
                 if (selectedUris.isNotEmpty()) {
 
-                    Text("Сертификаты:", style = MaterialTheme.typography.titleMedium)
+                    Text("Сертификаты:")
 
                     Spacer(Modifier.height(8.dp))
 
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(selectedUris) { uri ->
 
                             Box {
@@ -194,7 +203,26 @@ fun VolunteerApplicationFormScreen(
                     text = if (isLoading) "Отправка..." else "Отправить",
                     onClick = {
 
-                        if (dobroUrl.isBlank() || phone.isBlank()) return@PrimaryButton
+                        if (dobroUrl.isBlank() || phone.isBlank()) {
+                            viewModel.errorMessage.value = "Заполните все обязательные поля"
+                            return@PrimaryButton
+                        }
+
+                        val phoneRegex = Regex("^\\+?[0-9]{11}$")
+
+                        if (!phoneRegex.matches(phone.trim())) {
+                            viewModel.errorMessage.value = "Некорректный номер телефона"
+                            return@PrimaryButton
+                        }
+
+                        val nickname = socialNickname.trim()
+
+                        val nicknameRegex = Regex("^[a-zA-Z0-9_.@]{3,32}$")
+
+                        if (nickname.isNotBlank() && !nicknameRegex.matches(nickname)) {
+                            viewModel.errorMessage.value = "Ник должен содержать только латиницу, цифры, _ или ."
+                            return@PrimaryButton
+                        }
 
                         viewModel.submitVolunteerApplication(
                             context = context,
@@ -210,5 +238,62 @@ fun VolunteerApplicationFormScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ErrorBlock(error: String?) {
+    if (error.isNullOrBlank()) return
+
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
+        )
+    ) {
+        Text(
+            text = error,
+            color = MaterialTheme.colorScheme.onErrorContainer,
+            modifier = Modifier.padding(12.dp)
+        )
+    }
+
+    Spacer(Modifier.height(8.dp))
+}
+
+fun Throwable.toUserMessage(): String {
+
+    val msg = this.message ?: return "Неизвестная ошибка"
+
+    return when {
+
+        msg.contains("DOBRO_URL_INVALID") ->
+            "Некорректная ссылка на dobro.ru"
+
+        msg.contains("PHONE_INVALID") ->
+            "Некорректный номер телефона"
+
+        msg.contains("CERTIFICATE_URL_INVALID") ->
+            "Ошибка в ссылке сертификата"
+
+        msg.contains("APPLICATION_ALREADY_PENDING") ->
+            "Заявка уже отправлена и находится на рассмотрении"
+
+        msg.contains("ALREADY_VOLUNTEER") ->
+            "Вы уже зарегистрированы как волонтёр"
+
+        msg.contains("403") ->
+            "Нет прав для выполнения действия"
+
+        msg.contains("404") ->
+            "Объект не найден"
+
+        msg.contains("409") ->
+            "Конфликт данных (заявка уже существует)"
+
+        msg.contains("400") ->
+            "Ошибка в заполненных данных"
+
+        else ->
+            "Ошибка сервера. Попробуйте позже"
     }
 }
