@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -14,6 +15,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.obstacle.ObstacleRepository
+import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
+import com.example.goodroad.modules.volunteer.screens.HelpRequestCreateScreen
+import com.example.goodroad.modules.volunteer.screens.VolunteerScreen
+import com.example.goodroad.modules.volunteer.screens.UserHelpRequestsScreen
 import com.example.goodroad.modules.maps.presentation.MapsViewModel
 import com.example.goodroad.modules.maps.screens.MapRouteScreen
 import com.example.goodroad.modules.maps.screens.ObstacleSelectScreen
@@ -26,10 +31,13 @@ import com.example.goodroad.modules.user.presentation.UserViewModel
 import com.example.goodroad.modules.user.screens.UserEditScreen
 import com.example.goodroad.ui.user.UserDeleteAccountScreen
 import com.example.goodroad.ui.user.UserProfileScreen
+import com.example.goodroad.ui.volunteer.screens.VolunteerApplicationFormScreen
+import com.example.goodroad.modules.volunteer.data.VolunteerRepository
 
 enum class BottomTab {
     MAP,
     REVIEWS,
+    HELP,
     PROFILE
 }
 
@@ -39,7 +47,10 @@ enum class OverlayScreen {
     DELETE_PROFILE,
     REVIEW_FORM,
     REVIEW_DETAILS,
-    OBSTACLES
+    OBSTACLES,
+    HELP_CREATE,
+    HELP_MY_REQUESTS,
+    VOLUNTEER_APPLICATION
 }
 
 @Composable
@@ -50,6 +61,7 @@ fun UserNav(
     val userApi = ApiClient.userApi
     val reviewApi = ApiClient.reviewApi
     val obstacleApi = ApiClient.obstacleApi
+    val volunteerApi = ApiClient.volunteerApi
 
     val userFactory = object : ViewModelProvider.Factory {
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
@@ -73,9 +85,21 @@ fun UserNav(
         }
     }
 
+    val helpFactory = object : ViewModelProvider.Factory {
+        override fun <T : androidx.lifecycle.ViewModel> create(
+            modelClass: Class<T>
+        ): T {
+
+            return VolunteerViewModel(
+                VolunteerRepository(volunteerApi)
+            ) as T
+        }
+    }
+
     val userViewModel: UserViewModel = viewModel(factory = userFactory)
     val reviewsViewModel: ReviewsViewModel = viewModel(factory = reviewsFactory)
     val mapsViewModel: MapsViewModel = viewModel(factory = mapsFactory)
+    val helpViewModel: VolunteerViewModel = viewModel(factory = helpFactory)
 
     var currentTab by rememberSaveable { mutableStateOf(BottomTab.MAP) }
     var overlayScreen by remember { mutableStateOf(OverlayScreen.NONE) }
@@ -103,6 +127,20 @@ fun UserNav(
                     },
                     icon = { Icon(Icons.Default.Star, null) },
                     label = { Text("Отзывы") }
+                )
+
+                NavigationBarItem(
+                    selected = currentTab == BottomTab.HELP,
+                    onClick = {
+                        currentTab = BottomTab.HELP
+                        overlayScreen = OverlayScreen.NONE
+                    },
+                    icon = {
+                        Icon(Icons.Default.VolunteerActivism, null)
+                    },
+                    label = {
+                        Text("Помощь")
+                    }
                 )
 
                 NavigationBarItem(
@@ -150,6 +188,18 @@ fun UserNav(
                         )
                     }
 
+                    BottomTab.HELP -> {
+                        VolunteerScreen(
+                            helpViewModel = helpViewModel,
+                            onCreateRequest = {
+                                overlayScreen = OverlayScreen.HELP_CREATE
+                            },
+                            onMyRequests = {
+                                overlayScreen = OverlayScreen.HELP_MY_REQUESTS
+                            }
+                        )
+                    }
+
                     BottomTab.PROFILE -> {
                         UserProfileScreen(
                             userViewModel = userViewModel,
@@ -158,6 +208,9 @@ fun UserNav(
                             onLogout = onLogout,
                             onSelectObstacles = {
                                 overlayScreen = OverlayScreen.OBSTACLES
+                            },
+                            onBecomeVolunteer = {
+                                overlayScreen = OverlayScreen.VOLUNTEER_APPLICATION
                             }
                         )
                     }
@@ -201,9 +254,7 @@ fun UserNav(
                             review = review,
                             reviewsViewModel = reviewsViewModel,
                             onBack = { overlayScreen = OverlayScreen.NONE },
-                            onEdit = {
-                                overlayScreen = OverlayScreen.REVIEW_FORM
-                            },
+                            onEdit = { overlayScreen = OverlayScreen.REVIEW_FORM },
                             onDeleted = {
                                 selectedReview = null
                                 overlayScreen = OverlayScreen.NONE
@@ -219,6 +270,26 @@ fun UserNav(
                         mapsViewModel = mapsViewModel,
                         onBackToProfile = { overlayScreen = OverlayScreen.NONE },
                         onSaved = { overlayScreen = OverlayScreen.NONE }
+                    )
+                }
+
+                OverlayScreen.HELP_CREATE -> {
+                    HelpRequestCreateScreen(
+                        helpViewModel = helpViewModel,
+                        onBack = { overlayScreen = OverlayScreen.NONE },
+                        onCreated = { overlayScreen = OverlayScreen.NONE }
+                    )
+                }
+
+                OverlayScreen.HELP_MY_REQUESTS -> {
+                    UserHelpRequestsScreen(viewModel  = helpViewModel)
+                }
+
+                OverlayScreen.VOLUNTEER_APPLICATION -> {
+                    VolunteerApplicationFormScreen(
+                        viewModel = helpViewModel,
+                        onBack = { overlayScreen = OverlayScreen.NONE },
+                        onSubmitted = { overlayScreen = OverlayScreen.NONE }
                     )
                 }
 
