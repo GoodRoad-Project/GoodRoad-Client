@@ -13,7 +13,7 @@ class VolunteerRepository(
         dobroUrl: String,
         phone: String,
         socialNickname: String?,
-        certificatePhotoUrls: List<String>?
+        certificatePhotoUrls: List<String> = emptyList()
     ) = api.createApplication(
         CreateVolunteerApplicationReqDto(
             dobroUrl = dobroUrl,

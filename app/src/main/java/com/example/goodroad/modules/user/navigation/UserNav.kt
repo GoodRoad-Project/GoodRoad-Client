@@ -31,7 +31,7 @@ import com.example.goodroad.modules.user.presentation.UserViewModel
 import com.example.goodroad.modules.user.screens.UserEditScreen
 import com.example.goodroad.ui.user.UserDeleteAccountScreen
 import com.example.goodroad.ui.user.UserProfileScreen
-import com.example.goodroad.ui.user.screens.VolunteerApplicationFormScreen
+import com.example.goodroad.ui.volunteer.screens.VolunteerApplicationFormScreen
 import com.example.goodroad.modules.volunteer.data.VolunteerRepository
 
 enum class BottomTab {
@@ -287,6 +287,7 @@ fun UserNav(
 
                 OverlayScreen.VOLUNTEER_APPLICATION -> {
                     VolunteerApplicationFormScreen(
+                        viewModel = helpViewModel,
                         onBack = { overlayScreen = OverlayScreen.NONE },
                         onSubmitted = { overlayScreen = OverlayScreen.NONE }
                     )

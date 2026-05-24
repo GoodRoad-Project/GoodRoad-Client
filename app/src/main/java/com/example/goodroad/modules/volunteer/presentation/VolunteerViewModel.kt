@@ -1,5 +1,7 @@
 package com.example.goodroad.modules.volunteer.presentation
 
+import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -8,12 +10,17 @@ import com.example.goodroad.modules.volunteer.data.VolunteerRepository
 import com.example.goodroad.modules.volunteer.data.models.HelpRequestItem
 import com.example.goodroad.modules.volunteer.data.models.RequestStatus as ApiRequestStatus
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import retrofit2.HttpException
+import java.io.File
+import java.io.IOException
 
 class VolunteerViewModel(
     private val repository: VolunteerRepository
 ) : ViewModel() {
-
-    enum class RequestStatus {
+        enum class RequestStatus {
         PENDING,
         APPROVED,
         REJECTED,
@@ -52,27 +59,19 @@ class VolunteerViewModel(
 
     fun loadOwnRequests() {
         viewModelScope.launch {
-
             isLoading.value = true
             errorMessage.value = null
             successMessage.value = null
 
             try {
-
                 val loaded = repository.loadOwnRequests()
 
                 requests.clear()
-                requests.addAll(
-                    loaded.map { it.toUiModel() }
-                )
+                requests.addAll(loaded.map { it.toUiModel() })
 
             } catch (e: Exception) {
-
-                errorMessage.value =
-                    e.message ?: "Ошибка загрузки заявок"
-
+                errorMessage.value = e.message ?: "Ошибка загрузки заявок"
             } finally {
-
                 isLoading.value = false
             }
         }
@@ -92,32 +91,18 @@ class VolunteerViewModel(
         comment: String,
         onSuccess: () -> Unit
     ) {
-
         viewModelScope.launch {
-
             isLoading.value = true
             errorMessage.value = null
             successMessage.value = null
 
             try {
-
-                if (routeStart.isBlank())
-                    throw IllegalArgumentException("Укажите начало маршрута")
-
-                if (routeEnd.isBlank())
-                    throw IllegalArgumentException("Укажите конец маршрута")
-
-                if (meetingDate.isBlank())
-                    throw IllegalArgumentException("Укажите дату встречи")
-
-                if (meetingTime.isBlank())
-                    throw IllegalArgumentException("Укажите время встречи")
-
-                if (contact.isBlank())
-                    throw IllegalArgumentException("Укажите контакт")
-
-                if (comment.isBlank())
-                    throw IllegalArgumentException("Укажите комментарий")
+                if (routeStart.isBlank()) throw IllegalArgumentException("Укажите начало маршрута")
+                if (routeEnd.isBlank()) throw IllegalArgumentException("Укажите конец маршрута")
+                if (meetingDate.isBlank()) throw IllegalArgumentException("Укажите дату")
+                if (meetingTime.isBlank()) throw IllegalArgumentException("Укажите время")
+                if (contact.isBlank()) throw IllegalArgumentException("Укажите контакт")
+                if (comment.isBlank()) throw IllegalArgumentException("Укажите комментарий")
 
                 val created = repository.createHelpRequest(
                     fromAddress = routeStart,
@@ -125,59 +110,111 @@ class VolunteerViewModel(
                     date = meetingDate.replace(".", "-"),
                     time = meetingTime,
                     phone = contact,
-                    socialNickname = specialNotes.takeIf {
-                        it.isNotBlank()
-                    },
+                    socialNickname = specialNotes.takeIf { it.isNotBlank() },
                     comment = comment
                 )
 
-                requests.add(
-                    0,
-                    created.toUiModel()
-                )
+                requests.add(0, created.toUiModel())
 
                 successMessage.value = "Заявка отправлена"
-
                 onSuccess()
 
             } catch (e: Exception) {
-
-                errorMessage.value =
-                    e.message ?: "Ошибка"
-
+                errorMessage.value = e.message ?: "Ошибка"
             } finally {
-
                 isLoading.value = false
             }
         }
     }
 
-    fun deleteRequest(id: String) {
-
+    fun submitVolunteerApplication(
+        context: Context,
+        dobroUrl: String,
+        phone: String,
+        socialNickname: String?,
+        uris: List<Uri>,
+        onSuccess: () -> Unit
+    ) {
         viewModelScope.launch {
 
             isLoading.value = true
             errorMessage.value = null
             successMessage.value = null
 
+            val uploadedUrls = mutableListOf<String>()
+            val tempFiles = mutableListOf<File>()
+
             try {
 
-                repository.deleteOwnRequest(id)
+                if (dobroUrl.isBlank())
+                    throw IllegalArgumentException("Укажите ссылку на dobro.ru")
 
-                requests.removeAll {
-                    it.id == id
+                if (!dobroUrl.startsWith("http"))
+                    throw IllegalArgumentException("Неверная ссылка")
+
+                if (phone.isBlank())
+                    throw IllegalArgumentException("Укажите телефон")
+
+                uris.forEach { uri ->
+
+                    val file = File.createTempFile("cert", ".tmp", context.cacheDir)
+                    tempFiles.add(file)
+
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        file.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+
+                    val mime = context.contentResolver.getType(uri) ?: "image/*"
+
+                    val body = file.asRequestBody(mime.toMediaTypeOrNull())
+                    val part = MultipartBody.Part.createFormData(
+                        "file",
+                        file.name,
+                        body
+                    )
+
+                    val response = repository.uploadCertificate(part)
+                        ?: throw IllegalStateException("Ошибка загрузки файла")
+
+                    uploadedUrls.add(response.photoUrl)
                 }
 
-                successMessage.value =
-                    "Заявка удалена"
+                repository.createApplication(
+                    dobroUrl = dobroUrl.trim(),
+                    phone = phone.trim(),
+                    socialNickname = socialNickname?.trim()?.ifBlank { null },
+                    certificatePhotoUrls = uploadedUrls
+                )
+
+                successMessage.value = "Заявка на волонтёрство отправлена"
+                onSuccess()
 
             } catch (e: Exception) {
-
-                errorMessage.value =
-                    e.message ?: "Не удалось удалить заявку"
-
+                errorMessage.value = e.message ?: "Ошибка отправки заявки"
             } finally {
+                tempFiles.forEach { it.delete() }
+                isLoading.value = false
+            }
+        }
+    }
 
+
+    fun deleteRequest(id: String) {
+        viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
+            successMessage.value = null
+
+            try {
+                repository.deleteOwnRequest(id)
+                requests.removeAll { it.id == id }
+                successMessage.value = "Заявка удалена"
+
+            } catch (e: Exception) {
+                errorMessage.value = e.message ?: "Ошибка удаления"
+            } finally {
                 isLoading.value = false
             }
         }
@@ -189,7 +226,6 @@ class VolunteerViewModel(
     }
 
     private fun HelpRequestItem.toUiModel(): HelpRequest {
-
         return HelpRequest(
             id = id,
             routeStart = routeStart,
@@ -203,23 +239,12 @@ class VolunteerViewModel(
     }
 
     private fun ApiRequestStatus.toUiStatus(): RequestStatus {
-
         return when (this) {
-
-            ApiRequestStatus.OPEN ->
-                RequestStatus.OPEN
-
-            ApiRequestStatus.ACCEPTED ->
-                RequestStatus.ACCEPTED
-
-            ApiRequestStatus.CANCELLED ->
-                RequestStatus.CANCELLED
-
-            ApiRequestStatus.COMPLETED ->
-                RequestStatus.COMPLETED
-
-            ApiRequestStatus.UNKNOWN ->
-                RequestStatus.UNKNOWN
+            ApiRequestStatus.OPEN -> RequestStatus.OPEN
+            ApiRequestStatus.ACCEPTED -> RequestStatus.ACCEPTED
+            ApiRequestStatus.CANCELLED -> RequestStatus.CANCELLED
+            ApiRequestStatus.COMPLETED -> RequestStatus.COMPLETED
+            ApiRequestStatus.UNKNOWN -> RequestStatus.UNKNOWN
         }
     }
 }
