@@ -15,6 +15,7 @@ import com.example.goodroad.data.network.GoodRoadApi
 import com.example.goodroad.modules.auth.data.AuthApi
 import com.example.goodroad.modules.review.data.ReviewApi
 import com.example.goodroad.modules.user.data.UserApi
+import com.example.goodroad.modules.volunteer.data.VolunteerApi
 
 object ApiClient {
 
@@ -95,6 +96,10 @@ object ApiClient {
 
     val routeApi: GoodRoadApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         retrofit().create(GoodRoadApi::class.java)
+    }
+
+    val volunteerApi: VolunteerApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        retrofit().create(VolunteerApi::class.java)
     }
 }
 

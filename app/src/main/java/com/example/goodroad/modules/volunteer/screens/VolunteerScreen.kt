@@ -1,19 +1,19 @@
-package com.example.goodroad.modules.help.screens
+package com.example.goodroad.modules.volunteer.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.goodroad.modules.help.presentation.HelpViewModel
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.*
 import androidx.compose.ui.text.font.FontWeight
+import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
 
 @Composable
-fun HelpScreen(
-    helpViewModel: HelpViewModel,
+fun VolunteerScreen(
+    helpViewModel: VolunteerViewModel,
     onCreateRequest: () -> Unit,
     onMyRequests: () -> Unit
 ) {

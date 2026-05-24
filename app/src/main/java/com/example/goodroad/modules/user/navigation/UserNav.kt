@@ -15,10 +15,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.obstacle.ObstacleRepository
-import com.example.goodroad.modules.help.presentation.HelpViewModel
-import com.example.goodroad.modules.help.screens.HelpCreateScreen
-import com.example.goodroad.modules.help.screens.HelpScreen
-import com.example.goodroad.modules.help.screens.UserRequestsScreen
+import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
+import com.example.goodroad.modules.volunteer.screens.HelpRequestCreateScreen
+import com.example.goodroad.modules.volunteer.screens.VolunteerScreen
+import com.example.goodroad.modules.volunteer.screens.UserHelpRequestsScreen
 import com.example.goodroad.modules.maps.presentation.MapsViewModel
 import com.example.goodroad.modules.maps.screens.MapRouteScreen
 import com.example.goodroad.modules.maps.screens.ObstacleSelectScreen
@@ -32,6 +32,7 @@ import com.example.goodroad.modules.user.screens.UserEditScreen
 import com.example.goodroad.ui.user.UserDeleteAccountScreen
 import com.example.goodroad.ui.user.UserProfileScreen
 import com.example.goodroad.ui.user.screens.VolunteerApplicationFormScreen
+import com.example.goodroad.modules.volunteer.data.VolunteerRepository
 
 enum class BottomTab {
     MAP,
@@ -60,6 +61,7 @@ fun UserNav(
     val userApi = ApiClient.userApi
     val reviewApi = ApiClient.reviewApi
     val obstacleApi = ApiClient.obstacleApi
+    val volunteerApi = ApiClient.volunteerApi
 
     val userFactory = object : ViewModelProvider.Factory {
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
@@ -84,15 +86,20 @@ fun UserNav(
     }
 
     val helpFactory = object : ViewModelProvider.Factory {
-        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-            return HelpViewModel() as T
+        override fun <T : androidx.lifecycle.ViewModel> create(
+            modelClass: Class<T>
+        ): T {
+
+            return VolunteerViewModel(
+                VolunteerRepository(volunteerApi)
+            ) as T
         }
     }
 
     val userViewModel: UserViewModel = viewModel(factory = userFactory)
     val reviewsViewModel: ReviewsViewModel = viewModel(factory = reviewsFactory)
     val mapsViewModel: MapsViewModel = viewModel(factory = mapsFactory)
-    val helpViewModel: HelpViewModel = viewModel(factory = helpFactory)
+    val helpViewModel: VolunteerViewModel = viewModel(factory = helpFactory)
 
     var currentTab by rememberSaveable { mutableStateOf(BottomTab.MAP) }
     var overlayScreen by remember { mutableStateOf(OverlayScreen.NONE) }
@@ -182,7 +189,7 @@ fun UserNav(
                     }
 
                     BottomTab.HELP -> {
-                        HelpScreen(
+                        VolunteerScreen(
                             helpViewModel = helpViewModel,
                             onCreateRequest = {
                                 overlayScreen = OverlayScreen.HELP_CREATE
@@ -267,7 +274,7 @@ fun UserNav(
                 }
 
                 OverlayScreen.HELP_CREATE -> {
-                    HelpCreateScreen(
+                    HelpRequestCreateScreen(
                         helpViewModel = helpViewModel,
                         onBack = { overlayScreen = OverlayScreen.NONE },
                         onCreated = { overlayScreen = OverlayScreen.NONE }
@@ -275,7 +282,7 @@ fun UserNav(
                 }
 
                 OverlayScreen.HELP_MY_REQUESTS -> {
-                    UserRequestsScreen(helpViewModel = helpViewModel)
+                    UserHelpRequestsScreen(viewModel  = helpViewModel)
                 }
 
                 OverlayScreen.VOLUNTEER_APPLICATION -> {

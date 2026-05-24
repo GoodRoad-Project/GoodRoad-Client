@@ -1,0 +1,225 @@
+package com.example.goodroad.modules.volunteer.presentation
+
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.goodroad.modules.volunteer.data.VolunteerRepository
+import com.example.goodroad.modules.volunteer.data.models.HelpRequestItem
+import com.example.goodroad.modules.volunteer.data.models.RequestStatus as ApiRequestStatus
+import kotlinx.coroutines.launch
+
+class VolunteerViewModel(
+    private val repository: VolunteerRepository
+) : ViewModel() {
+
+    enum class RequestStatus {
+        PENDING,
+        APPROVED,
+        REJECTED,
+        OPEN,
+        ACCEPTED,
+        CANCELLED,
+        COMPLETED,
+        UNKNOWN
+    }
+
+    data class HelpRequest(
+        val id: String,
+        val routeStart: String,
+        val routeEnd: String,
+        val dateTime: String,
+        val contact: String,
+        val specialNotes: String,
+        val comment: String,
+        val status: RequestStatus = RequestStatus.OPEN
+    )
+
+    var isLoading = mutableStateOf(false)
+        private set
+
+    var errorMessage = mutableStateOf<String?>(null)
+        private set
+
+    var successMessage = mutableStateOf<String?>(null)
+        private set
+
+    val requests = mutableStateListOf<HelpRequest>()
+
+    init {
+        loadOwnRequests()
+    }
+
+    fun loadOwnRequests() {
+        viewModelScope.launch {
+
+            isLoading.value = true
+            errorMessage.value = null
+            successMessage.value = null
+
+            try {
+
+                val loaded = repository.loadOwnRequests()
+
+                requests.clear()
+                requests.addAll(
+                    loaded.map { it.toUiModel() }
+                )
+
+            } catch (e: Exception) {
+
+                errorMessage.value =
+                    e.message ?: "Ошибка загрузки заявок"
+
+            } finally {
+
+                isLoading.value = false
+            }
+        }
+    }
+
+    fun refreshOwnRequests() {
+        loadOwnRequests()
+    }
+
+    fun createRequest(
+        routeStart: String,
+        routeEnd: String,
+        meetingDate: String,
+        meetingTime: String,
+        contact: String,
+        specialNotes: String,
+        comment: String,
+        onSuccess: () -> Unit
+    ) {
+
+        viewModelScope.launch {
+
+            isLoading.value = true
+            errorMessage.value = null
+            successMessage.value = null
+
+            try {
+
+                if (routeStart.isBlank())
+                    throw IllegalArgumentException("Укажите начало маршрута")
+
+                if (routeEnd.isBlank())
+                    throw IllegalArgumentException("Укажите конец маршрута")
+
+                if (meetingDate.isBlank())
+                    throw IllegalArgumentException("Укажите дату встречи")
+
+                if (meetingTime.isBlank())
+                    throw IllegalArgumentException("Укажите время встречи")
+
+                if (contact.isBlank())
+                    throw IllegalArgumentException("Укажите контакт")
+
+                if (comment.isBlank())
+                    throw IllegalArgumentException("Укажите комментарий")
+
+                val created = repository.createHelpRequest(
+                    fromAddress = routeStart,
+                    toAddress = routeEnd,
+                    date = meetingDate.replace(".", "-"),
+                    time = meetingTime,
+                    phone = contact,
+                    socialNickname = specialNotes.takeIf {
+                        it.isNotBlank()
+                    },
+                    comment = comment
+                )
+
+                requests.add(
+                    0,
+                    created.toUiModel()
+                )
+
+                successMessage.value = "Заявка отправлена"
+
+                onSuccess()
+
+            } catch (e: Exception) {
+
+                errorMessage.value =
+                    e.message ?: "Ошибка"
+
+            } finally {
+
+                isLoading.value = false
+            }
+        }
+    }
+
+    fun deleteRequest(id: String) {
+
+        viewModelScope.launch {
+
+            isLoading.value = true
+            errorMessage.value = null
+            successMessage.value = null
+
+            try {
+
+                repository.deleteOwnRequest(id)
+
+                requests.removeAll {
+                    it.id == id
+                }
+
+                successMessage.value =
+                    "Заявка удалена"
+
+            } catch (e: Exception) {
+
+                errorMessage.value =
+                    e.message ?: "Не удалось удалить заявку"
+
+            } finally {
+
+                isLoading.value = false
+            }
+        }
+    }
+
+    fun clearMessages() {
+        errorMessage.value = null
+        successMessage.value = null
+    }
+
+    private fun HelpRequestItem.toUiModel(): HelpRequest {
+
+        return HelpRequest(
+            id = id,
+            routeStart = routeStart,
+            routeEnd = routeEnd,
+            dateTime = dateTime,
+            contact = contact,
+            specialNotes = specialNotes.ifBlank { "—" },
+            comment = comment.ifBlank { "—" },
+            status = status.toUiStatus()
+        )
+    }
+
+    private fun ApiRequestStatus.toUiStatus(): RequestStatus {
+
+        return when (this) {
+
+            ApiRequestStatus.OPEN ->
+                RequestStatus.OPEN
+
+            ApiRequestStatus.ACCEPTED ->
+                RequestStatus.ACCEPTED
+
+            ApiRequestStatus.CANCELLED ->
+                RequestStatus.CANCELLED
+
+            ApiRequestStatus.COMPLETED ->
+                RequestStatus.COMPLETED
+
+            ApiRequestStatus.UNKNOWN ->
+                RequestStatus.UNKNOWN
+        }
+    }
+}
