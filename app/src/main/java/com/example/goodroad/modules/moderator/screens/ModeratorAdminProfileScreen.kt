@@ -20,6 +20,7 @@ fun AdminProfileScreen(
     userViewModel: UserViewModel,
     onModerators: () -> Unit,
     onReviews: () -> Unit,
+    onVolunteers: () -> Unit,
     onLogout: () -> Unit
 ) {
 
@@ -105,6 +106,16 @@ fun AdminProfileScreen(
                     ) {
                         Log.d("AdminProfile", "BUTTON CLICKED")
                         safeOnModerators()
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
+                    PrimaryButton(
+                        text = "Волонтёры",
+                        backgroundColor = UrbanBrown,
+                        contentColor = WhiteSoft
+                    ) {
+                        onVolunteers()
                     }
 
                     Spacer(Modifier.height(12.dp))
