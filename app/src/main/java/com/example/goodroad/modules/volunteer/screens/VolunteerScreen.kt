@@ -4,19 +4,24 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
-import com.example.goodroad.ui.theme.*
-import androidx.compose.ui.text.font.FontWeight
-import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
+import com.example.goodroad.ui.theme.BackgroundLight
+import com.example.goodroad.ui.theme.UrbanBrown
 
 @Composable
 fun VolunteerScreen(
     helpViewModel: VolunteerViewModel,
     onCreateRequest: () -> Unit,
-    onMyRequests: () -> Unit
+    onMyRequests: () -> Unit,
+    onVolunteerFeed: () -> Unit
 ) {
+
+    val menuState = helpViewModel.volunteerMenu.value
+    val isVolunteer = menuState?.isVolunteer == true
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -43,7 +48,6 @@ fun VolunteerScreen(
                     containerColor = UrbanBrown.copy(alpha = 0.06f)
                 )
             ) {
-
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
@@ -58,7 +62,7 @@ fun VolunteerScreen(
                     Spacer(Modifier.height(6.dp))
 
                     Text(
-                        text = "Оставьте заявку для волонтёра, и вам помогут с маршрутом, передвижением или сопровождением.",
+                        text = "Оставьте заявку для волонтёра, и вам помогут с маршрутом, передвижением или сопровождением",
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -67,7 +71,7 @@ fun VolunteerScreen(
             Spacer(Modifier.weight(1f))
 
             PrimaryButton(
-                text = "Оставить заявку",
+                text = "Оставить заявку на помощь",
                 onClick = onCreateRequest
             )
 
@@ -77,6 +81,17 @@ fun VolunteerScreen(
                 text = "Мои заявки",
                 onClick = onMyRequests
             )
+
+            if (isVolunteer) {
+                Spacer(Modifier.height(12.dp))
+
+                PrimaryButton(
+                    text = "Лента волонтёра",
+                    onClick = onVolunteerFeed
+                )
+            }
         }
     }
+
+    println("VOLUNTEER MENU = ${helpViewModel.volunteerMenu.value}")
 }

@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.goodroad.modules.volunteer.data.VolunteerRepository
 import com.example.goodroad.modules.volunteer.data.models.HelpRequestItem
 import com.example.goodroad.modules.volunteer.data.models.RequestStatus as ApiRequestStatus
-import com.example.goodroad.modules.volunteer.data.models.VolunteerMenuRespDto
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -73,13 +72,16 @@ class VolunteerViewModel(
         viewModelScope.launch {
             try {
                 val resp = repository.getMenu()
+                println("GET MENU RESP = $resp")
                 volunteerMenu.value = VolunteerMenu(
                     isVolunteer = resp.volunteer,
                     applicationStatus = resp.applicationStatus,
                     rejectReason = resp.rejectReason
                 )
+                println("VOLUNTEER MENU STATE = ${volunteerMenu.value}")
             } catch (e: Exception) {
                 errorMessage.value = e.message ?: "Ошибка загрузки статуса заявки"
+                println("LOAD MENU ERROR = ${e.message}")
             }
         }
     }
@@ -87,6 +89,9 @@ class VolunteerViewModel(
     fun clearVolunteerMenu() {
         volunteerMenu.value = null
     }
+
+    val isVolunteer: Boolean
+        get() = volunteerMenu.value?.isVolunteer == true
 
     fun loadOwnRequests() {
         viewModelScope.launch {

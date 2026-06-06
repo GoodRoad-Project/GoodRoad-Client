@@ -115,11 +115,26 @@ fun UserHelpRequestsScreen(
                 }
             } else if (requests.isEmpty()) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Пока нет заявок")
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "📝",
+                            style = MaterialTheme.typography.displaySmall
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+
+                        Text(
+                            text = "Пока нет заявок на помощь",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = UrbanBrown
+                        )
+                    }
                 }
             } else {
                 LazyColumn(
