@@ -1,6 +1,8 @@
 package com.example.goodroad.ui.user
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -64,118 +66,127 @@ fun UserProfileScreen(
                 modifier = Modifier.fillMaxSize(),
                 color = BackgroundLight
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp)
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
 
-                    UserDecor()
+                    item {
+                        UserDecor()
 
-                    Text(
-                        text = "Профиль",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = TextPrimary
-                    )
-
-                    Spacer(Modifier.height(20.dp))
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = UrbanBrown.copy(alpha = 0.08f)
+                        Text(
+                            text = "Профиль",
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = TextPrimary
                         )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                    }
+
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = UrbanBrown.copy(alpha = 0.12f)
+                            )
                         ) {
-                            Column(
-                                modifier = Modifier.weight(1f)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "${u.firstName ?: ""} ${u.lastName ?: ""}".trim(),
-                                    fontSize = 22.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = UrbanBrown
-                                )
 
-                                Spacer(Modifier.height(6.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "${u.firstName ?: ""} ${u.lastName ?: ""}".trim(),
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = UrbanBrown
+                                    )
 
-                                Text(
-                                    text = "Роль: ${u.role ?: ""}",
-                                    fontSize = 16.sp,
-                                    color = UrbanBrown.copy(alpha = 0.8f)
-                                )
-                            }
+                                    Spacer(Modifier.height(6.dp))
 
-                            if (!u.photoUrl.isNullOrBlank()) {
-                                AsyncImage(
-                                    model = u.photoUrl,
-                                    contentDescription = "Фото профиля",
-                                    modifier = Modifier
-                                        .size(90.dp)
-                                        .clip(CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                Surface(
-                                    modifier = Modifier.size(90.dp),
-                                    shape = CircleShape,
-                                    color = WhiteSoft
-                                ) {
-                                    Box(
-                                        contentAlignment = Alignment.Center
+                                    Text(
+                                        text = "Роль: ${u.role ?: ""}",
+                                        fontSize = 16.sp,
+                                        color = UrbanBrown.copy(alpha = 0.8f)
+                                    )
+                                }
+
+                                if (!u.photoUrl.isNullOrBlank()) {
+                                    AsyncImage(
+                                        model = u.photoUrl,
+                                        contentDescription = "Фото профиля",
+                                        modifier = Modifier
+                                            .size(90.dp)
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Surface(
+                                        modifier = Modifier.size(90.dp),
+                                        shape = CircleShape,
+                                        color = WhiteSoft
                                     ) {
-                                        Text(
-                                            text = "👤",
-                                            fontSize = 32.sp
-                                        )
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Text(
+                                                text = "👤",
+                                                fontSize = 32.sp
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
 
-                    Spacer(Modifier.weight(1f))
+                    item {
+                        SectionTitle("Доступность и комфорт")
+                    }
 
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        PrimaryButton(
-                            text = "Выбрать препятствия",
-                            backgroundColor = UrbanBrown,
-                            contentColor = WhiteSoft
-                        ) {
-                            onSelectObstacles()
-                        }
+                    item {
+                        ServiceCard(
+                            title = "Выбрать препятствия",
+                            description = "Настройте условия передвижения и доступности",
+                            onClick = onSelectObstacles
+                        )
+                    }
 
-                        PrimaryButton(
-                            text = "Стать волонтёром",
-                            backgroundColor = UrbanBrown,
-                            contentColor = WhiteSoft
-                        ) {
-                            onBecomeVolunteer()
-                        }
+                    item {
+                        ServiceCard(
+                            title = "Стать волонтёром",
+                            description = "Подключитесь к помощи другим пользователям",
+                            onClick = onBecomeVolunteer
+                        )
+                    }
 
-                        PrimaryButton(
-                            text = "Редактировать профиль",
+                    item {
+                        SectionTitle("Аккаунт")
+                    }
+
+                    item {
+                        ServiceCard(
+                            title = "Редактировать профиль",
+                            description = "Изменить личные данные",
                             onClick = onEdit
                         )
+                    }
 
-                        PrimaryButton(
-                            text = "Удалить аккаунт",
+                    item {
+                        ServiceCard(
+                            title = "Удалить аккаунт",
+                            description = "Безвозвратное удаление профиля",
                             onClick = onDelete
                         )
+                    }
 
-                        PrimaryButton(
-                            text = "Выйти из аккаунта"
-                        ) {
-                            userViewModel.logout { onLogout() }
-                        }
+                    item {
+                        ServiceCard(
+                            title = "Выйти из аккаунта",
+                            description = "Завершить текущую сессию",
+                            onClick = { userViewModel.logout { onLogout() } }
+                        )
                     }
                 }
             }
@@ -185,6 +196,54 @@ fun UserProfileScreen(
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
+        }
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = UrbanBrown
+    )
+}
+
+@Composable
+private fun ServiceCard(
+    title: String,
+    description: String,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        colors = CardDefaults.cardColors(
+            containerColor = SurfaceWarm
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 1.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
+            )
         }
     }
 }

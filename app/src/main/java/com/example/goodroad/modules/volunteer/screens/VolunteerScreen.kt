@@ -8,9 +8,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
 import com.example.goodroad.ui.UserDecor
-import com.example.goodroad.ui.buttons.PrimaryButton
-import com.example.goodroad.ui.theme.BackgroundLight
-import com.example.goodroad.ui.theme.UrbanBrown
+import com.example.goodroad.ui.theme.*
 
 @Composable
 fun VolunteerScreen(
@@ -28,7 +26,6 @@ fun VolunteerScreen(
         modifier = Modifier.fillMaxSize(),
         color = BackgroundLight
     ) {
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -42,65 +39,95 @@ fun VolunteerScreen(
                 style = MaterialTheme.typography.headlineLarge
             )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(16.dp))
 
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = UrbanBrown.copy(alpha = 0.06f)
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
+            SectionTitle("Помощь")
 
-                    Text(
-                        text = "Нуждаетесь в сопровождении?",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = UrbanBrown
-                    )
-
-                    Spacer(Modifier.height(6.dp))
-
-                    Text(
-                        text = "Оставьте заявку для волонтёра, и вам помогут с маршрутом, передвижением или сопровождением",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-            }
-
-            Spacer(Modifier.weight(1f))
-
-            if (isVolunteer) {
-
-                PrimaryButton(
-                    text = "Лента волонтёра",
-                    onClick = onVolunteerFeed
-                )
-
-                Spacer(Modifier.height(12.dp))
-
-                PrimaryButton(
-                    text = "Мои подопечные",
-                    onClick = onMyWards
-                )
-
-                Spacer(Modifier.height(12.dp))
-            }
-
-            PrimaryButton(
-                text = "Оставить заявку на помощь",
+            ServiceCard(
+                title = "Оставить заявку",
+                description = "Получите сопровождение от волонтёра",
                 onClick = onCreateRequest
             )
 
             Spacer(Modifier.height(12.dp))
 
-            PrimaryButton(
-                text = "Мои заявки",
+            ServiceCard(
+                title = "Мои заявки",
+                description = "Посмотреть статус и историю заявок",
                 onClick = onMyRequests
+            )
+
+            Spacer(Modifier.height(20.dp))
+
+            if (isVolunteer) {
+
+                SectionTitle("Волонтёрство")
+
+                ServiceCard(
+                    title = "Лента волонтёра",
+                    description = "Доступные заявки для помощи",
+                    onClick = onVolunteerFeed
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                ServiceCard(
+                    title = "Мои подопечные",
+                    description = "Люди, которым вы помогаете",
+                    onClick = onMyWards
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = UrbanBrown
+    )
+
+    Spacer(Modifier.height(8.dp))
+}
+
+@Composable
+private fun ServiceCard(
+    title: String,
+    description: String,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        colors = CardDefaults.cardColors(
+            containerColor = SurfaceWarm
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 1.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp)
+        ) {
+
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
             )
         }
     }
-
-    println("VOLUNTEER MENU = ${helpViewModel.volunteerMenu.value}")
 }
