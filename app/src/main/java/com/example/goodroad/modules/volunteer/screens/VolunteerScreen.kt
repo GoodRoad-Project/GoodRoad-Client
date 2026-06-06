@@ -17,7 +17,8 @@ fun VolunteerScreen(
     helpViewModel: VolunteerViewModel,
     onCreateRequest: () -> Unit,
     onMyRequests: () -> Unit,
-    onVolunteerFeed: () -> Unit
+    onVolunteerFeed: () -> Unit,
+    onMyWards: () -> Unit
 ) {
 
     val menuState = helpViewModel.volunteerMenu.value
@@ -70,6 +71,23 @@ fun VolunteerScreen(
 
             Spacer(Modifier.weight(1f))
 
+            if (isVolunteer) {
+
+                PrimaryButton(
+                    text = "Лента волонтёра",
+                    onClick = onVolunteerFeed
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                PrimaryButton(
+                    text = "Мои подопечные",
+                    onClick = onMyWards
+                )
+
+                Spacer(Modifier.height(12.dp))
+            }
+
             PrimaryButton(
                 text = "Оставить заявку на помощь",
                 onClick = onCreateRequest
@@ -81,15 +99,6 @@ fun VolunteerScreen(
                 text = "Мои заявки",
                 onClick = onMyRequests
             )
-
-            if (isVolunteer) {
-                Spacer(Modifier.height(12.dp))
-
-                PrimaryButton(
-                    text = "Лента волонтёра",
-                    onClick = onVolunteerFeed
-                )
-            }
         }
     }
 

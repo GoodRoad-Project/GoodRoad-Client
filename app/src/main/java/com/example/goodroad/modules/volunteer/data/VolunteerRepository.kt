@@ -99,6 +99,4 @@ class VolunteerRepository(
 
     suspend fun finishWalk(id: String): HelpRequestItem =
         api.finishWalk(id).toUi()
-
-
 }

@@ -49,7 +49,8 @@ enum class OverlayScreen {
     HELP_CREATE,
     HELP_MY_REQUESTS,
     VOLUNTEER_APPLICATION,
-    VOLUNTEER_FEED
+    VOLUNTEER_FEED,
+    VOLUNTEER_WARDS
 }
 
 @Composable
@@ -181,6 +182,9 @@ fun UserNav(
                         },
                         onVolunteerFeed = {
                             overlayScreen = OverlayScreen.VOLUNTEER_FEED
+                        },
+                        onMyWards = {
+                            overlayScreen = OverlayScreen.VOLUNTEER_WARDS
                         }
                     )
 
@@ -265,6 +269,13 @@ fun UserNav(
 
                 OverlayScreen.VOLUNTEER_FEED -> VolunteerFeedScreen(
                     onBack = { overlayScreen = OverlayScreen.NONE }
+                )
+
+                OverlayScreen.VOLUNTEER_WARDS -> VolunteerWardsScreen(
+                    viewModel = helpViewModel,
+                    onBack = {
+                        overlayScreen = OverlayScreen.NONE
+                    }
                 )
 
                 OverlayScreen.NONE -> Unit

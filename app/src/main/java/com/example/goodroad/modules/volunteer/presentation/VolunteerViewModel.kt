@@ -62,8 +62,9 @@ class VolunteerViewModel(
         private set
 
     val requests = mutableStateListOf<HelpRequest>()
-
     val feed = mutableStateListOf<HelpRequest>()
+
+    val wards = mutableStateListOf<HelpRequest>()
 
     init {
         loadOwnRequests()
@@ -128,7 +129,6 @@ class VolunteerViewModel(
                 feed.addAll(loaded.map { it.toUiModel() })
 
                 println("FEED UI SIZE = ${feed.size}")
-
             } catch (e: Exception) {
                 errorMessage.value = e.message ?: "Ошибка загрузки ленты"
             } finally {
@@ -138,6 +138,59 @@ class VolunteerViewModel(
     }
 
     fun refreshFeed() = loadFeed()
+
+    fun acceptRequest(id: String) {
+        viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
+            successMessage.value = null
+
+            val removedItem = feed.find { it.id == id }
+
+            try {
+                feed.removeAll { it.id == id }
+
+                repository.acceptRequest(id)
+
+                successMessage.value = "Вы стали сопровождающим"
+            } catch (e: Exception) {
+                if (removedItem != null) {
+                    feed.add(removedItem)
+                }
+                errorMessage.value = e.message ?: "Ошибка принятия заявки"
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
+    fun withdrawRequest(id: String) {
+        viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
+            successMessage.value = null
+
+            val removedItem = wards.find { it.id == id }
+
+            try {
+                wards.removeAll { it.id == id }
+
+                repository.withdrawResponse(id)
+
+                successMessage.value = "Вы отказались от заявки"
+
+            } catch (e: Exception) {
+                if (removedItem != null) {
+                    wards.add(removedItem)
+                }
+
+                errorMessage.value = e.message ?: "Ошибка отказа от заявки"
+
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
 
     fun createRequest(
         routeStart: String,
@@ -255,6 +308,36 @@ class VolunteerViewModel(
     fun clearMessages() {
         errorMessage.value = null
         successMessage.value = null
+    }
+
+    private fun replaceFeedItem(updated: HelpRequest) {
+        val index = feed.indexOfFirst { it.id == updated.id }
+        if (index >= 0) {
+            feed[index] = updated
+        } else {
+            feed.add(updated)
+        }
+    }
+
+    fun loadMyWards() {
+        viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
+
+            try {
+                val loaded = repository.loadMyWards()
+
+                wards.clear()
+                wards.addAll(
+                    loaded.map { it.toUiModel() }
+                )
+
+            } catch (e: Exception) {
+                errorMessage.value = e.message ?: "Ошибка загрузки подопечных"
+            } finally {
+                isLoading.value = false
+            }
+        }
     }
 
     private fun HelpRequestItem.toUiModel(): HelpRequest {

@@ -5,30 +5,29 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel.HelpRequest
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.theme.*
 
 @Composable
-fun VolunteerFeedScreen(
-    viewModel: VolunteerViewModel = viewModel(),
+fun VolunteerWardsScreen(
+    viewModel: VolunteerViewModel,
     onBack: () -> Unit
 ) {
-    val feed = viewModel.feed
+    val wards = viewModel.wards
     val isLoading = viewModel.isLoading.value
     val error = viewModel.errorMessage.value
-    val success = viewModel.successMessage.value
 
     LaunchedEffect(Unit) {
-        viewModel.loadFeed()
+        viewModel.loadMyWards()
     }
 
     Surface(
@@ -40,12 +39,13 @@ fun VolunteerFeedScreen(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
+
             UserDecor()
 
             Spacer(Modifier.height(12.dp))
 
             Text(
-                text = "Лента волонтёра",
+                text = "Мои подопечные",
                 style = MaterialTheme.typography.headlineLarge,
                 color = TextPrimary
             )
@@ -53,22 +53,19 @@ fun VolunteerFeedScreen(
             Spacer(Modifier.height(20.dp))
 
             if (isLoading) {
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = UrbanBrown)
-                }
-            } else {
-                if (success != null) {
-                    Text(
-                        text = success,
-                        color = SafeGreen
+                    CircularProgressIndicator(
+                        color = UrbanBrown
                     )
-                    Spacer(Modifier.height(8.dp))
                 }
+
+            } else {
 
                 if (error != null) {
                     Text(
@@ -78,30 +75,33 @@ fun VolunteerFeedScreen(
                     Spacer(Modifier.height(8.dp))
                 }
 
-                if (feed.isEmpty()) {
+                if (wards.isEmpty()) {
+
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "Нет доступных заявок",
+                            text = "У вас пока нет активных подопечных",
                             color = UrbanBrown
                         )
                     }
+
                 } else {
+
                     LazyColumn(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(feed, key = { it.id }) { item ->
-                            VolunteerRequestCard(
+                        items(
+                            items = wards,
+                            key = { it.id }
+                        ) { item ->
+
+                            WardRequestCard(
                                 item = item,
-                                onTake = {
-                                    when (item.status) {
-                                        VolunteerViewModel.RequestStatus.OPEN -> viewModel.acceptRequest(item.id)
-                                        VolunteerViewModel.RequestStatus.ACCEPTED -> viewModel.withdrawRequest(item.id)
-                                        else -> Unit
-                                    }
+                                onWithdraw = {
+                                    viewModel.withdrawRequest(item.id)
                                 }
                             )
                         }
@@ -113,11 +113,12 @@ fun VolunteerFeedScreen(
 }
 
 @Composable
-private fun VolunteerRequestCard(
+private fun WardRequestCard(
     item: HelpRequest,
-    onTake: () -> Unit
+    onWithdraw: () -> Unit
 ) {
     val parts = item.dateTime.split(" ")
+
     val rawDate = parts.getOrNull(0) ?: item.dateTime
     val datePart = rawDate.replace("-", ".")
     val timePart = parts.getOrNull(1) ?: ""
@@ -129,9 +130,11 @@ private fun VolunteerRequestCard(
             containerColor = BackgroundLight
         )
     ) {
+
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
+
             Text(
                 text = "${item.routeStart} → ${item.routeEnd}",
                 style = MaterialTheme.typography.titleLarge,
@@ -144,9 +147,11 @@ private fun VolunteerRequestCard(
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {
+
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
+
                     Text(
                         text = "Дата",
                         style = MaterialTheme.typography.titleSmall,
@@ -162,9 +167,11 @@ private fun VolunteerRequestCard(
                 }
 
                 if (timePart.isNotBlank()) {
+
                     Column(
                         modifier = Modifier.weight(1f)
                     ) {
+
                         Text(
                             text = "Время",
                             style = MaterialTheme.typography.titleSmall,
@@ -212,6 +219,7 @@ private fun VolunteerRequestCard(
             )
 
             if (item.specialNotes.isNotBlank()) {
+
                 Spacer(Modifier.height(10.dp))
 
                 Text(
@@ -230,45 +238,26 @@ private fun VolunteerRequestCard(
 
             Spacer(Modifier.height(14.dp))
 
-            when (item.status) {
-                VolunteerViewModel.RequestStatus.OPEN -> {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = SafeGreen.copy(alpha = 0.14f),
-                        shape = MaterialTheme.shapes.medium,
-                        tonalElevation = 1.dp
-                    ) {
-                        Button(
-                            onClick = onTake,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Transparent,
-                                contentColor = SafeGreen
-                            ),
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 0.dp,
-                                pressedElevation = 0.dp
-                            )
-                        ) {
-                            Text("Стать сопровождающим")
-                        }
-                    }
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = AlertRed.copy(alpha = 0.14f),
+                shape = MaterialTheme.shapes.medium,
+                tonalElevation = 1.dp
+            ) {
+                Button(
+                    onClick = onWithdraw,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = AlertRed
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 0.dp,
+                        pressedElevation = 0.dp
+                    )
+                ) {
+                    Text("Отказаться от заявки")
                 }
-
-                VolunteerViewModel.RequestStatus.ACCEPTED -> {
-                    Button(
-                        onClick = onTake,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AlertRed,
-                            contentColor = WhiteSoft
-                        )
-                    ) {
-                        Text("Отказаться от заявки")
-                    }
-                }
-
-                else -> Unit
             }
         }
     }
