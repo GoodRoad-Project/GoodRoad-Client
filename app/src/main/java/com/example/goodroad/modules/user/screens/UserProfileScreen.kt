@@ -102,7 +102,7 @@ fun UserProfileScreen(
                                         text = "${u.firstName ?: ""} ${u.lastName ?: ""}".trim(),
                                         fontSize = 22.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = UrbanBrown
+                                        color = TextPrimary
                                     )
 
                                     Spacer(Modifier.height(6.dp))

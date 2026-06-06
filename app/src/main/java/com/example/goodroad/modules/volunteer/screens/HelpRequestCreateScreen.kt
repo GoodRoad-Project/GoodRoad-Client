@@ -32,6 +32,14 @@ fun HelpRequestCreateScreen(
     var specialNotes by rememberSaveable { mutableStateOf("") }
     var comment by rememberSaveable { mutableStateOf("") }
 
+    // ошибки обязательных полей
+    var routeStartError by rememberSaveable { mutableStateOf<String?>(null) }
+    var routeEndError by rememberSaveable { mutableStateOf<String?>(null) }
+    var meetingDateError by rememberSaveable { mutableStateOf<String?>(null) }
+    var meetingTimeError by rememberSaveable { mutableStateOf<String?>(null) }
+    var contactError by rememberSaveable { mutableStateOf<String?>(null) }
+    var commentError by rememberSaveable { mutableStateOf<String?>(null) }
+
     val scrollState = rememberScrollState()
 
     fun formatDate(input: String): String {
@@ -58,6 +66,42 @@ fun HelpRequestCreateScreen(
         return sb.toString()
     }
 
+    fun validate(): Boolean {
+        var valid = true
+
+        routeStartError = if (routeStart.isBlank()) {
+            valid = false
+            "Обязательное поле"
+        } else null
+
+        routeEndError = if (routeEnd.isBlank()) {
+            valid = false
+            "Обязательное поле"
+        } else null
+
+        meetingDateError = if (meetingDate.isBlank()) {
+            valid = false
+            "Обязательное поле"
+        } else null
+
+        meetingTimeError = if (meetingTime.isBlank()) {
+            valid = false
+            "Обязательное поле"
+        } else null
+
+        contactError = if (contact.isBlank()) {
+            valid = false
+            "Обязательное поле"
+        } else null
+
+        commentError = if (comment.isBlank()) {
+            valid = false
+            "Обязательное поле"
+        } else null
+
+        return valid
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = BackgroundLight
@@ -81,10 +125,13 @@ fun HelpRequestCreateScreen(
 
             OutlinedTextField(
                 value = routeStart,
-                onValueChange = { routeStart = it },
-                label = {
-                    Text("Начало маршрута с сопровождением")
+                onValueChange = {
+                    routeStart = it
+                    routeStartError = null
                 },
+                label = { Text("Начало маршрута *") },
+                isError = routeStartError != null,
+                supportingText = { routeStartError?.let { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
                 singleLine = true
@@ -94,10 +141,13 @@ fun HelpRequestCreateScreen(
 
             OutlinedTextField(
                 value = routeEnd,
-                onValueChange = { routeEnd = it },
-                label = {
-                    Text("Конец маршрута с сопровождением")
+                onValueChange = {
+                    routeEnd = it
+                    routeEndError = null
                 },
+                label = { Text("Конец маршрута *") },
+                isError = routeEndError != null,
+                supportingText = { routeEndError?.let { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
                 singleLine = true
@@ -110,10 +160,11 @@ fun HelpRequestCreateScreen(
                 onValueChange = {
                     val digits = it.filter { ch -> ch.isDigit() }.take(8)
                     meetingDate = formatDate(digits)
+                    meetingDateError = null
                 },
-                label = {
-                    Text("Дата (ДД.ММ.ГГГГ)")
-                },
+                label = { Text("Дата (ДД.ММ.ГГГГ) *") },
+                isError = meetingDateError != null,
+                supportingText = { meetingDateError?.let { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
                 singleLine = true
@@ -126,10 +177,11 @@ fun HelpRequestCreateScreen(
                 onValueChange = {
                     val digits = it.filter { ch -> ch.isDigit() }.take(4)
                     meetingTime = formatTime(digits)
+                    meetingTimeError = null
                 },
-                label = {
-                    Text("Время (ЧЧ:ММ)")
-                },
+                label = { Text("Время (ЧЧ:ММ) *") },
+                isError = meetingTimeError != null,
+                supportingText = { meetingTimeError?.let { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
                 singleLine = true
@@ -143,10 +195,11 @@ fun HelpRequestCreateScreen(
                     contact = it.filter { ch ->
                         ch.isLetterOrDigit() || ch in "+@._-() "
                     }
+                    contactError = null
                 },
-                label = {
-                    Text("Номер телефона")
-                },
+                label = { Text("Номер телефона *") },
+                isError = contactError != null,
+                supportingText = { contactError?.let { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
                 singleLine = true
@@ -156,12 +209,8 @@ fun HelpRequestCreateScreen(
 
             OutlinedTextField(
                 value = specialNotes,
-                onValueChange = {
-                    specialNotes = it
-                },
-                label = {
-                    Text("Telegram / ВК / доп. контакт")
-                },
+                onValueChange = { specialNotes = it },
+                label = { Text("Telegram / ВК / доп. контакт") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
                 singleLine = true
@@ -173,29 +222,26 @@ fun HelpRequestCreateScreen(
                 value = comment,
                 onValueChange = {
                     comment = it
+                    commentError = null
                 },
-                label = {
-                    Text("Комментарий")
-                },
+                label = { Text("Комментарий *") },
+                isError = commentError != null,
+                supportingText = { commentError?.let { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
                 minLines = 2
             )
 
             if (error != null) {
-
                 Spacer(Modifier.height(12.dp))
-
                 Text(
-                    text = error!!,
+                    text = mapErrorToUserMessage(error),
                     color = MaterialTheme.colorScheme.error
                 )
             }
 
             if (success != null) {
-
                 Spacer(Modifier.height(12.dp))
-
                 Text(
                     text = success!!,
                     color = MaterialTheme.colorScheme.primary
@@ -205,12 +251,9 @@ fun HelpRequestCreateScreen(
             Spacer(Modifier.height(24.dp))
 
             PrimaryButton(
-                text = if (isLoading)
-                    "Отправка..."
-                else
-                    "Отправить заявку",
-
+                text = if (isLoading) "Отправка..." else "Отправить заявку",
                 onClick = {
+                    if (!validate()) return@PrimaryButton
 
                     helpViewModel.createRequest(
                         routeStart = routeStart,
@@ -227,5 +270,22 @@ fun HelpRequestCreateScreen(
                 }
             )
         }
+    }
+}
+
+private fun mapErrorToUserMessage(error: String?): String {
+    val msg = error?.lowercase() ?: return "Произошла неизвестная ошибка"
+
+    return when {
+        msg.contains("timeout") -> "Сервер не отвечает. Попробуйте позже"
+        msg.contains("unable to resolve host") -> "Нет соединения с интернетом"
+        msg.contains("400") -> "Проверьте заполнение обязательных полей"
+        msg.contains("401") -> "Необходима повторная авторизация"
+        msg.contains("403") -> "У вас нет доступа к этой операции"
+        msg.contains("404") -> "Сервис временно недоступен"
+        msg.contains("500") -> "Ошибка сервера. Попробуйте позже"
+        msg.contains("validation") -> "Некоторые поля заполнены неверно"
+        msg.contains("illegal") -> "Проверьте введённые данные"
+        else -> "Не удалось отправить заявку. Попробуйте ещё раз"
     }
 }
