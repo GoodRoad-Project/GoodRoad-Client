@@ -242,6 +242,7 @@ private fun WardRequestCard(
                 modifier = Modifier.fillMaxWidth(),
                 color = AlertRed.copy(alpha = 0.14f),
                 shape = MaterialTheme.shapes.medium,
+                border = BorderStroke(1.5.dp, AlertRed),
                 tonalElevation = 1.dp
             ) {
                 Button(

@@ -236,6 +236,7 @@ private fun VolunteerRequestCard(
                         modifier = Modifier.fillMaxWidth(),
                         color = SafeGreen.copy(alpha = 0.14f),
                         shape = MaterialTheme.shapes.medium,
+                        border = BorderStroke(1.5.dp, SafeGreen),
                         tonalElevation = 1.dp
                     ) {
                         Button(
