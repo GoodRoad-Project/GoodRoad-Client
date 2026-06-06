@@ -63,25 +63,25 @@ class VolunteerViewModel(
 
     val requests = mutableStateListOf<HelpRequest>()
 
+    val feed = mutableStateListOf<HelpRequest>()
+
     init {
         loadOwnRequests()
         loadVolunteerMenu()
+        loadFeed()
     }
 
     fun loadVolunteerMenu() {
         viewModelScope.launch {
             try {
                 val resp = repository.getMenu()
-                println("GET MENU RESP = $resp")
                 volunteerMenu.value = VolunteerMenu(
                     isVolunteer = resp.volunteer,
                     applicationStatus = resp.applicationStatus,
                     rejectReason = resp.rejectReason
                 )
-                println("VOLUNTEER MENU STATE = ${volunteerMenu.value}")
             } catch (e: Exception) {
                 errorMessage.value = e.message ?: "Ошибка загрузки статуса заявки"
-                println("LOAD MENU ERROR = ${e.message}")
             }
         }
     }
@@ -112,6 +112,32 @@ class VolunteerViewModel(
     }
 
     fun refreshOwnRequests() = loadOwnRequests()
+
+    fun loadFeed() {
+        viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
+
+            try {
+                val loaded = repository.loadFeed()
+
+                println("FEED RAW SIZE = ${loaded.size}")
+                println("FEED RAW = $loaded")
+
+                feed.clear()
+                feed.addAll(loaded.map { it.toUiModel() })
+
+                println("FEED UI SIZE = ${feed.size}")
+
+            } catch (e: Exception) {
+                errorMessage.value = e.message ?: "Ошибка загрузки ленты"
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
+    fun refreshFeed() = loadFeed()
 
     fun createRequest(
         routeStart: String,
@@ -167,17 +193,9 @@ class VolunteerViewModel(
             val tempFiles = mutableListOf<File>()
 
             try {
-                if (dobroUrl.isBlank()) {
-                    throw IllegalArgumentException("Укажите ссылку на dobro.ru")
-                }
-
-                if (!dobroUrl.startsWith("http")) {
-                    throw IllegalArgumentException("Неверная ссылка")
-                }
-
-                if (phone.isBlank()) {
-                    throw IllegalArgumentException("Укажите телефон")
-                }
+                if (dobroUrl.isBlank()) throw IllegalArgumentException("Укажите ссылку")
+                if (!dobroUrl.startsWith("http")) throw IllegalArgumentException("Неверная ссылка")
+                if (phone.isBlank()) throw IllegalArgumentException("Укажите телефон")
 
                 uris.forEach { uri ->
                     val file = File.createTempFile("cert", ".tmp", context.cacheDir)
@@ -208,18 +226,7 @@ class VolunteerViewModel(
                 loadVolunteerMenu()
                 onSuccess()
             } catch (e: Exception) {
-                errorMessage.value = when (e) {
-                    is HttpException -> when (e.code()) {
-                        400 -> "Ошибка в заполненных данных"
-                        403 -> "Нет прав для выполнения действия"
-                        404 -> "Объект не найден"
-                        409 -> "Заявка уже отправлена или уже существует"
-                        else -> "Ошибка сервера (${e.code()})"
-                    }
-
-                    is IOException -> "Ошибка сети. Проверьте интернет"
-                    else -> e.message ?: "Ошибка отправки заявки"
-                }
+                errorMessage.value = e.message ?: "Ошибка"
             } finally {
                 tempFiles.forEach { it.delete() }
                 isLoading.value = false

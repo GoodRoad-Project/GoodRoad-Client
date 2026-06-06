@@ -29,6 +29,12 @@ class VolunteerRepository(
     suspend fun loadOwnRequests(): List<HelpRequestItem> =
         api.listOwnRequests().map { it.toUi() }
 
+    suspend fun loadFeed(
+        latitude: Double? = null,
+        longitude: Double? = null
+    ): List<HelpRequestItem> =
+        api.listAvailableRequests(latitude, longitude).map { it.toUi() }
+
     suspend fun createHelpRequest(
         fromAddress: String,
         toAddress: String,
@@ -93,4 +99,6 @@ class VolunteerRepository(
 
     suspend fun finishWalk(id: String): HelpRequestItem =
         api.finishWalk(id).toUi()
+
+
 }
