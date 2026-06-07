@@ -5,15 +5,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel.HelpRequest
+import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel.RequestStatus
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.*
@@ -54,18 +53,14 @@ fun VolunteerWardsScreen(
             Spacer(Modifier.height(20.dp))
 
             if (isLoading) {
-
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
-                        color = UrbanBrown
-                    )
+                    CircularProgressIndicator(color = UrbanBrown)
                 }
-
             } else {
 
                 if (error != null) {
@@ -77,7 +72,6 @@ fun VolunteerWardsScreen(
                 }
 
                 if (wards.isEmpty()) {
-
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -87,7 +81,6 @@ fun VolunteerWardsScreen(
                             color = UrbanBrown
                         )
                     }
-
                 } else {
 
                     LazyColumn(
@@ -103,6 +96,9 @@ fun VolunteerWardsScreen(
                                 item = item,
                                 onWithdraw = {
                                     viewModel.withdrawRequest(item.id)
+                                },
+                                onFinish = {
+                                    viewModel.finishWalk(item.id)
                                 }
                             )
                         }
@@ -116,13 +112,18 @@ fun VolunteerWardsScreen(
 @Composable
 private fun WardRequestCard(
     item: HelpRequest,
-    onWithdraw: () -> Unit
+    onWithdraw: () -> Unit,
+    onFinish: () -> Unit
 ) {
     val parts = item.dateTime.split(" ")
 
     val rawDate = parts.getOrNull(0) ?: item.dateTime
     val datePart = rawDate.replace("-", ".")
     val timePart = parts.getOrNull(1) ?: ""
+
+    val isActive = item.status == RequestStatus.ACCEPTED
+    val isCancelled = item.status == RequestStatus.CANCELLED
+    val isCompleted = item.status == RequestStatus.COMPLETED
 
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
@@ -149,101 +150,71 @@ private fun WardRequestCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
 
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-
-                    Text(
-                        text = "Дата",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = UrbanBrown
-                    )
-
-                    Text(
-                        text = datePart,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = TextPrimary
-                    )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Дата", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
+                    Text(datePart, color = TextPrimary)
                 }
 
                 if (timePart.isNotBlank()) {
-
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-
-                        Text(
-                            text = "Время",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = UrbanBrown
-                        )
-
-                        Text(
-                            text = timePart,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = TextPrimary
-                        )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Время", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
+                        Text(timePart, color = TextPrimary)
                     }
                 }
             }
 
             Spacer(Modifier.height(10.dp))
 
-            Text(
-                text = "Комментарий:",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = UrbanBrown
-            )
+            Text("Комментарий:", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
+            Text(item.comment, color = TextPrimary)
 
-            Text(
-                text = item.comment,
-                style = MaterialTheme.typography.bodyLarge,
-                color = TextPrimary
-            )
+            Spacer(Modifier.height(10.dp))
+
+            Text("Телефон:", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
+            Text(item.contact.ifBlank { "Не указан" }, color = TextPrimary)
+
+            if (item.specialNotes.isNotBlank()) {
+                Spacer(Modifier.height(10.dp))
+                Text("Дополнительно:", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
+                Text(item.specialNotes, color = TextPrimary)
+            }
 
             Spacer(Modifier.height(10.dp))
 
             Text(
-                text = "Телефон:",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = UrbanBrown
+                text = when (item.status) {
+                    RequestStatus.CANCELLED -> "Заявка отменена"
+                    RequestStatus.COMPLETED -> "Заявка выполнена"
+                    RequestStatus.ACCEPTED -> "Вы приняли заявку на выполнение"
+                    else -> "Активная заявка"
+                },
+                color = when (item.status) {
+                    RequestStatus.CANCELLED -> AlertRed
+                    RequestStatus.COMPLETED -> SafeGreen
+                    RequestStatus.ACCEPTED -> SafeGreen
+                    else -> UrbanBrown
+                },
+                fontWeight = FontWeight.SemiBold
             )
-
-            Text(
-                text = item.contact.ifBlank { "Не указан" },
-                style = MaterialTheme.typography.bodyLarge,
-                color = TextPrimary
-            )
-
-            if (item.specialNotes.isNotBlank()) {
-
-                Spacer(Modifier.height(10.dp))
-
-                Text(
-                    text = "Дополнительно:",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = UrbanBrown
-                )
-
-                Text(
-                    text = item.specialNotes,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextPrimary
-                )
-            }
 
             Spacer(Modifier.height(14.dp))
 
-            PrimaryButton(
-                text = "Отказаться от заявки",
-                backgroundColor = AlertRed,
-                onClick = onWithdraw
-            )
+            if (isActive) {
+
+                PrimaryButton(
+                    text = "Прогулка завершена",
+                    backgroundColor = SafeGreen,
+                    onClick = onFinish
+                )
+
+                Spacer(Modifier.height(10.dp))
+
+                PrimaryButton(
+                    text = "Отказаться от заявки",
+                    backgroundColor = AlertRed,
+                    onClick = onWithdraw
+                )
+            }
         }
     }
 }

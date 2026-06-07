@@ -287,18 +287,48 @@ class VolunteerViewModel(
         }
     }
 
-    fun deleteRequest(id: String) {
+    fun cancelOrDeleteRequest(id: String, status: RequestStatus) {
         viewModelScope.launch {
             isLoading.value = true
             errorMessage.value = null
             successMessage.value = null
 
             try {
-                repository.deleteOwnRequest(id)
+                if (status == RequestStatus.ACCEPTED) {
+                    repository.cancelOwnRequest(id)
+                    successMessage.value = "Заявка отменена"
+                } else {
+                    repository.deleteOwnRequest(id)
+                    successMessage.value = "Заявка удалена"
+                }
+
                 requests.removeAll { it.id == id }
-                successMessage.value = "Заявка удалена"
+
             } catch (e: Exception) {
-                errorMessage.value = e.message ?: "Ошибка удаления"
+                errorMessage.value = e.message ?: "Ошибка операции"
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
+    fun finishWalk(id: String) {
+        viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
+            successMessage.value = null
+
+            try {
+                val updated = repository.finishWalk(id)
+
+                requests.replaceAll {
+                    if (it.id == id) updated.toUiModel() else it
+                }
+
+                successMessage.value = "Прогулка отмечена как выполненная"
+
+            } catch (e: Exception) {
+                errorMessage.value = e.message ?: "Ошибка завершения прогулки"
             } finally {
                 isLoading.value = false
             }

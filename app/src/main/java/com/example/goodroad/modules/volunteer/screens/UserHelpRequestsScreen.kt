@@ -8,16 +8,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
-import com.example.goodroad.ui.theme.BackgroundLight
-import com.example.goodroad.ui.theme.UrbanBrown
-import com.example.goodroad.ui.theme.TextPrimary
-import com.example.goodroad.ui.theme.SafeGreen
-import com.example.goodroad.ui.theme.AlertRed
+import com.example.goodroad.ui.theme.*
 
 @Composable
 fun UserHelpRequestsScreen(
@@ -43,11 +40,16 @@ fun UserHelpRequestsScreen(
         }
     }
 
-    fun actionLabel(status: VolunteerViewModel.RequestStatus): String {
+    fun statusColor(status: VolunteerViewModel.RequestStatus): Color {
         return when (status) {
-            VolunteerViewModel.RequestStatus.ACCEPTED -> "Отменить"
-            VolunteerViewModel.RequestStatus.COMPLETED -> ""
-            else -> "Удалить"
+            VolunteerViewModel.RequestStatus.PENDING -> Color(0xFFFFA000)
+            VolunteerViewModel.RequestStatus.OPEN -> Color(0xFF42A5F5)
+            VolunteerViewModel.RequestStatus.APPROVED -> SafeGreen
+            VolunteerViewModel.RequestStatus.ACCEPTED -> SafeGreen
+            VolunteerViewModel.RequestStatus.REJECTED -> AlertRed
+            VolunteerViewModel.RequestStatus.CANCELLED -> Color(0xFF757575)
+            VolunteerViewModel.RequestStatus.COMPLETED -> Color(0xFF2E7D32)
+            VolunteerViewModel.RequestStatus.UNKNOWN -> Color.Gray
         }
     }
 
@@ -144,20 +146,15 @@ fun UserHelpRequestsScreen(
 
                                 Spacer(Modifier.height(12.dp))
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
+                                Row(modifier = Modifier.fillMaxWidth()) {
 
-                                    Column(
-                                        modifier = Modifier.weight(1f)
-                                    ) {
+                                    Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = "Дата",
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.SemiBold,
                                             color = UrbanBrown
                                         )
-
                                         Text(
                                             text = datePart,
                                             style = MaterialTheme.typography.bodyLarge,
@@ -166,16 +163,13 @@ fun UserHelpRequestsScreen(
                                     }
 
                                     if (timePart.isNotBlank()) {
-                                        Column(
-                                            modifier = Modifier.weight(1f)
-                                        ) {
+                                        Column(modifier = Modifier.weight(1f)) {
                                             Text(
                                                 text = "Время",
                                                 style = MaterialTheme.typography.titleSmall,
                                                 fontWeight = FontWeight.SemiBold,
                                                 color = UrbanBrown
                                             )
-
                                             Text(
                                                 text = timePart,
                                                 style = MaterialTheme.typography.bodyLarge,
@@ -203,14 +197,43 @@ fun UserHelpRequestsScreen(
                                 Spacer(Modifier.height(10.dp))
 
                                 Text("Статус", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
-                                Text(statusText(req.status))
 
-                                if (req.status != VolunteerViewModel.RequestStatus.COMPLETED) {
+                                Surface(
+                                    color = statusColor(req.status),
+                                    shape = MaterialTheme.shapes.small
+                                ) {
+                                    Text(
+                                        text = statusText(req.status),
+                                        modifier = Modifier.padding(
+                                            horizontal = 10.dp,
+                                            vertical = 4.dp
+                                        ),
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+
+                                if (req.status == VolunteerViewModel.RequestStatus.ACCEPTED ||
+                                    req.status == VolunteerViewModel.RequestStatus.OPEN
+                                ) {
 
                                     Spacer(Modifier.height(12.dp))
 
+                                    if (req.status == VolunteerViewModel.RequestStatus.ACCEPTED) {
+
+                                        PrimaryButton(
+                                            text = "Прогулка выполнена",
+                                            backgroundColor = SafeGreen,
+                                            onClick = {
+                                                viewModel.finishWalk(req.id)
+                                            }
+                                        )
+
+                                        Spacer(Modifier.height(8.dp))
+                                    }
+
                                     PrimaryButton(
-                                        text = actionLabel(req.status),
+                                        text = "Удалить заявку",
                                         backgroundColor = AlertRed,
                                         onClick = { deleteTarget = req }
                                     )
@@ -230,16 +253,11 @@ fun UserHelpRequestsScreen(
             onDismissRequest = { deleteTarget = null },
             title = { Text("Подтверждение") },
             text = {
-                Text(
-                    if (target.status == VolunteerViewModel.RequestStatus.ACCEPTED)
-                        "Отменить эту заявку?"
-                    else
-                        "Удалить эту заявку?"
-                )
+                Text("Удалить эту заявку?")
             },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.deleteRequest(target.id)
+                    viewModel.cancelOrDeleteRequest(target.id, target.status)
                     deleteTarget = null
                 }) {
                     Text("Да")
