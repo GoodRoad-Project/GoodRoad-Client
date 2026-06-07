@@ -15,6 +15,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel.HelpRequest
 import com.example.goodroad.ui.UserDecor
+import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.*
 
 @Composable
@@ -232,28 +233,11 @@ private fun VolunteerRequestCard(
 
             when (item.status) {
                 VolunteerViewModel.RequestStatus.OPEN -> {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = SafeGreen.copy(alpha = 0.14f),
-                        shape = MaterialTheme.shapes.medium,
-                        border = BorderStroke(1.5.dp, SafeGreen),
-                        tonalElevation = 1.dp
-                    ) {
-                        Button(
-                            onClick = onTake,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Transparent,
-                                contentColor = SafeGreen
-                            ),
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 0.dp,
-                                pressedElevation = 0.dp
-                            )
-                        ) {
-                            Text("Стать сопровождающим")
-                        }
-                    }
+                    PrimaryButton(
+                        text = "Стать сопровождающим",
+                        backgroundColor = SafeGreen,
+                        onClick = onTake
+                    )
                 }
 
                 VolunteerViewModel.RequestStatus.ACCEPTED -> {

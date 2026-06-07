@@ -139,6 +139,8 @@ fun VolunteerManagementScreen(
 
             PrimaryButton(
                 text = "Назад в профиль",
+                backgroundColor = UrbanBrown,
+                contentColor = UrbanBrown,
                 onClick = onBack
             )
         }

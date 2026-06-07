@@ -1,30 +1,11 @@
 package com.example.goodroad.modules.volunteer.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +15,9 @@ import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.BackgroundLight
 import com.example.goodroad.ui.theme.UrbanBrown
+import com.example.goodroad.ui.theme.TextPrimary
+import com.example.goodroad.ui.theme.SafeGreen
+import com.example.goodroad.ui.theme.AlertRed
 
 @Composable
 fun UserHelpRequestsScreen(
@@ -80,133 +64,154 @@ fun UserHelpRequestsScreen(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
+
             UserDecor()
 
             Text(
                 text = "Мои заявки",
-                style = MaterialTheme.typography.headlineLarge
+                style = MaterialTheme.typography.headlineLarge,
+                color = TextPrimary
             )
 
+            Spacer(Modifier.height(16.dp))
+
             if (errorMessage != null) {
-                Spacer(Modifier.height(8.dp))
                 Text(
                     text = errorMessage!!,
                     color = MaterialTheme.colorScheme.error
                 )
+                Spacer(Modifier.height(8.dp))
             }
 
             if (successMessage != null) {
-                Spacer(Modifier.height(8.dp))
                 Text(
                     text = successMessage!!,
-                    color = MaterialTheme.colorScheme.primary
+                    color = SafeGreen
                 )
+                Spacer(Modifier.height(8.dp))
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
 
             if (isLoading && requests.isEmpty()) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = UrbanBrown)
                 }
             } else if (requests.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "📝",
-                            style = MaterialTheme.typography.displaySmall
-                        )
-
-                        Spacer(Modifier.height(16.dp))
-
-                        Text(
-                            text = "Пока нет заявок на помощь",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = UrbanBrown
-                        )
-                    }
+                    Text(
+                        text = "Пока нет заявок на помощь",
+                        color = UrbanBrown
+                    )
                 }
             } else {
+
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(requests, key = { it.id }) { req ->
+
                         OutlinedCard(
-                            border = BorderStroke(2.dp, UrbanBrown.copy(alpha = 0.4f)),
+                            modifier = Modifier.fillMaxWidth(),
+                            border = BorderStroke(2.dp, UrbanBrown),
                             colors = CardDefaults.outlinedCardColors(
                                 containerColor = BackgroundLight
-                            ),
-                            modifier = Modifier.fillMaxWidth()
+                            )
                         ) {
-                            Column(Modifier.padding(16.dp)) {
+
+                            Column(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+
+                                val parts = req.dateTime.split(" ")
+                                val rawDate = parts.getOrNull(0) ?: req.dateTime
+                                val datePart = rawDate.replace("-", ".")
+                                val timePart = parts.getOrNull(1) ?: ""
+
                                 Text(
-                                    text = "Маршрут",
-                                    color = UrbanBrown,
-                                    fontWeight = FontWeight.SemiBold
+                                    text = "${req.routeStart} → ${req.routeEnd}",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = UrbanBrown
                                 )
-                                Text("${req.routeStart} ➜ ${req.routeEnd}")
+
+                                Spacer(Modifier.height(12.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+
+                                    Column(
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            text = "Дата",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = UrbanBrown
+                                        )
+
+                                        Text(
+                                            text = datePart,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = TextPrimary
+                                        )
+                                    }
+
+                                    if (timePart.isNotBlank()) {
+                                        Column(
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text(
+                                                text = "Время",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = UrbanBrown
+                                            )
+
+                                            Text(
+                                                text = timePart,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = TextPrimary
+                                            )
+                                        }
+                                    }
+                                }
 
                                 Spacer(Modifier.height(8.dp))
 
-                                Text(
-                                    text = "Дата",
-                                    color = UrbanBrown,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Text(req.dateTime)
-
-                                Spacer(Modifier.height(8.dp))
-
-                                Text(
-                                    text = "Контакт",
-                                    color = UrbanBrown,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Text("Контакт", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
                                 Text(req.contact)
 
                                 Spacer(Modifier.height(8.dp))
 
-                                Text(
-                                    text = "Особенности",
-                                    color = UrbanBrown,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Text("Особенности", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
                                 Text(req.specialNotes)
 
                                 Spacer(Modifier.height(8.dp))
 
-                                Text(
-                                    text = "Комментарий",
-                                    color = UrbanBrown,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Text("Комментарий", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
                                 Text(req.comment)
 
                                 Spacer(Modifier.height(10.dp))
 
-                                Text(
-                                    text = "Статус",
-                                    color = UrbanBrown,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Text("Статус", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
                                 Text(statusText(req.status))
 
                                 if (req.status != VolunteerViewModel.RequestStatus.COMPLETED) {
+
                                     Spacer(Modifier.height(12.dp))
 
                                     PrimaryButton(
                                         text = actionLabel(req.status),
+                                        backgroundColor = AlertRed,
                                         onClick = { deleteTarget = req }
                                     )
                                 }
@@ -226,11 +231,10 @@ fun UserHelpRequestsScreen(
             title = { Text("Подтверждение") },
             text = {
                 Text(
-                    if (target.status == VolunteerViewModel.RequestStatus.ACCEPTED) {
+                    if (target.status == VolunteerViewModel.RequestStatus.ACCEPTED)
                         "Отменить эту заявку?"
-                    } else {
+                    else
                         "Удалить эту заявку?"
-                    }
                 )
             },
             confirmButton = {

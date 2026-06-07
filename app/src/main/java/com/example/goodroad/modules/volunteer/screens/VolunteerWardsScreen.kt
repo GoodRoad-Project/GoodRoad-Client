@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel.HelpRequest
 import com.example.goodroad.ui.UserDecor
+import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.*
 
 @Composable
@@ -238,28 +239,11 @@ private fun WardRequestCard(
 
             Spacer(Modifier.height(14.dp))
 
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = AlertRed.copy(alpha = 0.14f),
-                shape = MaterialTheme.shapes.medium,
-                border = BorderStroke(1.5.dp, AlertRed),
-                tonalElevation = 1.dp
-            ) {
-                Button(
-                    onClick = onWithdraw,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = AlertRed
-                    ),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 0.dp,
-                        pressedElevation = 0.dp
-                    )
-                ) {
-                    Text("Отказаться от заявки")
-                }
-            }
+            PrimaryButton(
+                text = "Отказаться от заявки",
+                backgroundColor = AlertRed,
+                onClick = onWithdraw
+            )
         }
     }
 }
