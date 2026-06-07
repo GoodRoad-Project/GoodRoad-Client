@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.goodroad.modules.rewards.data.RewardOffer
 import com.example.goodroad.modules.rewards.presentation.RewardsViewModel
 import com.example.goodroad.ui.UserDecor
+import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.BackgroundLight
 import com.example.goodroad.ui.theme.TextPrimary
 import com.example.goodroad.ui.theme.UrbanBrown
@@ -184,26 +185,24 @@ fun RewardDetailScreen(
 
                 val canBuy = account.balance >= reward.price
 
-                Button(
-                    onClick = { showConfirmation = true },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    enabled = canBuy && !isPurchasing,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (canBuy) UrbanBrown else UrbanBrown.copy(alpha = 0.5f)
-                    )
-                ) {
-                    if (isPurchasing) {
+                if (isPurchasing) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = androidx.compose.ui.graphics.Color.White
-                        )
-                    } else {
-                        Text(
-                            text = if (canBuy) "Купить за ${reward.price} баллов" else "Недостаточно баллов",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
+                            modifier = Modifier.size(28.dp),
+                            color = UrbanBrown
                         )
                     }
+                } else {
+                    PrimaryButton(
+                        text = if (canBuy) "Купить за ${reward.price} баллов" else "Недостаточно баллов",
+                        backgroundColor = if (canBuy) UrbanBrown else UrbanBrown.copy(alpha = 0.5f),
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = canBuy && !isPurchasing,
+                        onClick = { showConfirmation = true }
+                    )
                 }
             }
 

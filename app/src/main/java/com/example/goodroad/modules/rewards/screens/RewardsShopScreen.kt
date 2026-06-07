@@ -20,6 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.goodroad.modules.rewards.presentation.RewardsViewModel
 import com.example.goodroad.modules.rewards.data.RewardOffer
 import com.example.goodroad.ui.UserDecor
+import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.BackgroundLight
 import com.example.goodroad.ui.theme.TextPrimary
 import com.example.goodroad.ui.theme.UrbanBrown
@@ -323,25 +324,26 @@ private fun RewardCard(
                     )
                 }
 
-                Button(
-                    onClick = onBuyClick,
-                    enabled = canBuy && !isPurchasing,
-                    modifier = Modifier.width(100.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (canBuy) SafeGreen else UrbanBrown.copy(alpha = 0.5f)
-                    )
-                ) {
-                    if (isPurchasing) {
+                if (isPurchasing) {
+                    Box(
+                        modifier = Modifier
+                            .width(100.dp)
+                            .height(44.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            color = androidx.compose.ui.graphics.Color.White
-                        )
-                    } else {
-                        Text(
-                            text = if (canBuy) "Купить" else "Не хватает",
-                            fontSize = 14.sp
+                            modifier = Modifier.size(24.dp),
+                            color = UrbanBrown
                         )
                     }
+                } else {
+                    PrimaryButton(
+                        text = if (canBuy) "Купить" else "Не хватает",
+                        backgroundColor = if (canBuy) SafeGreen else UrbanBrown,
+                        modifier = Modifier.width(100.dp),
+                        enabled = canBuy && !isPurchasing,
+                        onClick = onBuyClick
+                    )
                 }
             }
         }

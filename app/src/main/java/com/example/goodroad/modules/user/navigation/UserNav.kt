@@ -41,6 +41,11 @@ import com.example.goodroad.modules.rewards.screens.LeaderboardScreen
 import com.example.goodroad.modules.rewards.data.RewardsRepository
 import com.example.goodroad.modules.rewards.data.RewardOffer
 import com.example.goodroad.modules.rewards.presentation.RewardsViewModel
+import com.example.goodroad.modules.tasks.presentation.TasksViewModel
+import com.example.goodroad.modules.tasks.data.TasksRepository
+import com.example.goodroad.modules.tasks.screens.TasksScreen
+import com.example.goodroad.modules.tasks.data.TaskViewDto
+import com.example.goodroad.modules.tasks.screens.TaskExecutionScreen
 
 enum class BottomTab {
     MAP,
@@ -64,7 +69,9 @@ enum class OverlayScreen {
     REWARDS_SHOP,
     REWARD_DETAIL,
     REWARDS_HISTORY,
-    LEADERBOARD
+    LEADERBOARD,
+    TASKS_SHOP,
+    TASK_DETAIL
 }
 
 @Composable
@@ -77,6 +84,7 @@ fun UserNav(
     val reviewApi = ApiClient.reviewApi
     val obstacleApi = ApiClient.obstacleApi
     val volunteerApi = ApiClient.volunteerApi
+    val tasksApi = ApiClient.tasksApi
 
     val userFactory = object : ViewModelProvider.Factory {
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
@@ -108,7 +116,14 @@ fun UserNav(
         }
     }
 
+    val tasksFactory = object : ViewModelProvider.Factory {
+        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+            return TasksViewModel(TasksRepository(tasksApi)) as T
+        }
+    }
+
     val rewardsViewModel: RewardsViewModel = viewModel(factory = rewardsFactory)
+    val tasksViewModel: TasksViewModel = viewModel(factory = tasksFactory)
     val userViewModel: UserViewModel = viewModel(factory = userFactory)
     val reviewsViewModel: ReviewsViewModel = viewModel(factory = reviewsFactory)
     val mapsViewModel: MapsViewModel = viewModel(factory = mapsFactory)
@@ -118,6 +133,7 @@ fun UserNav(
     var overlayScreen by remember { mutableStateOf(OverlayScreen.NONE) }
     var selectedReview by remember { mutableStateOf<ReviewCardResp?>(null) }
     var selectedReward by remember { mutableStateOf<RewardOffer?>(null) }
+    var selectedTask by remember { mutableStateOf<TaskViewDto?>(null) }
 
     Scaffold(
         bottomBar = {
@@ -223,6 +239,9 @@ fun UserNav(
                         },
                         onNavigateToRewards = {
                             overlayScreen = OverlayScreen.REWARDS_SHOP
+                        },
+                        onNavigateToTasks = {
+                            overlayScreen = OverlayScreen.TASKS_SHOP
                         }
                     )
                 }
@@ -343,6 +362,38 @@ fun UserNav(
                     viewModel = rewardsViewModel,
                     onBack = { overlayScreen = OverlayScreen.REWARDS_SHOP }
                 )
+
+                OverlayScreen.TASKS_SHOP -> TasksScreen(
+                    viewModel = tasksViewModel,
+                    onTaskClick = { task: TaskViewDto ->
+                        selectedTask = task
+                        overlayScreen = OverlayScreen.TASK_DETAIL
+                    },
+                    onBack = { overlayScreen = OverlayScreen.NONE }
+                )
+
+                OverlayScreen.TASK_DETAIL -> {
+                    val task = selectedTask
+                    if (task != null) {
+                        TaskExecutionScreen(
+                            task = task,
+                            onTargetComplete = { target ->
+                                tasksViewModel.completeTarget(task.id, target.id)
+                            },
+                            onComplete = {
+                                selectedTask = null
+                                overlayScreen = OverlayScreen.TASKS_SHOP
+                                tasksViewModel.loadTasks()
+                            },
+                            onBack = {
+                                selectedTask = null
+                                overlayScreen = OverlayScreen.TASKS_SHOP
+                            }
+                        )
+                    } else {
+                        overlayScreen = OverlayScreen.NONE
+                    }
+                }
 
                 OverlayScreen.NONE -> Unit
             }

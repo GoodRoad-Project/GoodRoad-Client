@@ -90,4 +90,15 @@ class TasksViewModel(
             }
         }
     }
+
+    fun completeTarget(taskId: String, targetId: String) {
+        viewModelScope.launch {
+            try {
+                repository.completeTarget(taskId, targetId)
+                loadTasks()
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
 }

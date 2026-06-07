@@ -17,6 +17,7 @@ import com.example.goodroad.modules.user.data.UserApi
 import com.example.goodroad.modules.volunteer.data.VolunteerApi
 import com.example.goodroad.modules.moderator.data.VolunteerModerationApi
 import com.example.goodroad.modules.rewards.data.RewardsApi
+import com.example.goodroad.modules.tasks.data.TasksApi
 
 object ApiClient {
 
@@ -109,6 +110,10 @@ object ApiClient {
 
     val rewardsApi: RewardsApi by lazy {
         retrofit().create(RewardsApi::class.java)
+    }
+
+    val tasksApi: TasksApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        retrofit().create(TasksApi::class.java)
     }
 }
 
