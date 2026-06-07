@@ -31,6 +31,8 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import org.maplibre.android.style.layers.CircleLayer
+import com.example.goodroad.domain.model.LocationPoint
 
 class MapActivity : AppCompatActivity() {
     private lateinit var mapView: MapView
@@ -69,6 +71,7 @@ class MapActivity : AppCompatActivity() {
 
         mapView.getMapAsync { map ->
             map.setStyle(Style.Builder().fromUri("https://tiles.openfreemap.org/styles/positron")) {
+                startLocationTracking()
                 if (hasLocationPermission()) {
                     getUserLocation()
                 } else {
@@ -296,6 +299,52 @@ class MapActivity : AppCompatActivity() {
                 getUserLocation()
             } else {
                 Toast.makeText(this, "Без разрешения геолокация не будет работать", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun updateUserMarker(location: LocationPoint) {
+        val point = LatLng(location.latitude, location.longitude)
+
+        mapView.getMapAsync { map ->
+            map.getStyle { style ->
+                style.removeLayer("user-marker-layer")
+                style.removeSource("user-marker-source")
+
+                val geojson = """
+                {
+                    "type": "FeatureCollection",
+                    "features": [{
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [${point.longitude}, ${point.latitude}]
+                        }
+                    }]
+                }
+            """.trimIndent()
+
+                val source = GeoJsonSource("user-marker-source", geojson)
+                style.addSource(source)
+
+                val circleLayer = CircleLayer("user-marker-layer", "user-marker-source").apply {
+                    setProperties(
+                        PropertyFactory.circleColor("#4F87C9"),
+                        PropertyFactory.circleRadius(8f),
+                        PropertyFactory.circleOpacity(0.8f),
+                        PropertyFactory.circleStrokeColor("#FFFFFF"),
+                        PropertyFactory.circleStrokeWidth(2f)
+                    )
+                }
+                style.addLayer(circleLayer)
+            }
+        }
+    }
+
+    private fun startLocationTracking() {
+        lifecycleScope.launch {
+            locationTracker.locationUpdates().collect { location ->
+                updateUserMarker(location)
             }
         }
     }
