@@ -17,7 +17,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Locale
 import com.example.goodroad.data.network.route.RouteRequest
-import com.example.goodroad.data.network.route.RouteResponse
+import com.example.goodroad.data.network.route.RouteObstaclePolicy
+import com.example.goodroad.data.network.route.PathResponse
 import com.example.goodroad.data.network.GoodRoadApi
 import com.example.goodroad.data.network.utils.decodePoints
 import org.maplibre.android.geometry.LatLng
@@ -129,7 +130,7 @@ class MapActivity : AppCompatActivity() {
 
                 Toast.makeText(
                     this@MapActivity,
-                    "Маршрут от \$startLat,\$startLon до \$endLat,\$endLon",
+                    "Маршрут от $startLat,$startLon до $endLat,$endLon",
                     Toast.LENGTH_LONG
                 ).show()
 
@@ -152,15 +153,14 @@ class MapActivity : AppCompatActivity() {
             val policies = res.body()
 
             if(policies != null) {
+                val obstaclePolicies = policies
+                    .filter { it.selected && it.maxAllowedSeverity != null }
+                    .map { RouteObstaclePolicy(it.obstacleType, it.maxAllowedSeverity) }
+
                 val request = RouteRequest(
                     start = "$startLat,$startLon",
                     end = "$endLat,$endLon",
-                    maxStairsSeverity = policies.find { it.obstacleType == "STAIRS" }?.maxAllowedSeverity,
-                    maxCurbSeverity = policies.find { it.obstacleType == "CURB" }?.maxAllowedSeverity,
-                    maxSlopeSeverity = policies.find { it.obstacleType == "ROAD_SLOPE" }?.maxAllowedSeverity,
-                    maxPotholesSeverity = policies.find { it.obstacleType == "POTHOLES" }?.maxAllowedSeverity,
-                    maxSandSeverity = policies.find { it.obstacleType == "SAND" }?.maxAllowedSeverity,
-                    maxGravelSeverity = policies.find { it.obstacleType == "GRAVEL" }?.maxAllowedSeverity
+                    obstaclePolicies = obstaclePolicies
                 )
 
                 //drawRoute(RouteResponse(id = "test", paths = emptyList()))
@@ -168,10 +168,19 @@ class MapActivity : AppCompatActivity() {
                 try {
                     val response = api.getRoute(request)
 
+                    if(response.paths.isEmpty())  {
+                        Toast.makeText(this@MapActivity, "Маршрутов нет", Toast.LENGTH_SHORT).show()
+                    }
+
                     fastRoute = response.paths.find { it.routeType == "fast" }
                     balancedRoute = response.paths.find { it.routeType == "balanced" }
                     safeRoute = response.paths.find { it.routeType == "safe" }
 
+                    if (fastRoute != null) {
+                        drawRoute(fastRoute)
+                    } else {
+                        Toast.makeText(this@MapActivity, "Быстрый маршрут не найден", Toast.LENGTH_SHORT).show()
+                    }
                     if (safeRoute != null) {
                         drawRoute(safeRoute)
                     } else {
@@ -184,12 +193,6 @@ class MapActivity : AppCompatActivity() {
                         Toast.makeText(this@MapActivity, "Сбалансированный маршрут не найден", Toast.LENGTH_SHORT).show()
                     }
 
-                    if (fastRoute != null) {
-                        drawRoute(fastRoute)
-                    } else {
-                        Toast.makeText(this@MapActivity, "Быстрый маршрут не найден", Toast.LENGTH_SHORT).show()
-                    }
-
                 } catch (e: Exception) {
                     Toast.makeText(this@MapActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT)
                         .show()
@@ -199,14 +202,13 @@ class MapActivity : AppCompatActivity() {
         }
     }
 
-    private fun drawRoute(response: RouteResponse) {
-        val path = response.paths.firstOrNull()
-        if (path == null) {
+    private fun drawRoute(pathResponse: PathResponse?) {
+        if (pathResponse == null) {
             Toast.makeText(this, "Маршрут не найден", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val points = decodePoints(path.points)
+        val points = decodePoints(pathResponse.points)
         if (points.isEmpty()) {
             Toast.makeText(this, "Нет точек для отрисовки", Toast.LENGTH_SHORT).show()
             return
@@ -216,8 +218,11 @@ class MapActivity : AppCompatActivity() {
 
         mapView.getMapAsync { map ->
             map.getStyle { style ->
-                style.removeLayer("route-layer")
-                style.removeSource("route-source")
+                val layerId = "route-layer-${pathResponse.routeType}"
+                val sourceId = "route-source-${pathResponse.routeType}"
+
+                style.removeLayer(layerId)
+                style.removeSource(sourceId)
 
                 // Создаём GeoJSON строку вручную
                 val coordinates = latLngs.joinToString(", ") {
@@ -236,12 +241,19 @@ class MapActivity : AppCompatActivity() {
                 }
             """.trimIndent()
 
-                val source = GeoJsonSource("route-source", geojson)
+                val source = GeoJsonSource(sourceId, geojson)
                 style.addSource(source)
 
-                val lineLayer = LineLayer("route-layer", "route-source").apply {
+                val lineColor = when (pathResponse.routeType) {
+                    "fast" -> "#4F87C9"
+                    "balanced" -> "#8B7AC6"
+                    "safe" -> "#6FAE8A"
+                    else -> "#8B7AC6"
+                }
+
+                val lineLayer = LineLayer(layerId, sourceId).apply {
                     setProperties(
-                        PropertyFactory.lineColor("#8B7AC6"),
+                        PropertyFactory.lineColor(lineColor),
                         PropertyFactory.lineWidth(6f),
                         PropertyFactory.lineOpacity(0.9f)
                     )
