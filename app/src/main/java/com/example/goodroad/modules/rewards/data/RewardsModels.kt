@@ -1,4 +1,4 @@
-package com.example.goodroad.modules.gamification.data
+package com.example.goodroad.modules.rewards.data
 
 data class RewardOffer(
     val id: String,
@@ -38,6 +38,7 @@ data class PointTransaction(
     val amount: Int,
     val type: String,
     val description: String?,
+    val details: String?,
     val balanceAfter: Int,
     val createdAt: String
 )

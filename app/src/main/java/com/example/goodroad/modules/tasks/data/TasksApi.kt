@@ -1,4 +1,4 @@
-package com.example.goodroad.modules.gamification.data
+package com.example.goodroad.modules.tasks.data
 
 import retrofit2.http.Body
 import retrofit2.http.GET

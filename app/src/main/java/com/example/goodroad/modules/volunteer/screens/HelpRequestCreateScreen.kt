@@ -32,7 +32,6 @@ fun HelpRequestCreateScreen(
     var specialNotes by rememberSaveable { mutableStateOf("") }
     var comment by rememberSaveable { mutableStateOf("") }
 
-    // ошибки обязательных полей
     var routeStartError by rememberSaveable { mutableStateOf<String?>(null) }
     var routeEndError by rememberSaveable { mutableStateOf<String?>(null) }
     var meetingDateError by rememberSaveable { mutableStateOf<String?>(null) }

@@ -1,13 +1,13 @@
-package com.example.goodroad.modules.gamification.presentation
+package com.example.goodroad.modules.rewards.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.goodroad.modules.gamification.data.LeaderboardItem
-import com.example.goodroad.modules.gamification.data.PointTransaction
-import com.example.goodroad.modules.gamification.data.PurchaseResponse
-import com.example.goodroad.modules.gamification.data.RewardOffer
-import com.example.goodroad.modules.gamification.data.RewardsAccount
-import com.example.goodroad.modules.gamification.data.RewardsRepository
+import com.example.goodroad.modules.rewards.data.LeaderboardItem
+import com.example.goodroad.modules.rewards.data.PointTransaction
+import com.example.goodroad.modules.rewards.data.PurchaseResponse
+import com.example.goodroad.modules.rewards.data.RewardOffer
+import com.example.goodroad.modules.rewards.data.RewardsAccount
+import com.example.goodroad.modules.rewards.data.RewardsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -1,4 +1,4 @@
-package com.example.goodroad.modules.gamification.data
+package com.example.goodroad.modules.rewards.data
 
 class RewardsRepository(
     private val api: RewardsApi

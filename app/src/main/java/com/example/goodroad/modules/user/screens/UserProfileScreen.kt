@@ -27,7 +27,8 @@ fun UserProfileScreen(
     onDelete: () -> Unit,
     onLogout: () -> Unit,
     onSelectObstacles: () -> Unit,
-    onBecomeVolunteer: () -> Unit = {}
+    onBecomeVolunteer: () -> Unit = {},
+    onNavigateToRewards: () -> Unit = {}
 ) {
     val user by userViewModel.user
     val isLoading by userViewModel.isLoading
@@ -158,6 +159,14 @@ fun UserProfileScreen(
                             title = "Стать волонтёром",
                             description = "Подключитесь к помощи другим пользователям",
                             onClick = onBecomeVolunteer
+                        )
+                    }
+
+                    item {
+                        ServiceCard(
+                            title = "Награды и баллы",
+                            description = "Магазин наград, история, рейтинг",
+                            onClick = onNavigateToRewards
                         )
                     }
 

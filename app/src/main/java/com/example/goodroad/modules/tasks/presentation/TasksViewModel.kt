@@ -1,11 +1,11 @@
-package com.example.goodroad.modules.gamification.presentation
+package com.example.goodroad.modules.tasks.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.goodroad.modules.gamification.data.CompletedTaskDto
-import com.example.goodroad.modules.gamification.data.TaskCreateReq
-import com.example.goodroad.modules.gamification.data.TaskViewDto
-import com.example.goodroad.modules.gamification.data.TasksRepository
+import com.example.goodroad.modules.tasks.data.CompletedTaskDto
+import com.example.goodroad.modules.tasks.data.TaskCreateReq
+import com.example.goodroad.modules.tasks.data.TaskViewDto
+import com.example.goodroad.modules.tasks.data.TasksRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

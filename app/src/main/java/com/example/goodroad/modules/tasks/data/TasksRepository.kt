@@ -1,4 +1,4 @@
-package com.example.goodroad.modules.gamification.data
+package com.example.goodroad.modules.tasks.data
 
 class TasksRepository(
     private val api: TasksApi
