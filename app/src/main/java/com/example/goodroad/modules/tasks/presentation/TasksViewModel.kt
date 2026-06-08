@@ -68,35 +68,11 @@ class TasksViewModel(
         }
     }
 
-    fun createTask(
-        request: TaskCreateReq,
-        onSuccess: (TaskViewDto) -> Unit = {}
-    ) {
-        viewModelScope.launch {
-            try {
-                _loading.value = true
-                _error.value = null
-
-                val created = repository.createTask(request)
-
-                _tasks.value = listOf(created) + _tasks.value
-
-                onSuccess(created)
-
-            } catch (e: Exception) {
-                _error.value = e.message
-            } finally {
-                _loading.value = false
-            }
-        }
-    }
-
     fun completeTarget(taskId: String, targetId: String, onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
             try {
                 repository.completeTarget(taskId, targetId)
 
-                // Обновляем задачу локально без полной перезагрузки
                 val currentTasks = _tasks.value.toMutableList()
                 val taskIndex = currentTasks.indexOfFirst { it.id == taskId }
                 if (taskIndex != -1) {

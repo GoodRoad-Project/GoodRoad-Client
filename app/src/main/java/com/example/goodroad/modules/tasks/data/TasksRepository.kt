@@ -20,12 +20,6 @@ class TasksRepository(
         return api.getCompletedTasks()
     }
 
-    suspend fun createTask(
-        request: TaskCreateReq
-    ): TaskViewDto {
-        return api.createTask(request)
-    }
-
     suspend fun completeTarget(taskId: String, targetId: String) {
         return api.completeTarget(taskId, targetId)
     }

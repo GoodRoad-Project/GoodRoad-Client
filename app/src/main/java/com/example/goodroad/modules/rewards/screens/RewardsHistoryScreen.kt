@@ -135,9 +135,16 @@ fun RewardsHistoryScreen(
 
 @Composable
 private fun HistoryItem(transaction: PointTransaction) {
-    val isEarn = transaction.type == "EARN"
+    val isEarn = when {
+        transaction.type.equals("EARN", ignoreCase = true) -> true
+        transaction.type.equals("EARNING", ignoreCase = true) -> true
+        transaction.type.equals("CREDIT", ignoreCase = true) -> true
+        transaction.amount > 0 -> true  // положительная сумма = начисление
+        else -> false
+    }
+
     val sign = if (isEarn) "+" else "-"
-    val color = if (isEarn) SafeGreen else AlertRed
+    val amountColor = if (isEarn) SafeGreen else AlertRed
 
     val displayText = when {
         !transaction.details.isNullOrBlank() -> transaction.details
@@ -180,10 +187,10 @@ private fun HistoryItem(transaction: PointTransaction) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "$sign ${transaction.amount}",
+                    text = "$sign ${kotlin.math.abs(transaction.amount)}",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = color
+                    color = amountColor
                 )
                 Text(
                     text = "⭐",

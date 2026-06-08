@@ -78,4 +78,5 @@ interface VolunteerApi {
     suspend fun finishWalk(
         @Path("id") id: String
     ): HelpRequestRespDto
+
 }
