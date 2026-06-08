@@ -32,7 +32,8 @@ fun TaskExecutionScreen(
     onComplete: () -> Unit,
     onBack: () -> Unit
 ) {
-    var completedTargets by remember { mutableStateOf(task.targets.filter { it.done }.size) }
+    var targetsState by remember { mutableStateOf(task.targets.toList()) }
+    val completedTargets = targetsState.count { it.done }
     val allCompleted = completedTargets >= task.targetCount
 
     Surface(
@@ -51,9 +52,11 @@ fun TaskExecutionScreen(
             ) {
                 Text(
                     text = task.title,
+                    fontSize = 28.sp,
                     style = MaterialTheme.typography.headlineLarge,
                     color = TextPrimary,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    lineHeight = 31.sp
                 )
 
                 IconButton(onClick = onBack) {
@@ -77,19 +80,14 @@ fun TaskExecutionScreen(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "⭐",
-                        fontSize = 16.sp
-                    )
-                    Text(
-                        text = "${task.points}",
-                        fontSize = 18.sp,
+                        text = "Задание на ${task.points}",
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = UrbanBrown
                     )
                     Text(
-                        text = "баллов",
-                        fontSize = 14.sp,
-                        color = UrbanBrown.copy(alpha = 0.7f)
+                        text = "⭐",
+                        fontSize = 16.sp
                     )
                 }
 
@@ -134,15 +132,15 @@ fun TaskExecutionScreen(
 
             Text(
                 text = "Прогресс: $completedTargets из ${task.targetCount} целей",
-                fontSize = 13.sp,
-                color = UrbanBrown.copy(alpha = 1.1f)
+                fontSize = 16.sp,
+                color = UrbanBrown
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 text = "Цели задания",
-                fontSize = 16.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = TextPrimary
             )
@@ -152,15 +150,18 @@ fun TaskExecutionScreen(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                itemsIndexed(task.targets) { idx, target ->
+                itemsIndexed(targetsState) { idx, target ->
                     TargetItem(
                         target = target,
                         index = idx,
                         isCompleted = target.done,
                         onComplete = {
                             if (!target.done) {
-                                completedTargets++
-                                onTargetComplete(target)
+                                val updatedTarget = target.copy(done = true)
+                                targetsState = targetsState.mapIndexed { index, t ->
+                                    if (index == idx) updatedTarget else t
+                                }
+                                onTargetComplete(updatedTarget)
                             }
                         }
                     )
@@ -190,9 +191,9 @@ private fun TargetItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = !isCompleted) { onComplete() },
+            .clickable(enabled = !isCompleted) { if (!isCompleted) onComplete() },
         colors = CardDefaults.cardColors(
-            containerColor = if (isCompleted) SurfaceWarm.copy(alpha = 0.5f) else SurfaceWarm
+            containerColor = SurfaceWarm
         )
     ) {
         Row(
@@ -212,34 +213,30 @@ private fun TargetItem(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = "Выполнено",
                         tint = SafeGreen,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 } else {
-                    Surface(
-                        modifier = Modifier.size(24.dp),
-                        shape = MaterialTheme.shapes.small,
-                        color = UrbanBrown.copy(alpha = 0.3f)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                text = "${index + 1}",
-                                fontSize = 12.sp,
-                                color = UrbanBrown
-                            )
-                        }
-                    }
+                    Text(
+                        text = "${index + 1}",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = UrbanBrown
+                    )
                 }
 
-                Column {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
                     Text(
                         text = target.title,
-                        fontSize = 15.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Medium,
-                        color = if (isCompleted) UrbanBrown.copy(alpha = 0.6f) else TextPrimary
+                        color = if (isCompleted) UrbanBrown.copy(alpha = 0.6f) else TextPrimary,
+                        lineHeight = 26.sp
                     )
 
                     if (target.latitude != null && target.longitude != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -248,11 +245,11 @@ private fun TargetItem(
                                 imageVector = Icons.Default.LocationOn,
                                 contentDescription = null,
                                 tint = AlertRed,
-                                modifier = Modifier.size(14.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                             Text(
                                 text = "Отметить на карте",
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 color = AlertRed
                             )
                         }
@@ -265,7 +262,9 @@ private fun TargetItem(
                     text = "Выполнить",
                     backgroundColor = SafeGreen,
                     modifier = Modifier.width(100.dp),
-                    onClick = onComplete
+                    onClick = {
+                        if (!isCompleted) onComplete()
+                    }
                 )
             }
         }

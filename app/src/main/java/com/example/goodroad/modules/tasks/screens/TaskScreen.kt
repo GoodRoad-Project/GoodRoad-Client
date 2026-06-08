@@ -74,7 +74,7 @@ fun TasksScreen(
             Text(
                 text = "Выполняйте задания и получайте баллы!",
                 fontSize = 18.sp,
-                color = UrbanBrown.copy(alpha = 1.1f),
+                color = UrbanBrown,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
@@ -181,7 +181,7 @@ private fun TaskCard(
                 ) {
                     Text(
                         text = task.title,
-                        fontSize = 16.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (isCompleted) UrbanBrown.copy(alpha = 0.6f) else TextPrimary
                     )
@@ -203,18 +203,18 @@ private fun TaskCard(
                 ) {
                     Text(
                         text = "⭐ ${task.points}",
-                        fontSize = 14.sp,
+                        fontSize = 17.sp,
                         color = UrbanBrown
                     )
                     Text(
                         text = "•",
-                        fontSize = 14.sp,
-                        color = UrbanBrown.copy(alpha = 0.5f)
+                        fontSize = 17.sp,
+                        color = UrbanBrown
                     )
                     Text(
                         text = "Прогресс: ${task.completedCount}/${task.targetCount}",
-                        fontSize = 14.sp,
-                        color = UrbanBrown.copy(alpha = 0.7f)
+                        fontSize = 17.sp,
+                        color = UrbanBrown
                     )
                 }
             }
@@ -223,7 +223,7 @@ private fun TaskCard(
                 PrimaryButton(
                     text = if (isInProgress) "Продолжить" else "Начать",
                     backgroundColor = SafeGreen,
-                    modifier = Modifier.width(100.dp),
+                    modifier = Modifier.width(120.dp),
                     onClick = onClick
                 )
             }
