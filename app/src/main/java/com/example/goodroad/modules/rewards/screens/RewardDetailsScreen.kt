@@ -35,9 +35,10 @@ fun RewardDetailScreen(
     val account = state.account
 
     LaunchedEffect(state.purchaseResult) {
-        if (state.purchaseResult != null) {
+        if (state.purchaseResult != null && isPurchasing) {
             isPurchasing = false
             onPurchaseComplete()
+            viewModel.clearPurchaseResult()
         }
     }
 

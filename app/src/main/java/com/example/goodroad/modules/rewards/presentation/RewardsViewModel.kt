@@ -106,4 +106,8 @@ class RewardsViewModel(
             }
         }
     }
+
+    fun clearPurchaseResult() {
+        _state.value = _state.value.copy(purchaseResult = null)
+    }
 }

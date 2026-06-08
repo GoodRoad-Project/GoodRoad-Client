@@ -19,13 +19,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.goodroad.modules.rewards.presentation.RewardsViewModel
 import com.example.goodroad.modules.rewards.data.RewardOffer
-import com.example.goodroad.ui.UserDecor
-import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.BackgroundLight
 import com.example.goodroad.ui.theme.TextPrimary
 import com.example.goodroad.ui.theme.UrbanBrown
 import com.example.goodroad.ui.theme.SurfaceWarm
 import com.example.goodroad.ui.theme.SafeGreen
+import kotlinx.coroutines.delay
 
 @Composable
 fun RewardsShopScreen(
@@ -51,6 +50,8 @@ fun RewardsShopScreen(
         if (state.purchaseResult != null) {
             viewModel.loadAccount()
             viewModel.loadRewards()
+            delay(500)
+            viewModel.clearPurchaseResult()
         }
     }
 
@@ -80,21 +81,21 @@ fun RewardsShopScreen(
                         Icon(
                             imageVector = Icons.Default.History,
                             contentDescription = "История",
-                            tint = UrbanBrown
+                            tint = UrbanBrown.copy(alpha = 0.7f)
                         )
                     }
                     IconButton(onClick = onNavigateToLeaderboard) {
                         Icon(
                             imageVector = Icons.Default.Leaderboard,
                             contentDescription = "Лидеры",
-                            tint = UrbanBrown
+                            tint = UrbanBrown.copy(alpha = 0.7f)
                         )
                     }
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Назад",
-                            tint = UrbanBrown
+                            tint = UrbanBrown.copy(alpha = 0.7f)
                         )
                     }
                 }
@@ -106,7 +107,7 @@ fun RewardsShopScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = UrbanBrown.copy(alpha = 0.12f)
+                        containerColor = TextPrimary.copy(alpha = 0.08f)
                     )
                 ) {
                     Row(
@@ -119,22 +120,21 @@ fun RewardsShopScreen(
                         Column {
                             Text(
                                 text = "Мои баллы",
-                                fontSize = 14.sp,
-                                color = UrbanBrown.copy(alpha = 0.7f)
+                                fontSize = 18.sp,
+                                color = UrbanBrown.copy(alpha = 1.5f)
                             )
                             Text(
                                 text = "${account.balance}",
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = UrbanBrown
+                                color = UrbanBrown.copy(alpha = 1.7f)
                             )
                             Text(
                                 text = account.title,
-                                fontSize = 14.sp,
-                                color = UrbanBrown.copy(alpha = 0.6f)
+                                fontSize = 16.sp,
+                                color = UrbanBrown.copy(alpha = 1.5f)
                             )
                         }
-
                         Text(
                             text = "⭐",
                             fontSize = 48.sp
@@ -164,8 +164,19 @@ fun RewardsShopScreen(
                         selectedSort = "price_asc"
                         viewModel.loadRewards(sort = "price_asc")
                     },
-                    label = { Text("По возрастанию") },
-                    modifier = Modifier.weight(1f)
+                    label = {
+                        Text(
+                            text = "По возрастанию",
+                            fontSize = 16.sp
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = UrbanBrown.copy(alpha = 0.15f),
+                        selectedLabelColor = UrbanBrown.copy(alpha = 0.8f),
+                        containerColor = Color.Transparent,
+                        labelColor = UrbanBrown.copy(alpha = 0.6f)
+                    )
                 )
                 FilterChip(
                     selected = selectedSort == "price_desc",
@@ -173,8 +184,19 @@ fun RewardsShopScreen(
                         selectedSort = "price_desc"
                         viewModel.loadRewards(sort = "price_desc")
                     },
-                    label = { Text("По убыванию") },
-                    modifier = Modifier.weight(1f)
+                    label = {
+                        Text(
+                            text = "По убыванию",
+                            fontSize = 16.sp
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = UrbanBrown.copy(alpha = 0.15f),
+                        selectedLabelColor = UrbanBrown.copy(alpha = 0.8f),
+                        containerColor = Color.Transparent,
+                        labelColor = UrbanBrown.copy(alpha = 0.6f)
+                    )
                 )
             }
 
@@ -226,7 +248,7 @@ fun RewardsShopScreen(
                             Text(
                                 text = "Загляните позже!",
                                 fontSize = 12.sp,
-                                color = UrbanBrown.copy(alpha = 0.6f)
+                                color = UrbanBrown.copy(alpha = 0.5f)
                             )
                         }
                     }
@@ -239,10 +261,7 @@ fun RewardsShopScreen(
                         items(rewards) { reward ->
                             RewardCard(
                                 reward = reward,
-                                onClick = { onRewardClick(reward) },
-                                onBuyClick = { viewModel.purchaseReward(reward.id) },
-                                canBuy = account?.balance ?: 0 >= reward.price,
-                                isPurchasing = loading
+                                onClick = { onRewardClick(reward) }
                             )
                         }
                     }
@@ -255,10 +274,7 @@ fun RewardsShopScreen(
 @Composable
 private fun RewardCard(
     reward: RewardOffer,
-    onClick: () -> Unit,
-    onBuyClick: () -> Unit,
-    canBuy: Boolean,
-    isPurchasing: Boolean
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -267,7 +283,7 @@ private fun RewardCard(
         colors = CardDefaults.cardColors(
             containerColor = SurfaceWarm
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -281,22 +297,22 @@ private fun RewardCard(
             ) {
                 Text(
                     text = reward.title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1A1A1A)
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = reward.partnerName,
-                    fontSize = 12.sp,
-                    color = UrbanBrown
+                    fontSize = 16.sp,
+                    color = UrbanBrown.copy(alpha = 1.5f)
                 )
                 if (!reward.description.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = reward.description,
-                        fontSize = 14.sp,
-                        color = Color(0xFF555555),
+                        fontSize = 15.sp,
+                        color = UrbanBrown.copy(alpha = 1.3f),
                         maxLines = 2
                     )
                 }
@@ -304,47 +320,20 @@ private fun RewardCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = "⭐",
-                        fontSize = 16.sp
-                    )
-                    Text(
-                        text = "${reward.price}",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2F2B28)
-                    )
-                }
-
-                if (isPurchasing) {
-                    Box(
-                        modifier = Modifier
-                            .width(100.dp)
-                            .height(44.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = UrbanBrown
-                        )
-                    }
-                } else {
-                    PrimaryButton(
-                        text = if (canBuy) "Купить" else "Не хватает",
-                        backgroundColor = if (canBuy) SafeGreen else UrbanBrown,
-                        modifier = Modifier.width(100.dp),
-                        enabled = canBuy && !isPurchasing,
-                        onClick = onBuyClick
-                    )
-                }
+                Text(
+                    text = "⭐",
+                    fontSize = 28.sp
+                )
+                Text(
+                    text = "${reward.price}",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = UrbanBrown.copy(alpha = 1.7f)
+                )
             }
         }
     }
