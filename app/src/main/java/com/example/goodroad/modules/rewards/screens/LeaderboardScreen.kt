@@ -142,13 +142,6 @@ private fun LeaderboardItemView(
     item: LeaderboardItem,
     position: Int
 ) {
-    val medalColor = when (position) {
-        1 -> SafeGreen
-        2 -> UrbanBrown
-        3 -> AlertRed
-        else -> UrbanBrown.copy(alpha = 0.5f)
-    }
-
     val medalEmoji = when (position) {
         1 -> "🥇"
         2 -> "🥈"
@@ -187,21 +180,21 @@ private fun LeaderboardItemView(
                         text = "$position",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = medalColor
+                        color = UrbanBrown
                     )
                 }
 
                 Column {
                     Text(
                         text = "${item.firstName ?: ""} ${item.lastName ?: ""}".trim(),
-                        fontSize = 16.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         color = TextPrimary
                     )
                     Text(
                         text = item.title,
-                        fontSize = 12.sp,
-                        color = UrbanBrown.copy(alpha = 0.6f)
+                        fontSize = 15.sp,
+                        color = UrbanBrown
                     )
                 }
             }
@@ -209,14 +202,9 @@ private fun LeaderboardItemView(
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "⭐ ${item.lifetimePoints}",
-                    fontSize = 18.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = medalColor
-                )
-                Text(
-                    text = "баллов",
-                    fontSize = 11.sp,
-                    color = UrbanBrown.copy(alpha = 0.5f)
+                    color = UrbanBrown
                 )
             }
         }
