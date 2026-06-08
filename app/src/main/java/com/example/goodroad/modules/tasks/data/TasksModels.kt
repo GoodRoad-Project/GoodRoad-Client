@@ -24,6 +24,7 @@ data class TaskViewDto(
 data class CompletedTaskDto(
     val id: String,
     val taskId: String,
+    val taskTitle: String,
     val pointsAwarded: Int,
     val createdAt: String
 )

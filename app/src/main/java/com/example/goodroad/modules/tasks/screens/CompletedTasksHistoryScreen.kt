@@ -1,44 +1,39 @@
 package com.example.goodroad.modules.tasks.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.goodroad.modules.tasks.data.CompletedTaskDto
 import com.example.goodroad.modules.tasks.presentation.TasksViewModel
-import com.example.goodroad.modules.tasks.data.TaskViewDto
-import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.BackgroundLight
 import com.example.goodroad.ui.theme.TextPrimary
 import com.example.goodroad.ui.theme.UrbanBrown
-import com.example.goodroad.ui.theme.SurfaceWarm
-import com.example.goodroad.ui.theme.SafeGreen
 import com.example.goodroad.ui.theme.AlertRed
+import com.example.goodroad.ui.theme.SurfaceWarm
 
 @Composable
-fun TasksScreen(
+fun CompletedTasksHistoryScreen(
     viewModel: TasksViewModel,
-    onTaskClick: (TaskViewDto) -> Unit,
-    onBack: () -> Unit,
-    onHistoryClick: () -> Unit
+    onBack: () -> Unit
 ) {
-    val tasks by viewModel.tasks.collectAsStateWithLifecycle()
+    val completedTasks by viewModel.completedTasks.collectAsStateWithLifecycle()
     val loading by viewModel.loading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        viewModel.loadTasks()
+        viewModel.loadCompletedTasks()
     }
 
     Surface(
@@ -56,19 +51,11 @@ fun TasksScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Задания",
+                    text = "История заданий",
                     style = MaterialTheme.typography.headlineLarge,
                     color = TextPrimary,
                     modifier = Modifier.weight(1f)
                 )
-
-                IconButton(onClick = onHistoryClick) {
-                    Icon(
-                        imageVector = Icons.Default.History,
-                        contentDescription = "История заданий",
-                        tint = UrbanBrown
-                    )
-                }
 
                 IconButton(onClick = onBack) {
                     Icon(
@@ -82,14 +69,14 @@ fun TasksScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Выполняйте задания и получайте баллы!",
+                text = "Ваши выполненные задания",
                 fontSize = 18.sp,
                 color = UrbanBrown,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
             when {
-                loading && tasks.isEmpty() -> {
+                loading && completedTasks.isEmpty() -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -98,7 +85,7 @@ fun TasksScreen(
                     }
                 }
 
-                error != null && tasks.isEmpty() -> {
+                error != null && completedTasks.isEmpty() -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -111,29 +98,29 @@ fun TasksScreen(
                                 color = AlertRed
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            Button(onClick = { viewModel.loadTasks() }) {
+                            Button(onClick = { viewModel.loadCompletedTasks() }) {
                                 Text("Повторить")
                             }
                         }
                     }
                 }
 
-                tasks.isEmpty() -> {
+                completedTasks.isEmpty() -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("📋", fontSize = 48.sp)
+                            Text("📭", fontSize = 48.sp)
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Нет доступных заданий",
+                                text = "Нет выполненных заданий",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = TextPrimary
                             )
                             Text(
-                                text = "Загляните позже!",
+                                text = "Выполните первое задание, чтобы оно появилось здесь!",
                                 fontSize = 14.sp,
                                 color = UrbanBrown.copy(alpha = 0.6f)
                             )
@@ -145,10 +132,9 @@ fun TasksScreen(
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(tasks) { task ->
-                            TaskCard(
-                                task = task,
-                                onClick = { onTaskClick(task) }
+                        items(completedTasks) { completedTask ->
+                            CompletedTaskCard(
+                                completedTask = completedTask
                             )
                         }
                     }
@@ -159,19 +145,13 @@ fun TasksScreen(
 }
 
 @Composable
-private fun TaskCard(
-    task: TaskViewDto,
-    onClick: () -> Unit
+private fun CompletedTaskCard(
+    completedTask: CompletedTaskDto
 ) {
-    val isCompleted = task.completedCount >= task.targetCount
-    val isInProgress = task.completedCount > 0 && !isCompleted
-
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = !isCompleted) { onClick() },
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (isCompleted) SurfaceWarm.copy(alpha = 0.5f) else SurfaceWarm
+            containerColor = SurfaceWarm
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -182,61 +162,63 @@ private fun TaskCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier.weight(1f)
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Выполнено",
+                    tint = Color(0xFF2E7D32),
+                    modifier = Modifier.size(28.dp)
+                )
+
+                Column(
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = task.title,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isCompleted) UrbanBrown.copy(alpha = 0.6f) else TextPrimary
+                        text = completedTask.taskTitle,
+                        fontSize = 16.sp,
+                        fontWeight =  FontWeight.SemiBold,
+                        color = TextPrimary
                     )
 
-                    if (isCompleted) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = "Выполнено",
-                            tint = SafeGreen,
-                            modifier = Modifier.size(20.dp)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "⭐ ${completedTask.pointsAwarded}",
+                            fontSize = 17.sp,
+                            color = UrbanBrown
+                        )
+                        Text(
+                            text = "•",
+                            fontSize = 17.sp,
+                            color = UrbanBrown
+                        )
+                        Text(
+                            text = formatDate(completedTask.createdAt),
+                            fontSize = 17.sp,
+                            color = UrbanBrown
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "⭐ ${task.points}",
-                        fontSize = 17.sp,
-                        color = UrbanBrown
-                    )
-                    Text(
-                        text = "•",
-                        fontSize = 17.sp,
-                        color = UrbanBrown
-                    )
-                    Text(
-                        text = "Прогресс: ${task.completedCount}/${task.targetCount}",
-                        fontSize = 17.sp,
-                        color = UrbanBrown
-                    )
-                }
-            }
-
-            if (!isCompleted) {
-                PrimaryButton(
-                    text = if (isInProgress) "Продолжить" else "Начать",
-                    backgroundColor = SafeGreen,
-                    modifier = Modifier.width(120.dp),
-                    onClick = onClick
-                )
             }
         }
+    }
+}
+
+private fun formatDate(dateString: String): String {
+    return try {
+        val instant = java.time.Instant.parse(dateString)
+        val formatter = java.time.format.DateTimeFormatter
+            .ofPattern("dd.MM.yyyy")
+            .withZone(java.time.ZoneId.systemDefault())
+        formatter.format(instant)
+    } catch (e: Exception) {
+        dateString.take(10)
     }
 }

@@ -45,6 +45,7 @@ import com.example.goodroad.modules.tasks.presentation.TasksViewModel
 import com.example.goodroad.modules.tasks.data.TasksRepository
 import com.example.goodroad.modules.tasks.screens.TasksScreen
 import com.example.goodroad.modules.tasks.data.TaskViewDto
+import com.example.goodroad.modules.tasks.screens.CompletedTasksHistoryScreen
 import com.example.goodroad.modules.tasks.screens.TaskExecutionScreen
 
 enum class BottomTab {
@@ -71,7 +72,8 @@ enum class OverlayScreen {
     REWARDS_HISTORY,
     LEADERBOARD,
     TASKS_SHOP,
-    TASK_DETAIL
+    TASK_DETAIL,
+    TASKS_HISTORY
 }
 
 @Composable
@@ -369,7 +371,13 @@ fun UserNav(
                         selectedTask = task
                         overlayScreen = OverlayScreen.TASK_DETAIL
                     },
-                    onBack = { overlayScreen = OverlayScreen.NONE }
+                    onBack = { overlayScreen = OverlayScreen.NONE },
+                    onHistoryClick = { overlayScreen = OverlayScreen.TASKS_HISTORY}
+                )
+
+                OverlayScreen.TASKS_HISTORY -> CompletedTasksHistoryScreen(
+                    viewModel = tasksViewModel,
+                    onBack = { overlayScreen = OverlayScreen.TASKS_SHOP }
                 )
 
                 OverlayScreen.TASK_DETAIL -> {
