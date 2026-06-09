@@ -35,7 +35,6 @@ class AuthViewModel(private val context: Context) : ViewModel() {
 
             try {
                 val response = authRepository.loginUser(phone, password)
-                //ApiClient.updateCredentials(phone, password)
                 _loginResult.value = response
             } catch (e: Exception) {
                 _error.value = mapAuthError(e, AuthAction.LOGIN)
@@ -52,7 +51,6 @@ class AuthViewModel(private val context: Context) : ViewModel() {
 
             try {
                 val response = authRepository.registerUser(firstName, lastName, phone, password)
-                //ApiClient.updateCredentials(phone, password)
                 _loginResult.value = response
             } catch (e: Exception) {
                 _error.value = mapAuthError(e, AuthAction.REGISTER)

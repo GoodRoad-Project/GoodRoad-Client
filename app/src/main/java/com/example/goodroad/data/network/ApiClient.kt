@@ -35,7 +35,7 @@ object ApiClient {
         } else {
             HttpLoggingInterceptor.Level.NONE
         }
-    }//мяу
+    }
 
     private val authInterceptor = Interceptor { chain ->
         val token = tokenManager.getToken()

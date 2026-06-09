@@ -1,8 +1,11 @@
 package com.example.goodroad.modules.auth.navigation
 
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,13 +38,39 @@ import com.example.goodroad.modules.moderator.presentation.VolunteerModerationVi
 fun AuthApp(
     navController: NavHostController = rememberNavController()
 ) {
+
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        Log.d("AuthApp", "Application started")
+        val token = ApiClient.getCurrentToken()
+        if (token != null) {
+            Log.d("AuthApp", "Token found on startup: ${token.take(50)}...")
+        } else {
+            Log.d("AuthApp", "No token found on startup")
+        }
+    }
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = BackgroundLight
     ) {
+        val startDest = remember {
+            val token = ApiClient.getCurrentToken()
+            if (token != null) {
+                val role = getRoleFromToken()
+                when (role) {
+                    "MODERATOR_ADMIN" -> "admin_home"
+                    "MODERATOR" -> "moderator_home"
+                    else -> USER_HOME_ROUTE
+                }
+            } else {
+                LOGIN_ROUTE
+            }
+        }
+
         NavHost(
             navController = navController,
-            startDestination = LOGIN_ROUTE
+            startDestination = startDest
         ) {
 
             composable(LOGIN_ROUTE) {
@@ -238,5 +267,18 @@ fun AuthApp(
                 )
             }
         }
+    }
+}
+
+fun getRoleFromToken(): String? {
+    val token = ApiClient.getCurrentToken() ?: return null
+    return try {
+        val chunks = token.split(".")
+        if (chunks.size != 3) return null
+        val payload = String(android.util.Base64.decode(chunks[1], android.util.Base64.URL_SAFE))
+        val json = org.json.JSONObject(payload)
+        json.getString("role")
+    } catch (e: Exception) {
+        null
     }
 }

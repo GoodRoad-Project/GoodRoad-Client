@@ -106,7 +106,7 @@ class UserViewModel(
                 if (hasPasswordChange) {
                     repository.changePassword(oldPassword!!, newPassword!!)
                     successMessage.value = "Пароль изменён. Пожалуйста, войдите заново."
-                    ApiClient.logout() //мяу
+                    ApiClient.logout()
                 }
 
                 successMessage.value = "Профиль обновлён"
