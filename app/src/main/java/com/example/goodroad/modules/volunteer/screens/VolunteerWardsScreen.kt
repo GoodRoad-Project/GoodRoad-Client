@@ -173,10 +173,10 @@ private fun WardRequestCard(
             Text("Телефон:", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
             Text(item.contact.ifBlank { "Не указан" }, color = TextPrimary)
 
-            if (item.specialNotes.isNotBlank()) {
+            if (item.socialNickname.isNotBlank()) {
                 Spacer(Modifier.height(10.dp))
-                Text("Дополнительно:", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
-                Text(item.specialNotes, color = TextPrimary)
+                Text("Telegram / ВК:", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
+                Text(item.socialNickname, color = TextPrimary)
             }
 
             Spacer(Modifier.height(10.dp))

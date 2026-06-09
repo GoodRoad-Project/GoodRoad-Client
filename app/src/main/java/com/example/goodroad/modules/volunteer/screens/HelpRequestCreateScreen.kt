@@ -44,7 +44,7 @@ fun HelpRequestCreateScreen(
     var meetingDate by rememberSaveable { mutableStateOf("") }
     var meetingTime by rememberSaveable { mutableStateOf("") }
     var contact by rememberSaveable { mutableStateOf("") }
-    var specialNotes by rememberSaveable { mutableStateOf("") }
+    var socialNickname by rememberSaveable { mutableStateOf("") }
     var comment by rememberSaveable { mutableStateOf("") }
 
     var routeStartError by rememberSaveable { mutableStateOf<String?>(null) }
@@ -198,8 +198,8 @@ fun HelpRequestCreateScreen(
             Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
-                value = specialNotes,
-                onValueChange = { specialNotes = it },
+                value = socialNickname,
+                onValueChange = { socialNickname = it },
                 label = { Text("Telegram / ВК / доп. контакт") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
@@ -245,13 +245,27 @@ fun HelpRequestCreateScreen(
                 onClick = {
                     if (!validate()) return@PrimaryButton
 
+                    // Форматируем дату из ДДММГГГГ в ДД-ММ-ГГГГ
+                    val formattedDate = if (meetingDate.length == 8) {
+                        "${meetingDate.substring(0, 2)}-${meetingDate.substring(2, 4)}-${meetingDate.substring(4, 8)}"
+                    } else {
+                        meetingDate
+                    }
+
+                    // Форматируем время из ЧЧММ в ЧЧ:ММ
+                    val formattedTime = if (meetingTime.length == 4) {
+                        "${meetingTime.substring(0, 2)}:${meetingTime.substring(2, 4)}"
+                    } else {
+                        meetingTime
+                    }
+
                     helpViewModel.createRequest(
                         routeStart = routeStart,
                         routeEnd = routeEnd,
-                        meetingDate = meetingDate,
-                        meetingTime = meetingTime,
+                        meetingDate = formattedDate,
+                        meetingTime = formattedTime,
                         contact = contact,
-                        specialNotes = specialNotes,
+                        socialNickname = socialNickname,
                         comment = comment
                     ) {
                         helpViewModel.clearMessages()

@@ -229,6 +229,8 @@ private fun TaskCard(
                 }
             }
 
+            Spacer(modifier = Modifier.width(16.dp))
+
             if (!isCompleted) {
                 PrimaryButton(
                     text = if (isInProgress) "Продолжить" else "Начать",
