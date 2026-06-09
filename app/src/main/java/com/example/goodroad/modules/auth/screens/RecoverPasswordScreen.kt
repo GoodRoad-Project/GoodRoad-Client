@@ -34,6 +34,7 @@ import com.example.goodroad.validation.normalizeRequiredRussianPhone
 
 @Composable
 fun RecoverPasswordScreen(
+    viewModel: AuthViewModel,
     onLogin: () -> Unit
 ) {
     var firstName by rememberSaveable { mutableStateOf("") }

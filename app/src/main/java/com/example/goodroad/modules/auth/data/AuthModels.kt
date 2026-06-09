@@ -21,6 +21,8 @@ data class RecoverPasswordReq(
 
 data class AuthResp(
     val user: UserDto? = null,
+    val accessToken: String? = null,
+    val tokenType: String? = null,
     val message: String? = null
 )
 

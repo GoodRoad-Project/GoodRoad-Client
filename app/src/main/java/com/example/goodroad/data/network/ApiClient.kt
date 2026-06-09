@@ -1,11 +1,13 @@
 package com.example.goodroad.data.network
 
+import android.content.Context
 import com.example.goodroad.BuildConfig
 import com.example.goodroad.modules.moderator.data.ModeratorApi
 import com.example.goodroad.modules.moderationReview.data.ModerationReviewApi
 import com.example.goodroad.data.obstacle.*
 import com.google.gson.GsonBuilder
 import okhttp3.*
+import okhttp3.Response
 import okhttp3.logging.*
 import retrofit2.*
 import retrofit2.converter.gson.*
@@ -21,44 +23,52 @@ import com.example.goodroad.modules.tasks.data.TasksApi
 
 object ApiClient {
 
+    private lateinit var tokenManager: TokenManager
+
+    fun init(context: Context) {
+        tokenManager = TokenManager(context.applicationContext)
+    }
+
     private val logging = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
-    }
-
-    private var userPhone: String? = null
-    private var userPassword: String? = null
-
-    fun updateCredentials(phone: String? = null, password: String? = null) {
-        if (!phone.isNullOrBlank()) {
-            userPhone = phone
+        level = if (BuildConfig.DEBUG) {
+            HttpLoggingInterceptor.Level.BODY
+        } else {
+            HttpLoggingInterceptor.Level.NONE
         }
-        if (!password.isNullOrBlank()) {
-            userPassword = password
-        }
-    }
+    }//мяу
 
-    fun clearCredentials() {
-        userPhone = null
-        userPassword = null
-    }
-
-    private val client: OkHttpClient
-        get() = OkHttpClient.Builder()
-            .addInterceptor(logging)
-            .addInterceptor { chain ->
-                val requestBuilder = chain.request().newBuilder()
-                val phone = userPhone
-                val password = userPassword
-                if (!phone.isNullOrBlank() && !password.isNullOrBlank()) {
-                    val credential = Credentials.basic(phone, password)
-                    requestBuilder.addHeader("Authorization", credential)
-                }
-                chain.proceed(requestBuilder.build())
+    private val authInterceptor = Interceptor { chain ->
+        val token = tokenManager.getToken()
+        val request = chain.request().newBuilder().apply {
+            if (token != null && token.isNotBlank()) {
+                header("Authorization", "Bearer $token")
+                addHeader("Content-Type", "application/json")
             }
+        }.build()
+
+        chain.proceed(request)
+    }
+
+    private val authenticator = object : Authenticator {
+        override fun authenticate(route: Route?, response: Response): Request? {
+            if (response.code == 401) {
+                tokenManager.clearToken()
+                return null
+            }
+            return null
+        }
+    }
+
+    private val client: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .addInterceptor(authInterceptor)
+            .authenticator(authenticator)
             .connectTimeout(20, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
             .writeTimeout(20, TimeUnit.SECONDS)
             .build()
+    }
 
     private fun retrofit(): Retrofit {
         val gson = GsonBuilder()
@@ -115,5 +125,13 @@ object ApiClient {
     val tasksApi: TasksApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         retrofit().create(TasksApi::class.java)
     }
+
+    fun isLoggedIn(): Boolean = tokenManager.isLoggedIn()
+
+    fun logout() {
+        tokenManager.clearToken()
+    }
+
+    fun getCurrentToken(): String? = tokenManager.getToken()
 }
 

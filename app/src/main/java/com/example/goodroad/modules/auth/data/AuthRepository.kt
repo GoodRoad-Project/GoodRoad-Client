@@ -1,16 +1,21 @@
 package com.example.goodroad.modules.auth.data
 
+import android.content.Context
 import com.example.goodroad.data.network.ApiClient
+import com.example.goodroad.data.network.TokenManager
 import retrofit2.HttpException
 import java.io.IOException
 
-class AuthRepository {
+class AuthRepository(private val context: Context) {
 
     private val api = ApiClient.authApi
+    private val tokenManager = TokenManager(context)
 
     suspend fun loginUser(phone: String, password: String): AuthResp {
         return try {
-            api.login(LoginReq(phone, password))
+            val response = api.login(LoginReq(phone, password))
+            response.accessToken?.let { tokenManager.saveToken(it) }
+            response
         } catch (e: HttpException) {
             throw e
         } catch (e: IOException) {
@@ -25,7 +30,9 @@ class AuthRepository {
         password: String
     ): AuthResp {
         return try {
-            api.register(RegisterReq(firstName, lastName, phone, password))
+            val response = api.register(RegisterReq(firstName, lastName, phone, password))
+            response.accessToken?.let { tokenManager.saveToken(it) }
+            response
         } catch (e: HttpException) {
             throw e
         } catch (e: IOException) {

@@ -1,5 +1,6 @@
 package com.example.goodroad.modules.auth.presentation
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -11,9 +12,9 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 
-class AuthViewModel : ViewModel() {
+class AuthViewModel(private val context: Context) : ViewModel() {
 
-    private val authRepository = AuthRepository()
+    private val authRepository = AuthRepository(context)
 
     private val _loginResult = MutableLiveData<AuthResp?>()
     val loginResult: LiveData<AuthResp?> = _loginResult
@@ -34,7 +35,7 @@ class AuthViewModel : ViewModel() {
 
             try {
                 val response = authRepository.loginUser(phone, password)
-                ApiClient.updateCredentials(phone, password)
+                //ApiClient.updateCredentials(phone, password)
                 _loginResult.value = response
             } catch (e: Exception) {
                 _error.value = mapAuthError(e, AuthAction.LOGIN)
@@ -51,7 +52,7 @@ class AuthViewModel : ViewModel() {
 
             try {
                 val response = authRepository.registerUser(firstName, lastName, phone, password)
-                ApiClient.updateCredentials(phone, password)
+                //ApiClient.updateCredentials(phone, password)
                 _loginResult.value = response
             } catch (e: Exception) {
                 _error.value = mapAuthError(e, AuthAction.REGISTER)
