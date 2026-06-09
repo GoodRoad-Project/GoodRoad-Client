@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -66,7 +67,14 @@ fun VolunteerApplicationFormScreen(
     val success by viewModel.successMessage
 
     LaunchedEffect(Unit) {
+        viewModel.clearMessages()
         viewModel.loadVolunteerMenu()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.clearMessages()
+        }
     }
 
     val picker = rememberLauncherForActivityResult(
@@ -124,6 +132,7 @@ fun VolunteerApplicationFormScreen(
                             text = "Подать заявку заново",
                             onClick = {
                                 viewModel.volunteerMenu.value = null
+                                viewModel.clearMessages()
                             }
                         )
                     } else {
@@ -156,13 +165,22 @@ fun VolunteerApplicationFormScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            ErrorBlock(error?.let { mapErrorToUserMessage(it) })
+            if (error != null) {
+                ErrorBlock(mapErrorToUserMessage(error))
+            }
 
             if (success != null) {
-                Text(
-                    text = success!!,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Text(
+                        text = success!!,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
                 Spacer(Modifier.height(8.dp))
             }
 
@@ -172,8 +190,14 @@ fun VolunteerApplicationFormScreen(
                     dobroUrl = it
                     viewModel.clearMessages()
                 },
-                label = { Text("Dobro.ru URL") },
-                modifier = Modifier.fillMaxWidth()
+                label = { Text("Dobro.ru URL *") },
+                modifier = Modifier.fillMaxWidth(),
+                isError = error?.contains("dobro", ignoreCase = true) == true,
+                supportingText = {
+                    if (error?.contains("dobro", ignoreCase = true) == true) {
+                        Text("Проверьте ссылку")
+                    }
+                }
             )
 
             Spacer(Modifier.height(12.dp))
@@ -184,8 +208,14 @@ fun VolunteerApplicationFormScreen(
                     phone = it
                     viewModel.clearMessages()
                 },
-                label = { Text("Телефон") },
-                modifier = Modifier.fillMaxWidth()
+                label = { Text("Телефон *") },
+                modifier = Modifier.fillMaxWidth(),
+                isError = error?.contains("phone", ignoreCase = true) == true,
+                supportingText = {
+                    if (error?.contains("phone", ignoreCase = true) == true) {
+                        Text("11 цифр, например: 79123456789")
+                    }
+                }
             )
 
             Spacer(Modifier.height(12.dp))
@@ -196,7 +226,7 @@ fun VolunteerApplicationFormScreen(
                     socialNickname = it
                     viewModel.clearMessages()
                 },
-                label = { Text("Telegram / VK ник") },
+                label = { Text("Telegram / VK ник (опционально)") },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -238,10 +268,22 @@ fun VolunteerApplicationFormScreen(
             Spacer(Modifier.height(24.dp))
 
             PrimaryButton(
-                text = if (isLoading) "Отправка..." else "Отправить",
+                text = if (isLoading) "Отправка..." else "Отправить заявку",
                 onClick = {
-                    if (dobroUrl.isBlank() || phone.isBlank()) {
-                        viewModel.errorMessage.value = "Заполните все обязательные поля"
+                    viewModel.clearMessages()
+
+                    if (dobroUrl.isBlank()) {
+                        viewModel.errorMessage.value = "Укажите ссылку на профиль Dobro.ru"
+                        return@PrimaryButton
+                    }
+
+                    if (!dobroUrl.startsWith("http")) {
+                        viewModel.errorMessage.value = "Ссылка должна начинаться с http:// или https://"
+                        return@PrimaryButton
+                    }
+
+                    if (phone.isBlank()) {
+                        viewModel.errorMessage.value = "Укажите номер телефона"
                         return@PrimaryButton
                     }
 
@@ -252,17 +294,18 @@ fun VolunteerApplicationFormScreen(
                     }
 
                     val nickname = socialNickname.trim().removePrefix("@")
-                    val nicknameRegex = Regex("^[a-zA-Z0-9_.]{3,32}$")
-                    if (nickname.isNotBlank() && !nicknameRegex.matches(nickname)) {
-                        viewModel.errorMessage.value =
-                            "Ник должен содержать только латиницу, цифры, _ или ."
-                        return@PrimaryButton
+                    if (nickname.isNotBlank()) {
+                        val nicknameRegex = Regex("^[a-zA-Z0-9_.]{3,32}$")
+                        if (!nicknameRegex.matches(nickname)) {
+                            viewModel.errorMessage.value = "Ник должен содержать только латиницу, цифры, _ или . (3-32 символа)"
+                            return@PrimaryButton
+                        }
                     }
 
                     viewModel.submitVolunteerApplication(
                         context = context,
-                        dobroUrl = dobroUrl,
-                        phone = phone,
+                        dobroUrl = dobroUrl.trim(),
+                        phone = phoneDigits,
                         socialNickname = nickname.ifBlank { null },
                         uris = selectedUris,
                         onSuccess = {
@@ -299,17 +342,21 @@ private fun mapErrorToUserMessage(error: String?): String {
     val msg = error?.lowercase() ?: return "Произошла неизвестная ошибка"
 
     return when {
-        msg.contains("timeout") -> "Сервер не отвечает. Попробуйте позже"
-        msg.contains("unable to resolve host") -> "Нет соединения с интернетом"
-        msg.contains("403") || msg.contains("forbidden") -> "Доступ запрещён. Возможно, потребуется повторный вход"
-        msg.contains("400") -> "Проверьте заполнение полей"
-        msg.contains("401") -> "Сессия истекла. Войдите заново"
-        msg.contains("404") -> "Сервис временно недоступен"
-        msg.contains("500") -> "Ошибка сервера. Попробуйте позже"
+        msg.contains("timeout") || msg.contains("timed out") -> "Сервер не отвечает. Проверьте интернет и попробуйте позже"
+        msg.contains("unable to resolve host") -> "Нет соединения с сервером. Проверьте интернет"
+        msg.contains("403") || msg.contains("forbidden") -> "Доступ запрещён. Выйдите из приложения и войдите заново"
+        msg.contains("400") -> "Проверьте правильность заполнения всех полей"
+        msg.contains("401") || msg.contains("unauthorized") -> "Сессия истекла. Войдите в приложение заново"
+        msg.contains("404") -> "Сервис временно недоступен. Попробуйте позже"
+        msg.contains("409") -> "Заявка уже существует или произошёл конфликт"
+        msg.contains("422") -> "Проверьте правильность введённых данных"
+        msg.contains("500") || msg.contains("502") || msg.contains("503") -> "Ошибка на сервере. Попробуйте позже"
         msg.contains("validation") -> "Некоторые поля заполнены неверно"
         msg.contains("url") || msg.contains("dobro") -> "Проверьте правильность ссылки на Dobro.ru"
         msg.contains("phone") -> "Проверьте правильность номера телефона"
-        msg.contains("nickname") -> "Проверьте правильник Telegram/VK ника"
-        else -> "Не удалось отправить заявку. Попробуйте ещё раз"
+        msg.contains("nickname") -> "Проверьте правильность Telegram/VK ника"
+        msg.contains("already") && msg.contains("volunteer") -> "Вы уже являетесь волонтёром"
+        msg.contains("already") && msg.contains("pending") -> "У вас уже есть заявка на рассмотрении"
+        else -> error
     }
 }
