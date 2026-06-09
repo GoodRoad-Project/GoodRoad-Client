@@ -253,7 +253,6 @@ fun UserNav(
 
                 OverlayScreen.HELP_CREATE -> HelpRequestCreateScreen(
                     helpViewModel = helpViewModel,
-                    onBack = { overlayScreen = OverlayScreen.NONE },
                     onCreated = { overlayScreen = OverlayScreen.NONE }
                 )
 

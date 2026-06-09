@@ -7,16 +7,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.BackgroundLight
+import androidx.compose.ui.text.input.TextFieldValue
+//import androidx.compose.ui.text.input.TextRange
 
 @Composable
 fun HelpRequestCreateScreen(
     helpViewModel: VolunteerViewModel,
-    onBack: () -> Unit,
     onCreated: () -> Unit
 ) {
 
@@ -26,13 +28,16 @@ fun HelpRequestCreateScreen(
 
     var routeStart by rememberSaveable { mutableStateOf("") }
     var routeEnd by rememberSaveable { mutableStateOf("") }
-    var meetingDate by rememberSaveable { mutableStateOf("") }
-    var meetingTime by rememberSaveable { mutableStateOf("") }
+    var meetingDate by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(""))
+    }
+    var meetingTime by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(""))
+    }
     var contact by rememberSaveable { mutableStateOf("") }
     var specialNotes by rememberSaveable { mutableStateOf("") }
     var comment by rememberSaveable { mutableStateOf("") }
 
-    // ошибки обязательных полей
     var routeStartError by rememberSaveable { mutableStateOf<String?>(null) }
     var routeEndError by rememberSaveable { mutableStateOf<String?>(null) }
     var meetingDateError by rememberSaveable { mutableStateOf<String?>(null) }
@@ -79,12 +84,12 @@ fun HelpRequestCreateScreen(
             "Обязательное поле"
         } else null
 
-        meetingDateError = if (meetingDate.isBlank()) {
+        meetingDateError = if (meetingDate.text.isBlank()) {
             valid = false
             "Обязательное поле"
         } else null
 
-        meetingTimeError = if (meetingTime.isBlank()) {
+        meetingTimeError = if (meetingTime.text.isBlank()) {
             valid = false
             "Обязательное поле"
         } else null
@@ -157,9 +162,21 @@ fun HelpRequestCreateScreen(
 
             OutlinedTextField(
                 value = meetingDate,
-                onValueChange = {
-                    val digits = it.filter { ch -> ch.isDigit() }.take(8)
-                    meetingDate = formatDate(digits)
+                onValueChange = { newValue ->
+                    val digits = newValue.text.filter { it.isDigit() }.take(8)
+
+                    val formatted = buildString {
+                        digits.forEachIndexed { index, c ->
+                            append(c)
+                            if (index == 1 || index == 3) append('.')
+                        }
+                    }
+
+                    meetingDate = TextFieldValue(
+                        text = formatted,
+                        selection = TextRange(formatted.length)
+                    )
+
                     meetingDateError = null
                 },
                 label = { Text("Дата (ДД.ММ.ГГГГ) *") },
@@ -174,9 +191,21 @@ fun HelpRequestCreateScreen(
 
             OutlinedTextField(
                 value = meetingTime,
-                onValueChange = {
-                    val digits = it.filter { ch -> ch.isDigit() }.take(4)
-                    meetingTime = formatTime(digits)
+                onValueChange = { newValue ->
+                    val digits = newValue.text.filter { it.isDigit() }.take(4)
+
+                    val formatted = buildString {
+                        digits.forEachIndexed { index, c ->
+                            append(c)
+                            if (index == 1) append(':')
+                        }
+                    }
+
+                    meetingTime = TextFieldValue(
+                        text = formatted,
+                        selection = TextRange(formatted.length)
+                    )
+
                     meetingTimeError = null
                 },
                 label = { Text("Время (ЧЧ:ММ) *") },
@@ -258,8 +287,8 @@ fun HelpRequestCreateScreen(
                     helpViewModel.createRequest(
                         routeStart = routeStart,
                         routeEnd = routeEnd,
-                        meetingDate = meetingDate,
-                        meetingTime = meetingTime,
+                        meetingDate = meetingDate.text,
+                        meetingTime = meetingTime.text,
                         contact = contact,
                         specialNotes = specialNotes,
                         comment = comment
