@@ -156,7 +156,7 @@ fun VolunteerApplicationFormScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            ErrorBlock(error)
+            ErrorBlock(error?.let { mapErrorToUserMessage(it) })
 
             if (success != null) {
                 Text(
@@ -293,4 +293,23 @@ private fun ErrorBlock(error: String?) {
     }
 
     Spacer(Modifier.height(8.dp))
+}
+
+private fun mapErrorToUserMessage(error: String?): String {
+    val msg = error?.lowercase() ?: return "Произошла неизвестная ошибка"
+
+    return when {
+        msg.contains("timeout") -> "Сервер не отвечает. Попробуйте позже"
+        msg.contains("unable to resolve host") -> "Нет соединения с интернетом"
+        msg.contains("403") || msg.contains("forbidden") -> "Доступ запрещён. Возможно, потребуется повторный вход"
+        msg.contains("400") -> "Проверьте заполнение полей"
+        msg.contains("401") -> "Сессия истекла. Войдите заново"
+        msg.contains("404") -> "Сервис временно недоступен"
+        msg.contains("500") -> "Ошибка сервера. Попробуйте позже"
+        msg.contains("validation") -> "Некоторые поля заполнены неверно"
+        msg.contains("url") || msg.contains("dobro") -> "Проверьте правильность ссылки на Dobro.ru"
+        msg.contains("phone") -> "Проверьте правильность номера телефона"
+        msg.contains("nickname") -> "Проверьте правильник Telegram/VK ника"
+        else -> "Не удалось отправить заявку. Попробуйте ещё раз"
+    }
 }
