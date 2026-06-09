@@ -106,14 +106,6 @@ fun UserProfileScreen(
                                         fontWeight = FontWeight.Bold,
                                         color = TextPrimary
                                     )
-
-                                    Spacer(Modifier.height(6.dp))
-
-                                    Text(
-                                        text = "Роль: ${u.role ?: ""}",
-                                        fontSize = 16.sp,
-                                        color = UrbanBrown.copy(alpha = 0.8f)
-                                    )
                                 }
 
                                 if (!u.photoUrl.isNullOrBlank()) {
