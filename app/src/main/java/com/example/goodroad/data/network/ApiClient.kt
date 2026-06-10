@@ -7,7 +7,6 @@ import com.example.goodroad.modules.moderationReview.data.ModerationReviewApi
 import com.example.goodroad.data.obstacle.*
 import com.google.gson.GsonBuilder
 import okhttp3.*
-import okhttp3.Response
 import okhttp3.logging.*
 import retrofit2.*
 import retrofit2.converter.gson.*
@@ -20,10 +19,13 @@ import com.example.goodroad.modules.volunteer.data.VolunteerApi
 import com.example.goodroad.modules.moderator.data.VolunteerModerationApi
 import com.example.goodroad.modules.rewards.data.RewardsApi
 import com.example.goodroad.modules.tasks.data.TasksApi
+import retrofit2.http.POST
+import retrofit2.http.Body
 
 object ApiClient {
 
     private lateinit var tokenManager: TokenManager
+    private lateinit var refreshApi: RefreshApi
 
     fun init(context: Context) {
         tokenManager = TokenManager(context.applicationContext)
@@ -38,7 +40,7 @@ object ApiClient {
     }
 
     private val authInterceptor = Interceptor { chain ->
-        val token = tokenManager.getToken()
+        val token = tokenManager.getAccessToken()
         val request = chain.request().newBuilder().apply {
             if (token != null && token.isNotBlank()) {
                 header("Authorization", "Bearer $token")
@@ -49,17 +51,52 @@ object ApiClient {
         chain.proceed(request)
     }
 
-    private val authenticator = object : Authenticator {
-        override fun authenticate(route: Route?, response: Response): Request? {
+    private val authenticator = object : okhttp3.Authenticator {
+        override fun authenticate(route: Route?, response: okhttp3.Response): Request? {
             if (response.code == 401) {
-                tokenManager.clearToken()
-                return null
+                val refreshToken = tokenManager.getRefreshToken()
+                if (refreshToken != null) {
+                    try {
+                        val refreshResponse = kotlinx.coroutines.runBlocking {
+                            refreshApi.refreshToken(RefreshRequest(refreshToken))
+                        }
+                        tokenManager.saveTokens(refreshResponse.accessToken, refreshResponse.refreshToken)
+                        return response.request.newBuilder()
+                            .header("Authorization", "Bearer ${refreshResponse.accessToken}")
+                            .build()
+                    } catch (e: Exception) {
+                        tokenManager.clearTokens()
+                        return null
+                    }
+                } else {
+                    tokenManager.clearTokens()
+                    return null
+                }
             }
             return null
         }
     }
 
+    private fun createRefreshApi(): RefreshApi {
+        val client = OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
+            .build()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(BuildConfig.GOODROAD_SERVER_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        return retrofit.create(RefreshApi::class.java)
+    }
+
     private val client: OkHttpClient by lazy {
+        refreshApi = createRefreshApi()
+
         OkHttpClient.Builder()
             .addInterceptor(logging)
             .addInterceptor(authInterceptor)
@@ -129,9 +166,20 @@ object ApiClient {
     fun isLoggedIn(): Boolean = tokenManager.isLoggedIn()
 
     fun logout() {
-        tokenManager.clearToken()
+        tokenManager.clearTokens()
     }
 
-    fun getCurrentToken(): String? = tokenManager.getToken()
+    fun getCurrentToken(): String? = tokenManager.getAccessToken()
 }
 
+interface RefreshApi {
+    @POST("api/auth/refresh")
+    suspend fun refreshToken(@Body request: RefreshRequest): AuthRefreshResponse
+}
+
+data class RefreshRequest(val refreshToken: String)
+
+data class AuthRefreshResponse(
+    val accessToken: String,
+    val refreshToken: String
+)

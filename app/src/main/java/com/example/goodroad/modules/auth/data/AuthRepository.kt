@@ -18,11 +18,14 @@ class AuthRepository(private val context: Context) {
             val response = api.login(LoginReq(phone, password))
             Log.d("AuthRepo", "Response received, accessToken: ${response.accessToken?.take(50)}")
 
-            response.accessToken?.let { token ->
-                Log.d("AuthRepo", "Saving token...")
-                tokenManager.saveToken(token)
-                Log.d("AuthRepo", "Token saved, checking...")
-                Log.d("AuthRepo", "Token exists now: ${tokenManager.getToken() != null}")
+            response.accessToken?.let { accessToken ->
+                response.refreshToken?.let { refreshToken ->
+                    Log.d("AuthRepo", "Saving tokens...")
+                    tokenManager.saveTokens(accessToken, refreshToken)
+                    Log.d("AuthRepo", "Tokens saved, checking...")
+                    Log.d("AuthRepo", "AccessToken exists: ${tokenManager.getAccessToken() != null}")
+                    Log.d("AuthRepo", "RefreshToken exists: ${tokenManager.getRefreshToken() != null}")
+                } ?: Log.e("AuthRepo", "No refreshToken in response!")
             } ?: Log.e("AuthRepo", "No accessToken in response!")
 
             response
@@ -43,7 +46,11 @@ class AuthRepository(private val context: Context) {
     ): AuthResp {
         return try {
             val response = api.register(RegisterReq(firstName, lastName, phone, password))
-            response.accessToken?.let { tokenManager.saveToken(it) }
+            response.accessToken?.let { accessToken ->
+                response.refreshToken?.let { refreshToken ->
+                    tokenManager.saveTokens(accessToken, refreshToken)
+                }
+            }
             response
         } catch (e: HttpException) {
             throw e
