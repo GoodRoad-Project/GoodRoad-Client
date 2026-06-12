@@ -27,7 +27,9 @@ fun UserProfileScreen(
     onDelete: () -> Unit,
     onLogout: () -> Unit,
     onSelectObstacles: () -> Unit,
-    onBecomeVolunteer: () -> Unit = {}
+    onBecomeVolunteer: () -> Unit = {},
+    onNavigateToRewards: () -> Unit = {},
+    onNavigateToTasks: () -> Unit = {}
 ) {
     val user by userViewModel.user
     val isLoading by userViewModel.isLoading
@@ -134,7 +136,7 @@ fun UserProfileScreen(
                     }
 
                     item {
-                        SectionTitle("Доступность и комфорт")
+                        SectionTitle("Настройки достуности")
                     }
 
                     item {
@@ -142,6 +144,26 @@ fun UserProfileScreen(
                             title = "Выбрать препятствия",
                             description = "Настройте условия передвижения и доступности",
                             onClick = onSelectObstacles
+                        )
+                    }
+
+                    item {
+                        SectionTitle("Мой вклад")
+                    }
+
+                    item {
+                        ServiceCard(
+                            title = "Задания",
+                            description = "Выполняйте задания и получайте баллы",
+                            onClick = onNavigateToTasks
+                        )
+                    }
+
+                    item {
+                        ServiceCard(
+                            title = "Награды и баллы",
+                            description = "Магазин наград, история, рейтинг",
+                            onClick = onNavigateToRewards
                         )
                     }
 

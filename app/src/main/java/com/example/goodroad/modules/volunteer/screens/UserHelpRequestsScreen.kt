@@ -4,12 +4,14 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
 import com.example.goodroad.ui.UserDecor
@@ -26,32 +28,6 @@ fun UserHelpRequestsScreen(
     val successMessage by viewModel.successMessage
 
     var deleteTarget by remember { mutableStateOf<VolunteerViewModel.HelpRequest?>(null) }
-
-    fun statusText(status: VolunteerViewModel.RequestStatus): String {
-        return when (status) {
-            VolunteerViewModel.RequestStatus.PENDING -> "В обработке"
-            VolunteerViewModel.RequestStatus.APPROVED -> "Одобрено"
-            VolunteerViewModel.RequestStatus.REJECTED -> "Отклонено"
-            VolunteerViewModel.RequestStatus.OPEN -> "Открыта"
-            VolunteerViewModel.RequestStatus.ACCEPTED -> "Принята"
-            VolunteerViewModel.RequestStatus.CANCELLED -> "Отменена"
-            VolunteerViewModel.RequestStatus.COMPLETED -> "Выполнена"
-            VolunteerViewModel.RequestStatus.UNKNOWN -> "Неизвестно"
-        }
-    }
-
-    fun statusColor(status: VolunteerViewModel.RequestStatus): Color {
-        return when (status) {
-            VolunteerViewModel.RequestStatus.PENDING -> Color(0xFFFFA000)
-            VolunteerViewModel.RequestStatus.OPEN -> Color(0xFF42A5F5)
-            VolunteerViewModel.RequestStatus.APPROVED -> SafeGreen
-            VolunteerViewModel.RequestStatus.ACCEPTED -> SafeGreen
-            VolunteerViewModel.RequestStatus.REJECTED -> AlertRed
-            VolunteerViewModel.RequestStatus.CANCELLED -> Color(0xFF757575)
-            VolunteerViewModel.RequestStatus.COMPLETED -> Color(0xFF2E7D32)
-            VolunteerViewModel.RequestStatus.UNKNOWN -> Color.Gray
-        }
-    }
 
     LaunchedEffect(Unit) {
         viewModel.loadOwnRequests()
@@ -196,21 +172,16 @@ fun UserHelpRequestsScreen(
 
                                 Spacer(Modifier.height(10.dp))
 
-                                Text("Статус", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
-
-                                Surface(
-                                    color = statusColor(req.status),
-                                    shape = MaterialTheme.shapes.small
-                                ) {
+                                Column {
                                     Text(
-                                        text = statusText(req.status),
-                                        modifier = Modifier.padding(
-                                            horizontal = 10.dp,
-                                            vertical = 4.dp
-                                        ),
-                                        color = Color.White,
-                                        style = MaterialTheme.typography.bodyMedium
+                                        text = "Статус",
+                                        color = UrbanBrown,
+                                        fontWeight = FontWeight.SemiBold
                                     )
+
+                                    Spacer(Modifier.height(4.dp))
+
+                                    StatusBadge(status = req.status)
                                 }
 
                                 if (req.status == VolunteerViewModel.RequestStatus.ACCEPTED ||
@@ -268,6 +239,53 @@ fun UserHelpRequestsScreen(
                     Text("Нет")
                 }
             }
+        )
+    }
+}
+
+@Composable
+fun StatusBadge(status: VolunteerViewModel.RequestStatus) {
+    fun statusText(status: VolunteerViewModel.RequestStatus): String {
+        return when (status) {
+            VolunteerViewModel.RequestStatus.PENDING -> "В обработке"
+            VolunteerViewModel.RequestStatus.APPROVED -> "Одобрено"
+            VolunteerViewModel.RequestStatus.REJECTED -> "Отклонено"
+            VolunteerViewModel.RequestStatus.OPEN -> "Открыта"
+            VolunteerViewModel.RequestStatus.ACCEPTED -> "Принята"
+            VolunteerViewModel.RequestStatus.CANCELLED -> "Отменена"
+            VolunteerViewModel.RequestStatus.COMPLETED -> "Выполнена"
+            VolunteerViewModel.RequestStatus.UNKNOWN -> "Неизвестно"
+        }
+    }
+
+    fun statusColor(status: VolunteerViewModel.RequestStatus): Color {
+        return when (status) {
+            VolunteerViewModel.RequestStatus.PENDING -> Color(0xFFFFA000)
+            VolunteerViewModel.RequestStatus.OPEN -> SafeGreen
+            VolunteerViewModel.RequestStatus.APPROVED -> SafeGreen
+            VolunteerViewModel.RequestStatus.ACCEPTED -> SafeGreen
+            VolunteerViewModel.RequestStatus.REJECTED -> AlertRed
+            VolunteerViewModel.RequestStatus.CANCELLED -> Color(0xFF757575)
+            VolunteerViewModel.RequestStatus.COMPLETED -> Color(0xFF2E7D32)
+            VolunteerViewModel.RequestStatus.UNKNOWN -> Color.Gray
+        }
+    }
+
+    val color = statusColor(status)
+
+    Surface(
+        modifier = Modifier.wrapContentWidth(),
+        color = color.copy(alpha = 0.14f),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.5.dp, color)
+    ) {
+        Text(
+            text = statusText(status),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            color = color,
+            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center
         )
     }
 }

@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.goodroad.data.network.ApiClient
+import com.example.goodroad.data.network.ApiClient.rewardsApi
 import com.example.goodroad.data.obstacle.ObstacleRepository
 import com.example.goodroad.modules.maps.presentation.MapsViewModel
 import com.example.goodroad.modules.maps.screens.MapRouteScreen
@@ -21,7 +22,9 @@ import com.example.goodroad.modules.maps.screens.ObstacleSelectScreen
 import com.example.goodroad.modules.review.data.ReviewCardResp
 import com.example.goodroad.modules.review.data.ReviewRepository
 import com.example.goodroad.modules.review.presentation.ReviewsViewModel
-import com.example.goodroad.modules.review.screens.*
+import com.example.goodroad.modules.review.screens.ReviewFormScreen
+import com.example.goodroad.modules.review.screens.ReviewDetailsScreen
+import com.example.goodroad.modules.review.screens.UserReviewsScreen
 import com.example.goodroad.modules.user.data.UserRepository
 import com.example.goodroad.modules.user.presentation.UserViewModel
 import com.example.goodroad.modules.user.screens.UserEditScreen
@@ -31,6 +34,19 @@ import com.example.goodroad.modules.volunteer.screens.*
 import com.example.goodroad.ui.user.UserDeleteAccountScreen
 import com.example.goodroad.ui.user.UserProfileScreen
 import com.example.goodroad.ui.volunteer.screens.VolunteerApplicationFormScreen
+import com.example.goodroad.modules.rewards.screens.RewardsShopScreen
+import com.example.goodroad.modules.rewards.screens.RewardDetailScreen
+import com.example.goodroad.modules.rewards.screens.RewardsHistoryScreen
+import com.example.goodroad.modules.rewards.screens.LeaderboardScreen
+import com.example.goodroad.modules.rewards.data.RewardsRepository
+import com.example.goodroad.modules.rewards.data.RewardOffer
+import com.example.goodroad.modules.rewards.presentation.RewardsViewModel
+import com.example.goodroad.modules.tasks.presentation.TasksViewModel
+import com.example.goodroad.modules.tasks.data.TasksRepository
+import com.example.goodroad.modules.tasks.screens.TasksScreen
+import com.example.goodroad.modules.tasks.data.TaskViewDto
+import com.example.goodroad.modules.tasks.screens.CompletedTasksHistoryScreen
+import com.example.goodroad.modules.tasks.screens.TaskExecutionScreen
 
 enum class BottomTab {
     MAP,
@@ -50,7 +66,14 @@ enum class OverlayScreen {
     HELP_MY_REQUESTS,
     VOLUNTEER_APPLICATION,
     VOLUNTEER_FEED,
-    VOLUNTEER_WARDS
+    VOLUNTEER_WARDS,
+    REWARDS_SHOP,
+    REWARD_DETAIL,
+    REWARDS_HISTORY,
+    LEADERBOARD,
+    TASKS_SHOP,
+    TASK_DETAIL,
+    TASKS_HISTORY
 }
 
 @Composable
@@ -63,6 +86,7 @@ fun UserNav(
     val reviewApi = ApiClient.reviewApi
     val obstacleApi = ApiClient.obstacleApi
     val volunteerApi = ApiClient.volunteerApi
+    val tasksApi = ApiClient.tasksApi
 
     val userFactory = object : ViewModelProvider.Factory {
         override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
@@ -88,6 +112,20 @@ fun UserNav(
         }
     }
 
+    val rewardsFactory = object : ViewModelProvider.Factory {
+        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+            return RewardsViewModel(RewardsRepository(rewardsApi)) as T
+        }
+    }
+
+    val tasksFactory = object : ViewModelProvider.Factory {
+        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+            return TasksViewModel(TasksRepository(tasksApi)) as T
+        }
+    }
+
+    val rewardsViewModel: RewardsViewModel = viewModel(factory = rewardsFactory)
+    val tasksViewModel: TasksViewModel = viewModel(factory = tasksFactory)
     val userViewModel: UserViewModel = viewModel(factory = userFactory)
     val reviewsViewModel: ReviewsViewModel = viewModel(factory = reviewsFactory)
     val mapsViewModel: MapsViewModel = viewModel(factory = mapsFactory)
@@ -96,6 +134,8 @@ fun UserNav(
     var currentTab by rememberSaveable { mutableStateOf(BottomTab.MAP) }
     var overlayScreen by remember { mutableStateOf(OverlayScreen.NONE) }
     var selectedReview by remember { mutableStateOf<ReviewCardResp?>(null) }
+    var selectedReward by remember { mutableStateOf<RewardOffer?>(null) }
+    var selectedTask by remember { mutableStateOf<TaskViewDto?>(null) }
 
     Scaffold(
         bottomBar = {
@@ -162,12 +202,12 @@ fun UserNav(
                             selectedReview = null
                             overlayScreen = OverlayScreen.REVIEW_FORM
                         },
-                        onOpenDetails = {
-                            selectedReview = it
+                        onOpenDetails = { review ->
+                            selectedReview = review
                             overlayScreen = OverlayScreen.REVIEW_DETAILS
                         },
-                        onEditReview = {
-                            selectedReview = it
+                        onEditReview = { review ->
+                            selectedReview = review
                             overlayScreen = OverlayScreen.REVIEW_FORM
                         }
                     )
@@ -198,6 +238,12 @@ fun UserNav(
                         },
                         onBecomeVolunteer = {
                             overlayScreen = OverlayScreen.VOLUNTEER_APPLICATION
+                        },
+                        onNavigateToRewards = {
+                            overlayScreen = OverlayScreen.REWARDS_SHOP
+                        },
+                        onNavigateToTasks = {
+                            overlayScreen = OverlayScreen.TASKS_SHOP
                         }
                     )
                 }
@@ -276,6 +322,85 @@ fun UserNav(
                         overlayScreen = OverlayScreen.NONE
                     }
                 )
+
+                OverlayScreen.REWARDS_SHOP -> RewardsShopScreen(
+                    viewModel = rewardsViewModel,
+                    onRewardClick = { reward: RewardOffer ->
+                        selectedReward = reward
+                        overlayScreen = OverlayScreen.REWARD_DETAIL
+                    },
+                    onNavigateToHistory = { overlayScreen = OverlayScreen.REWARDS_HISTORY },
+                    onNavigateToLeaderboard = { overlayScreen = OverlayScreen.LEADERBOARD },
+                    onBack = { overlayScreen = OverlayScreen.NONE }
+                )
+
+                OverlayScreen.REWARD_DETAIL -> {
+                    val reward = selectedReward
+                    if (reward != null) {
+                        RewardDetailScreen(
+                            viewModel = rewardsViewModel,
+                            reward = reward,
+                            onPurchaseComplete = {
+                                selectedReward = null
+                                overlayScreen = OverlayScreen.REWARDS_SHOP
+                            },
+                            onBack = {
+                                selectedReward = null
+                                overlayScreen = OverlayScreen.REWARDS_SHOP
+                            }
+                        )
+                    } else {
+                        overlayScreen = OverlayScreen.NONE
+                    }
+                }
+
+                OverlayScreen.REWARDS_HISTORY -> RewardsHistoryScreen(
+                    viewModel = rewardsViewModel,
+                    onBack = { overlayScreen = OverlayScreen.REWARDS_SHOP }
+                )
+
+                OverlayScreen.LEADERBOARD -> LeaderboardScreen(
+                    viewModel = rewardsViewModel,
+                    onBack = { overlayScreen = OverlayScreen.REWARDS_SHOP }
+                )
+
+                OverlayScreen.TASKS_SHOP -> TasksScreen(
+                    viewModel = tasksViewModel,
+                    onTaskClick = { task: TaskViewDto ->
+                        selectedTask = task
+                        overlayScreen = OverlayScreen.TASK_DETAIL
+                    },
+                    onBack = { overlayScreen = OverlayScreen.NONE },
+                    onHistoryClick = { overlayScreen = OverlayScreen.TASKS_HISTORY}
+                )
+
+                OverlayScreen.TASKS_HISTORY -> CompletedTasksHistoryScreen(
+                    viewModel = tasksViewModel,
+                    onBack = { overlayScreen = OverlayScreen.TASKS_SHOP }
+                )
+
+                OverlayScreen.TASK_DETAIL -> {
+                    val task = selectedTask
+                    if (task != null) {
+                        TaskExecutionScreen(
+                            task = task,
+                            onTargetComplete = { target ->
+                                tasksViewModel.completeTarget(task.id, target.id)
+                            },
+                            onComplete = {
+                                selectedTask = null
+                                overlayScreen = OverlayScreen.TASKS_SHOP
+                                tasksViewModel.loadTasks()
+                            },
+                            onBack = {
+                                selectedTask = null
+                                overlayScreen = OverlayScreen.TASKS_SHOP
+                            }
+                        )
+                    } else {
+                        overlayScreen = OverlayScreen.NONE
+                    }
+                }
 
                 OverlayScreen.NONE -> Unit
             }
