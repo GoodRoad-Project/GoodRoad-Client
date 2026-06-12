@@ -225,25 +225,19 @@ private fun ReviewListItem(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
 
-                ReviewActionButton(
+                PrimaryButton(
                     text = "Редактировать",
-
                     backgroundColor = UrbanBrown,
-
                     modifier = Modifier.weight(1f)
                 ) {
-
                     onEdit()
                 }
 
-                ReviewActionButton(
+                PrimaryButton(
                     text = "Подробнее",
-
                     backgroundColor = SafeGreen,
-
                     modifier = Modifier.weight(1f)
                 ) {
-
                     onOpenDetails()
                 }
             }

@@ -24,7 +24,10 @@ import com.example.goodroad.modules.moderationReview.presentation.ReviewModerati
 import com.example.goodroad.modules.moderator.screens.AdminProfileScreen
 import com.example.goodroad.modules.moderator.screens.ModeratorProfileScreen
 import com.example.goodroad.modules.moderator.screens.ModeratorsManagementScreen
+import com.example.goodroad.modules.moderator.screens.VolunteerManagementScreen
 import com.example.goodroad.modules.moderationReview.screens.ReviewModerationScreen
+import com.example.goodroad.modules.moderator.data.VolunteerModerationRepository
+import com.example.goodroad.modules.moderator.presentation.VolunteerModerationViewModel
 
 @Composable
 fun AuthApp(
@@ -38,6 +41,7 @@ fun AuthApp(
             navController = navController,
             startDestination = LOGIN_ROUTE
         ) {
+
             composable(LOGIN_ROUTE) {
                 LoginScreen(
                     onLoginSuccess = { resp ->
@@ -95,6 +99,7 @@ fun AuthApp(
             }
 
             composable("admin_home") {
+
                 val userViewModel: UserViewModel = viewModel(factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
                         return UserViewModel(UserRepository(ApiClient.userApi)) as T
@@ -105,6 +110,9 @@ fun AuthApp(
                     userViewModel = userViewModel,
                     onModerators = { navController.navigate("moderators") },
                     onReviews = { navController.navigate("review_moderation") },
+                    onVolunteers = {
+                        navController.navigate("admin_volunteers")
+                    },
                     onLogout = {
                         navController.navigate(LOGIN_ROUTE) {
                             popUpTo("admin_home") { inclusive = true }
@@ -113,7 +121,26 @@ fun AuthApp(
                 )
             }
 
+            composable("admin_volunteers") {
+
+                val volunteerModerationViewModel: VolunteerModerationViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            return VolunteerModerationViewModel(
+                                VolunteerModerationRepository()
+                            ) as T
+                        }
+                    }
+                )
+
+                VolunteerManagementScreen(
+                    viewModel = volunteerModerationViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
             composable("moderator_home") {
+
                 val userViewModel: UserViewModel = viewModel(factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
                         return UserViewModel(UserRepository(ApiClient.userApi)) as T
@@ -123,6 +150,7 @@ fun AuthApp(
                 ModeratorProfileScreen(
                     userViewModel = userViewModel,
                     onReviews = { navController.navigate("review_moderation") },
+                    onVolunteers = { navController.navigate("volunteers") },
                     onLogout = {
                         navController.navigate(LOGIN_ROUTE) {
                             popUpTo("moderator_home") { inclusive = true }
@@ -132,6 +160,7 @@ fun AuthApp(
             }
 
             composable("moderators") {
+
                 val moderatorViewModel: ModeratorViewModel = viewModel(factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
                         return ModeratorViewModel(ModeratorRepository()) as T
@@ -144,8 +173,28 @@ fun AuthApp(
                 )
             }
 
+            composable("volunteers") {
+
+                val volunteerModerationViewModel: VolunteerModerationViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            return VolunteerModerationViewModel(
+                                VolunteerModerationRepository()
+                            ) as T
+                        }
+                    }
+                )
+
+                VolunteerManagementScreen(
+                    viewModel = volunteerModerationViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
             composable("review_moderation") {
+
                 val moderationRepository = ModerationReviewRepository(ApiClient.moderationReviewApi)
+
                 val moderationViewModel: ReviewModerationViewModel = viewModel(factory = object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
                         return ReviewModerationViewModel(moderationRepository) as T
