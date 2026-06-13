@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.modules.volunteer.data.VolunteerRepository
 import com.example.goodroad.modules.volunteer.data.models.HelpRequestItem
 import com.example.goodroad.modules.volunteer.data.models.RequestStatus as ApiRequestStatus
@@ -75,6 +76,7 @@ class VolunteerViewModel(
     fun loadVolunteerMenu() {
         viewModelScope.launch {
             try {
+                ApiClient.refreshTokens()
                 val resp = repository.getMenu()
                 volunteerMenu.value = VolunteerMenu(
                     isVolunteer = resp.volunteer,
@@ -120,6 +122,7 @@ class VolunteerViewModel(
             errorMessage.value = null
 
             try {
+                ApiClient.refreshTokens()
                 val loaded = repository.loadFeed()
 
                 println("FEED RAW SIZE = ${loaded.size}")
@@ -355,6 +358,7 @@ class VolunteerViewModel(
             errorMessage.value = null
 
             try {
+                ApiClient.refreshTokens()
                 val loaded = repository.loadMyWards()
 
                 wards.clear()

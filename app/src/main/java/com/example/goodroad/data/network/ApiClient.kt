@@ -13,6 +13,7 @@ import retrofit2.converter.gson.*
 import java.time.Instant
 import java.util.concurrent.*
 import com.example.goodroad.modules.auth.data.AuthApi
+import com.example.goodroad.modules.auth.data.UserDto
 import com.example.goodroad.modules.review.data.ReviewApi
 import com.example.goodroad.modules.user.data.UserApi
 import com.example.goodroad.modules.volunteer.data.VolunteerApi
@@ -40,11 +41,12 @@ object ApiClient {
     }
 
     private val authInterceptor = Interceptor { chain ->
+        val original = chain.request()
         val token = tokenManager.getAccessToken()
-        val request = chain.request().newBuilder().apply {
-            if (token != null && token.isNotBlank()) {
+
+        val request = original.newBuilder().apply {
+            if (!token.isNullOrBlank() && !original.url.encodedPath.startsWith("/auth/")) {
                 header("Authorization", "Bearer $token")
-                addHeader("Content-Type", "application/json")
             }
         }.build()
 
@@ -53,27 +55,16 @@ object ApiClient {
 
     private val authenticator = object : okhttp3.Authenticator {
         override fun authenticate(route: Route?, response: okhttp3.Response): Request? {
-            if (response.code == 401) {
-                val refreshToken = tokenManager.getRefreshToken()
-                if (refreshToken != null) {
-                    try {
-                        val refreshResponse = kotlinx.coroutines.runBlocking {
-                            refreshApi.refreshToken(RefreshRequest(refreshToken))
-                        }
-                        tokenManager.saveTokens(refreshResponse.accessToken, refreshResponse.refreshToken)
-                        return response.request.newBuilder()
-                            .header("Authorization", "Bearer ${refreshResponse.accessToken}")
-                            .build()
-                    } catch (e: Exception) {
-                        tokenManager.clearTokens()
-                        return null
-                    }
-                } else {
-                    tokenManager.clearTokens()
-                    return null
-                }
-            }
-            return null
+            if (response.code != 401) return null
+            if (responseCount(response) >= 2) return null
+
+            val refreshResponse = kotlinx.coroutines.runBlocking {
+                refreshTokens()
+            } ?: return null
+
+            return response.request.newBuilder()
+                .header("Authorization", "Bearer ${refreshResponse.accessToken}")
+                .build()
         }
     }
 
@@ -170,16 +161,49 @@ object ApiClient {
     }
 
     fun getCurrentToken(): String? = tokenManager.getAccessToken()
+
+    suspend fun refreshTokens(): AuthRefreshResponse? {
+        val refreshToken = tokenManager.getRefreshToken()
+        if (refreshToken.isNullOrBlank()) {
+            tokenManager.clearTokens()
+            return null
+        }
+
+        return try {
+            if (!::refreshApi.isInitialized) {
+                refreshApi = createRefreshApi()
+            }
+
+            val response = refreshApi.refreshToken(RefreshRequest(refreshToken))
+            tokenManager.saveTokens(response.accessToken, response.refreshToken)
+            response
+        } catch (e: Exception) {
+            tokenManager.clearTokens()
+            null
+        }
+    }
+
+    private fun responseCount(response: okhttp3.Response): Int {
+        var result = 1
+        var prior = response.priorResponse
+        while (prior != null) {
+            result++
+            prior = prior.priorResponse
+        }
+        return result
+    }
 }
 
 interface RefreshApi {
-    @POST("api/auth/refresh")
+    @POST("auth/refresh")
     suspend fun refreshToken(@Body request: RefreshRequest): AuthRefreshResponse
 }
 
 data class RefreshRequest(val refreshToken: String)
 
 data class AuthRefreshResponse(
+    val user: UserDto? = null,
     val accessToken: String,
-    val refreshToken: String
+    val refreshToken: String,
+    val tokenType: String? = null
 )
