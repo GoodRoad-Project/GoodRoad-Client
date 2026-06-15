@@ -70,13 +70,14 @@ class VolunteerViewModel(
     init {
         loadOwnRequests()
         loadVolunteerMenu()
-        loadFeed()
     }
 
-    fun loadVolunteerMenu() {
+    fun loadVolunteerMenu(refreshBeforeLoad: Boolean = true) {
         viewModelScope.launch {
             try {
-                ApiClient.refreshTokens()
+                if (refreshBeforeLoad) {
+                    ApiClient.refreshTokens()
+                }
                 val resp = repository.getMenu()
                 volunteerMenu.value = VolunteerMenu(
                     isVolunteer = resp.volunteer,
@@ -278,8 +279,12 @@ class VolunteerViewModel(
                     certificatePhotoUrls = uploadedUrls
                 )
 
+                volunteerMenu.value = VolunteerMenu(
+                    isVolunteer = false,
+                    applicationStatus = "PENDING",
+                    rejectReason = null
+                )
                 successMessage.value = "Заявка на волонтёрство отправлена"
-                loadVolunteerMenu()
                 onSuccess()
             } catch (e: Exception) {
                 errorMessage.value = e.message ?: "Ошибка"
