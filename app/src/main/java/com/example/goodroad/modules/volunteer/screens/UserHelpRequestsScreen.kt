@@ -162,8 +162,8 @@ fun UserHelpRequestsScreen(
 
                                 Spacer(Modifier.height(8.dp))
 
-                                Text("Особенности", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
-                                Text(req.specialNotes)
+                                Text("Telegram / ВК", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
+                                Text(req.socialNickname.ifBlank { "—" })
 
                                 Spacer(Modifier.height(8.dp))
 

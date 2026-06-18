@@ -74,17 +74,13 @@ data class WalkRouteReqDto(
     val routePoints: List<RoutePointReqDto>? = null
 )
 
-/**
- * То, что удобно показывать на экране "Мои заявки".
- * Поля оставлены близкими к твоему текущему UI, чтобы меньше менять экран.
- */
 data class HelpRequestItem(
     val id: String,
     val routeStart: String,
     val routeEnd: String,
     val dateTime: String,
     val contact: String,
-    val specialNotes: String,
+    val socialNickname: String,
     val comment: String,
     val status: RequestStatus
 )
@@ -113,28 +109,8 @@ fun HelpRequestRespDto.toUi(): HelpRequestItem {
         routeEnd = toAddress,
         dateTime = "$date $time",
         contact = phone ?: socialNickname.orEmpty(),
-        specialNotes = socialNickname.orEmpty(),
+        socialNickname = socialNickname.orEmpty(),
         comment = comment.orEmpty(),
         status = status.toRequestStatus()
     )
 }
-
-fun CreateHelpRequestReqDto.toCreateDto() = HelpRequestCreateReqDto(
-    fromAddress = fromAddress,
-    toAddress = toAddress,
-    date = date,
-    time = time,
-    phone = phone,
-    socialNickname = socialNickname,
-    comment = comment
-)
-
-data class CreateHelpRequestReqDto(
-    val fromAddress: String,
-    val toAddress: String,
-    val date: String,
-    val time: String,
-    val phone: String,
-    val socialNickname: String?,
-    val comment: String
-)

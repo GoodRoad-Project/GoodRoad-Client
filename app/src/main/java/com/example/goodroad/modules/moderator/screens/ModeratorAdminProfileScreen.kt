@@ -86,14 +86,6 @@ fun AdminProfileScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = UrbanBrown
                             )
-
-                            Spacer(Modifier.height(6.dp))
-
-                            Text(
-                                text = "Роль: ${u.role ?: ""}",
-                                fontSize = 16.sp,
-                                color = UrbanBrown.copy(alpha = 0.8f)
-                            )
                         }
                     }
 
