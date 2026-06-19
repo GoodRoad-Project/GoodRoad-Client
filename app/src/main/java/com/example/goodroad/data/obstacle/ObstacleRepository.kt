@@ -25,4 +25,9 @@ class ObstacleRepository(private val api: ObstacleApi) {
 
         throw HttpException(response)
     }
+
+    suspend fun getObstacleCard(id: String): ObstacleCardResp? {
+        val response = api.getObstacleCard(id)
+        return if (response.isSuccessful) response.body() else null
+    }
 }

@@ -15,6 +15,9 @@ import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.network.GoodRoadApi
 import com.example.goodroad.data.network.location.LocationTracker
 import com.example.goodroad.data.network.route.RouteRequest
+import com.example.goodroad.data.network.route.RouteObstaclePolicy
+import com.example.goodroad.data.network.route.PathResponse
+import com.example.goodroad.data.network.GoodRoadApi
 import com.example.goodroad.data.network.route.RouteResponse
 import com.example.goodroad.data.network.utils.decodePoints
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +30,14 @@ import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.layers.PropertyFactory
+import com.example.goodroad.data.network.ApiClient
+import kotlin.collections.firstOrNull
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import org.maplibre.android.style.layers.CircleLayer
+import com.example.goodroad.domain.model.LocationPoint
 import org.maplibre.android.style.sources.GeoJsonSource
 import java.util.Locale
 
@@ -43,6 +54,12 @@ class MapActivity : AppCompatActivity() {
 
     private var startLat: Double = 0.0
     private var startLon: Double = 0.0
+    private var fastRoute: PathResponse? = null
+    private var balancedRoute: PathResponse? = null
+    private var safeRoute: PathResponse? = null
+    private var showCoordinatesBottomSheet by mutableStateOf(false)
+    private var clickedLat by mutableStateOf(0.0)
+    private var clickedLon by mutableStateOf(0.0)
 
     private val api: GoodRoadApi by lazy {
         ApiClient.routeApi
@@ -66,16 +83,39 @@ class MapActivity : AppCompatActivity() {
         locationTracker = LocationTracker(this)
 
         mapView.getMapAsync { map ->
-            map.setStyle(
-                Style.Builder().fromUri(
-                    "https://tiles.openfreemap.org/styles/positron"
-                )
-            ) {
-
+            map.setStyle(Style.Builder().fromUri("https://tiles.openfreemap.org/styles/positron")) {
+                startLocationTracking()
                 if (hasLocationPermission()) {
                     getUserLocation()
                 } else {
                     requestLocationPermission()
+                }
+            }
+
+            map.addOnMapClickListener { point ->
+                lifecycleScope.launch {
+                    try {
+                        val response = api.getPlaceInfo(point.latitude, point.longitude)
+                        if (response.isSuccessful && response.body() != null) {
+                            showPlaceInfoBottomSheet(response.body())
+                        } else {
+                            Toast.makeText(this@MapActivity, "Заведение не найдено", Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (e: Exception) {
+                        Toast.makeText(this@MapActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+
+        findViewById<ComposeView>(R.id.composeView).setContent {
+            GoodRoadTheme {
+                if (showCoordinatesBottomSheet) {
+                    CoordinatesBottomSheet(
+                        lat = clickedLat,
+                        lon = clickedLon,
+                        onDismiss = { showCoordinatesBottomSheet = false }
+                    )
                 }
             }
         }
@@ -98,6 +138,42 @@ class MapActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         // блокируем возврат назад
+    }
+
+    private fun addTemporaryMarker(point: LatLng) {
+        mapView.getMapAsync { map ->
+            map.getStyle { style ->
+                style.removeLayer("click-marker-layer")
+                style.removeSource("click-marker-source")
+
+                val geojson = """
+            {
+                "type": "FeatureCollection",
+                "features": [{
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [${point.longitude}, ${point.latitude}]
+                    }
+                }]
+            }
+            """.trimIndent()
+
+                val source = GeoJsonSource("click-marker-source", geojson)
+                style.addSource(source)
+
+                val circleLayer = CircleLayer("click-marker-layer", "click-marker-source").apply {
+                    setProperties(
+                        PropertyFactory.circleColor("#FF5722"),
+                        PropertyFactory.circleRadius(12f),
+                        PropertyFactory.circleOpacity(0.8f),
+                        PropertyFactory.circleStrokeColor("#FFFFFF"),
+                        PropertyFactory.circleStrokeWidth(2f)
+                    )
+                }
+                style.addLayer(circleLayer)
+            }
+        }
     }
 
     private fun getUserLocation() {
@@ -193,43 +269,45 @@ class MapActivity : AppCompatActivity() {
 
             val policies = res.body()
 
-            val allowedTypes = setOf(
-                "SAND",
-                "GRAVEL"
-            )
-
-            if (policies != null) {
+            if(policies != null) {
+                val obstaclePolicies = policies
+                    .filter { it.selected && it.maxAllowedSeverity != null }
+                    .map { RouteObstaclePolicy(it.obstacleType, it.maxAllowedSeverity) }
 
                 val request = RouteRequest(
                     start = "$startLat,$startLon",
                     end = "$endLat,$endLon",
-                    avoidStairs = policies.find {
-                        it.obstacleType == "STAIRS"
-                    }?.selected == true,
-                    maxCurbHeight = policies.find {
-                        it.obstacleType == "CURB"
-                    }?.maxAllowedSeverity?.toInt(),
-                    maxSlopeAngle = policies.find {
-                        it.obstacleType == "ROAD_SLOPE"
-                    }?.maxAllowedSeverity?.toDouble(),
-                    avoidBadRoad = policies.find {
-                        it.obstacleType == "POTHOLES"
-                    }?.selected == true,
-                    avoidSurfaceTypes = policies
-                        .filter {
-                            it.selected &&
-                                    it.obstacleType in allowedTypes
-                        }
-                        .map {
-                            it.obstacleType
-                        }
+                    obstaclePolicies = obstaclePolicies
                 )
 
                 try {
 
                     val response = api.getRoute(request)
 
-                    drawRoute(response)
+                    if(response.paths.isEmpty())  {
+                        Toast.makeText(this@MapActivity, "Маршрутов нет", Toast.LENGTH_SHORT).show()
+                    }
+
+                    fastRoute = response.paths.find { it.routeType == "fast" }
+                    balancedRoute = response.paths.find { it.routeType == "balanced" }
+                    safeRoute = response.paths.find { it.routeType == "safe" }
+
+                    if (fastRoute != null) {
+                        drawRoute(fastRoute)
+                    } else {
+                        Toast.makeText(this@MapActivity, "Быстрый маршрут не найден", Toast.LENGTH_SHORT).show()
+                    }
+                    if (safeRoute != null) {
+                        drawRoute(safeRoute)
+                    } else {
+                        Toast.makeText(this@MapActivity, "Безопасный маршрут не найден", Toast.LENGTH_SHORT).show()
+                    }
+
+                    if (balancedRoute != null) {
+                        drawRoute(balancedRoute)
+                    } else {
+                        Toast.makeText(this@MapActivity, "Сбалансированный маршрут не найден", Toast.LENGTH_SHORT).show()
+                    }
 
                 } catch (e: Exception) {
 
@@ -245,23 +323,13 @@ class MapActivity : AppCompatActivity() {
         }
     }
 
-    private fun drawRoute(response: RouteResponse) {
-
-        val path = response.paths.firstOrNull()
-
-        if (path == null) {
-
-            Toast.makeText(
-                this,
-                "Маршрут не найден",
-                Toast.LENGTH_SHORT
-            ).show()
-
+    private fun drawRoute(pathResponse: PathResponse?) {
+        if (pathResponse == null) {
+            Toast.makeText(this, "Маршрут не найден", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val points = decodePoints(path.points)
-
+        val points = decodePoints(pathResponse.points)
         if (points.isEmpty()) {
 
             Toast.makeText(
@@ -280,9 +348,11 @@ class MapActivity : AppCompatActivity() {
         mapView.getMapAsync { map ->
 
             map.getStyle { style ->
+                val layerId = "route-layer-${pathResponse.routeType}"
+                val sourceId = "route-source-${pathResponse.routeType}"
 
-                style.removeLayer("route-layer")
-                style.removeSource("route-source")
+                style.removeLayer(layerId)
+                style.removeSource(sourceId)
 
                 val coordinates = latLngs.joinToString(", ") {
                     "[${it.longitude}, ${it.latitude}]"
@@ -306,15 +376,19 @@ class MapActivity : AppCompatActivity() {
                     geojson
                 )
 
+                val source = GeoJsonSource(sourceId, geojson)
                 style.addSource(source)
 
-                val lineLayer = LineLayer(
-                    "route-layer",
-                    "route-source"
-                ).apply {
+                val lineColor = when (pathResponse.routeType) {
+                    "fast" -> "#4F87C9"
+                    "balanced" -> "#8B7AC6"
+                    "safe" -> "#6FAE8A"
+                    else -> "#8B7AC6"
+                }
 
+                val lineLayer = LineLayer(layerId, sourceId).apply {
                     setProperties(
-                        PropertyFactory.lineColor("#8B7AC6"),
+                        PropertyFactory.lineColor(lineColor),
                         PropertyFactory.lineWidth(6f),
                         PropertyFactory.lineOpacity(0.9f)
                     )
@@ -385,36 +459,58 @@ class MapActivity : AppCompatActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        mapView.onStart()
+    private fun updateUserMarker(location: LocationPoint) {
+        val point = LatLng(location.latitude, location.longitude)
+
+        mapView.getMapAsync { map ->
+            map.getStyle { style ->
+                style.removeLayer("user-marker-layer")
+                style.removeSource("user-marker-source")
+
+                val geojson = """
+                {
+                    "type": "FeatureCollection",
+                    "features": [{
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [${point.longitude}, ${point.latitude}]
+                        }
+                    }]
+                }
+            """.trimIndent()
+
+                val source = GeoJsonSource("user-marker-source", geojson)
+                style.addSource(source)
+
+                val circleLayer = CircleLayer("user-marker-layer", "user-marker-source").apply {
+                    setProperties(
+                        PropertyFactory.circleColor("#4F87C9"),
+                        PropertyFactory.circleRadius(8f),
+                        PropertyFactory.circleOpacity(0.8f),
+                        PropertyFactory.circleStrokeColor("#FFFFFF"),
+                        PropertyFactory.circleStrokeWidth(2f)
+                    )
+                }
+                style.addLayer(circleLayer)
+            }
+        }
     }
 
-    override fun onResume() {
-        super.onResume()
-        mapView.onResume()
+    private fun startLocationTracking() {
+        lifecycleScope.launch {
+            locationTracker.locationUpdates().collect { location ->
+                updateUserMarker(location)
+            }
+        }
     }
 
-    override fun onPause() {
-        super.onPause()
-        mapView.onPause()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        mapView.onStop()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mapView.onDestroy()
-    }
-
-    override fun onLowMemory() {
-        super.onLowMemory()
-        mapView.onLowMemory()
-    }
-
+    override fun onStart() { super.onStart(); mapView.onStart() }
+    override fun onResume() { super.onResume(); mapView.onResume() }
+    override fun onPause() { super.onPause(); mapView.onPause() }
+    override fun onStop() { super.onStop(); mapView.onStop() }
+    override fun onDestroy() { super.onDestroy(); mapView.onDestroy() }
+    override fun onLowMemory() { super.onLowMemory(); mapView.onLowMemory() }
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         mapView.onSaveInstanceState(outState)
