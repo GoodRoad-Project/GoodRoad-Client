@@ -48,6 +48,9 @@ class MapActivity : AppCompatActivity() {
     private var fastRoute: PathResponse? = null
     private var balancedRoute: PathResponse? = null
     private var safeRoute: PathResponse? = null
+    private var showCoordinatesBottomSheet by mutableStateOf(false)
+    private var clickedLat by mutableStateOf(0.0)
+    private var clickedLon by mutableStateOf(0.0)
 
     private val api: GoodRoadApi by lazy {
         ApiClient.routeApi
@@ -78,6 +81,33 @@ class MapActivity : AppCompatActivity() {
                     requestLocationPermission()
                 }
             }
+
+            map.addOnMapClickListener { point ->
+                lifecycleScope.launch {
+                    try {
+                        val response = api.getPlaceInfo(point.latitude, point.longitude)
+                        if (response.isSuccessful && response.body() != null) {
+                            showPlaceInfoBottomSheet(response.body())
+                        } else {
+                            Toast.makeText(this@MapActivity, "Заведение не найдено", Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (e: Exception) {
+                        Toast.makeText(this@MapActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+
+        findViewById<ComposeView>(R.id.composeView).setContent {
+            GoodRoadTheme {
+                if (showCoordinatesBottomSheet) {
+                    CoordinatesBottomSheet(
+                        lat = clickedLat,
+                        lon = clickedLon,
+                        onDismiss = { showCoordinatesBottomSheet = false }
+                    )
+                }
+            }
         }
 
         setDestinationButton.setOnClickListener {
@@ -94,6 +124,42 @@ class MapActivity : AppCompatActivity() {
             finish()
         }
 
+    }
+
+    private fun addTemporaryMarker(point: LatLng) {
+        mapView.getMapAsync { map ->
+            map.getStyle { style ->
+                style.removeLayer("click-marker-layer")
+                style.removeSource("click-marker-source")
+
+                val geojson = """
+            {
+                "type": "FeatureCollection",
+                "features": [{
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [${point.longitude}, ${point.latitude}]
+                    }
+                }]
+            }
+            """.trimIndent()
+
+                val source = GeoJsonSource("click-marker-source", geojson)
+                style.addSource(source)
+
+                val circleLayer = CircleLayer("click-marker-layer", "click-marker-source").apply {
+                    setProperties(
+                        PropertyFactory.circleColor("#FF5722"),
+                        PropertyFactory.circleRadius(12f),
+                        PropertyFactory.circleOpacity(0.8f),
+                        PropertyFactory.circleStrokeColor("#FFFFFF"),
+                        PropertyFactory.circleStrokeWidth(2f)
+                    )
+                }
+                style.addLayer(circleLayer)
+            }
+        }
     }
 
     private fun getUserLocation() {

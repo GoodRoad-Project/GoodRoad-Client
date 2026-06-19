@@ -161,6 +161,22 @@ fun ObstacleSelectScreen(
                                 color = UrbanBrown
                             )
 
+                            val severityDescription = when (obstacle.obstacleType) {
+                                "STAIRS" -> "1 — 1-3 ступеньки, 2 — 4-10 ступенек, 3 — более 10 ступенек"
+                                "CURB" -> "1 — маленький бордюр, 2 — обычный бордюр, 3 — высокий бордюр"
+                                "ROAD_SLOPE" -> "1 — незначительный подъём, 2 — заметный подъём, 3 — крутой подъём"
+                                "POTHOLES" -> "1 — маленькая яма, 2 — обычная яма, 3 — большая яма"
+                                "SAND", "GRAVEL" -> "1 — укатанный, 2 — немного рыхлый, 3 — сильно рыхлый"
+                                else -> "1 — слабая, 2 — средняя, 3 — сильная"
+                            }
+
+                            Text(
+                                text = severityDescription,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = UrbanBrown.copy(alpha = 0.7f),
+                                fontSize = 11.sp
+                            )
+
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Row(
