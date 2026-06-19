@@ -145,8 +145,16 @@ class ReviewsViewModel(private val repository: ReviewRepository) : ViewModel() {
                         } ?: throw IllegalArgumentException("Не удалось прочитать выбранный файл")
 
                         val requestBody = tempFile.asRequestBody(mimeType.toMediaTypeOrNull())
-                        val part = MultipartBody.Part.createFormData("file", tempFile.name, requestBody)
-                        uploadedUrls += repository.uploadReviewPhoto(part)
+
+                        val part = MultipartBody.Part.createFormData(
+                            name = "file",
+                            filename = tempFile.name,
+                            body = requestBody
+                        )
+
+                        val response = repository.uploadReviewPhoto(part)
+                        uploadedUrls.add(response)
+
                     } finally {
                         tempFile.delete()
                     }
@@ -157,7 +165,9 @@ class ReviewsViewModel(private val repository: ReviewRepository) : ViewModel() {
                 } else {
                     "Фотографии добавлены"
                 }
+
                 onSuccess(uploadedUrls)
+
             } catch (e: Exception) {
                 errorMessage.value = mapReviewError(e)
             } finally {

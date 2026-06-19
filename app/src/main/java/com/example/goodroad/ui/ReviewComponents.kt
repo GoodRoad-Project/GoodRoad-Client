@@ -193,37 +193,6 @@ fun ReviewCardSummary(review: ReviewCardResp) {
 }
 
 @Composable
-fun ReviewActionButton(
-    text: String,
-    modifier: Modifier = Modifier,
-    backgroundColor: Color = SafeGreen,
-    enabled: Boolean = true,
-    onClick: () -> Unit
-) {
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = modifier.height(44.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = backgroundColor,
-            contentColor = WhiteSoft,
-            disabledContainerColor = backgroundColor.copy(alpha = 0.6f),
-            disabledContentColor = WhiteSoft
-        ),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-            softWrap = false,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
 fun ReviewSquareActionButton(
     text: String,
     modifier: Modifier = Modifier,

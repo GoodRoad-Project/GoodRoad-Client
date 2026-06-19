@@ -29,3 +29,5 @@ val TextSecondary = Color(0xFF7A6F66)
 val WhiteSoft = Color(0xFFFFFBF7)
 
 val GrayButton = Color(0xFF9E9E9E)
+
+val WarningOrange = Color(0xFFE09B4C)

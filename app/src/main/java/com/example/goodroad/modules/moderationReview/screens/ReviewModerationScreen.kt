@@ -11,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -383,20 +382,20 @@ private fun ReviewModerationCard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            ModerationActionButton(
+                            PrimaryButton(
                                 text = "Отклонить",
                                 backgroundColor = AlertRed,
                                 modifier = Modifier.weight(1f)
                             ) { onReject() }
 
-                            ModerationActionButton(
+                            PrimaryButton(
                                 text = "Одобрить",
                                 backgroundColor = SafeGreen,
                                 modifier = Modifier.weight(1f)
                             ) { onApprove() }
                         }
 
-                        ModerationActionButton(
+                        PrimaryButton(
                             text = "Отказаться от модерации",
                             backgroundColor = UrbanBrown,
                             modifier = Modifier.fillMaxWidth()
@@ -404,9 +403,9 @@ private fun ReviewModerationCard(
                     }
                 }
                 else -> {
-                    ModerationActionButton(
+                    PrimaryButton(
                         text = "Взять в работу",
-                        backgroundColor = UrbanBrown,
+                        backgroundColor = SafeGreen,
                         modifier = Modifier.fillMaxWidth()
                     ) { onTakeInWork() }
                 }
@@ -438,29 +437,6 @@ private fun ModerationStatusChip(takenInWork: Boolean, takenByMe: Boolean) {
     }
 }
 
-@Composable
-private fun ModerationActionButton(
-    text: String,
-    backgroundColor: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(48.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = backgroundColor,
-            contentColor = WhiteSoft
-        ),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Text(
-            text = text,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold
-        )
-    }
-}
 
 @Composable
 private fun RejectReasonDialog(

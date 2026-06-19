@@ -18,6 +18,7 @@ import com.example.goodroad.ui.UserDecor
 fun ModeratorProfileScreen(
     userViewModel: UserViewModel,
     onReviews: () -> Unit,
+    onVolunteers: () -> Unit,
     onLogout: () -> Unit
 ) {
 
@@ -81,18 +82,20 @@ fun ModeratorProfileScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = UrbanBrown
                             )
-
-                            Spacer(Modifier.height(6.dp))
-
-                            Text(
-                                text = "Роль: ${u.role ?: ""}",
-                                fontSize = 16.sp,
-                                color = UrbanBrown.copy(alpha = 0.8f)
-                            )
                         }
                     }
 
                     Spacer(Modifier.height(30.dp))
+
+                    PrimaryButton(
+                        text = "Волонтёры",
+                        backgroundColor = UrbanBrown,
+                        contentColor = WhiteSoft
+                    ) {
+                        onVolunteers()
+                    }
+
+                    Spacer(Modifier.height(12.dp))
 
                     PrimaryButton(
                         text = "Отзывы",

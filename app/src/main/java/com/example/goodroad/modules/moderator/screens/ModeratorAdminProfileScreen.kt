@@ -20,6 +20,7 @@ fun AdminProfileScreen(
     userViewModel: UserViewModel,
     onModerators: () -> Unit,
     onReviews: () -> Unit,
+    onVolunteers: () -> Unit,
     onLogout: () -> Unit
 ) {
 
@@ -85,14 +86,6 @@ fun AdminProfileScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = UrbanBrown
                             )
-
-                            Spacer(Modifier.height(6.dp))
-
-                            Text(
-                                text = "Роль: ${u.role ?: ""}",
-                                fontSize = 16.sp,
-                                color = UrbanBrown.copy(alpha = 0.8f)
-                            )
                         }
                     }
 
@@ -101,7 +94,7 @@ fun AdminProfileScreen(
                     PrimaryButton(
                         text = "Модераторы",
                         backgroundColor = UrbanBrown,
-                        contentColor = WhiteSoft
+                        contentColor = UrbanBrown
                     ) {
                         Log.d("AdminProfile", "BUTTON CLICKED")
                         safeOnModerators()
@@ -110,16 +103,30 @@ fun AdminProfileScreen(
                     Spacer(Modifier.height(12.dp))
 
                     PrimaryButton(
+                        text = "Волонтёры",
+                        backgroundColor = UrbanBrown,
+                        contentColor = UrbanBrown
+                    ) {
+                        onVolunteers()
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
+                    PrimaryButton(
                         text = "Отзывы",
                         backgroundColor = UrbanBrown,
-                        contentColor = WhiteSoft
+                        contentColor = UrbanBrown
                     ) {
                         onReviews()
                     }
 
                     Spacer(Modifier.height(20.dp))
 
-                    PrimaryButton(text = "Выйти") {
+                    PrimaryButton(
+                        text = "Выйти",
+                        backgroundColor = AlertRed,
+                        contentColor = AlertRed
+                    ) {
                         userViewModel.logout { onLogout() }
                     }
                 }

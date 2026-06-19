@@ -1,21 +1,24 @@
 package com.example.goodroad.ui.user
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.goodroad.ui.buttons.*
-import com.example.goodroad.ui.theme.*
-import com.example.goodroad.ui.UserDecor
+import coil.compose.AsyncImage
 import com.example.goodroad.modules.user.presentation.UserViewModel
-import android.content.Intent
-import com.example.goodroad.MapActivity
-import androidx.compose.ui.platform.LocalContext
+import com.example.goodroad.ui.UserDecor
+import com.example.goodroad.ui.buttons.PrimaryButton
+import com.example.goodroad.ui.theme.*
 
 @Composable
 fun UserProfileScreen(
@@ -24,8 +27,9 @@ fun UserProfileScreen(
     onDelete: () -> Unit,
     onLogout: () -> Unit,
     onSelectObstacles: () -> Unit,
-    onOpenMap: () -> Unit,
-    onOpenReviews: () -> Unit
+    onBecomeVolunteer: () -> Unit = {},
+    onNavigateToRewards: () -> Unit = {},
+    onNavigateToTasks: () -> Unit = {}
 ) {
     val user by userViewModel.user
     val isLoading by userViewModel.isLoading
@@ -45,9 +49,7 @@ fun UserProfileScreen(
         }
 
         userViewModel.isDeleted -> {
-            LaunchedEffect(Unit) {
-                onLogout()
-            }
+            LaunchedEffect(Unit) { onLogout() }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
@@ -66,92 +68,139 @@ fun UserProfileScreen(
                 modifier = Modifier.fillMaxSize(),
                 color = BackgroundLight
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp)
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    UserDecor()
 
-                    Text(
-                        text = "Профиль",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = TextPrimary
-                    )
+                    item {
+                        UserDecor()
 
-                    Spacer(Modifier.height(20.dp))
+                        Text(
+                            text = "Профиль",
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = TextPrimary
+                        )
+                    }
 
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = UrbanBrown.copy(alpha = 0.08f)
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp)
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = UrbanBrown.copy(alpha = 0.12f)
+                            )
                         ) {
-                            Text(
-                                text = "${u.firstName ?: ""} ${u.lastName ?: ""}".trim(),
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = UrbanBrown
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
 
-                            Spacer(Modifier.height(6.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "${u.firstName ?: ""} ${u.lastName ?: ""}".trim(),
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextPrimary
+                                    )
+                                }
 
-                            Text(
-                                text = "Роль: ${u.role ?: ""}",
-                                fontSize = 16.sp,
-                                color = UrbanBrown.copy(alpha = 0.8f)
-                            )
+                                if (!u.photoUrl.isNullOrBlank()) {
+                                    AsyncImage(
+                                        model = u.photoUrl,
+                                        contentDescription = "Фото профиля",
+                                        modifier = Modifier
+                                            .size(90.dp)
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Surface(
+                                        modifier = Modifier.size(90.dp),
+                                        shape = CircleShape,
+                                        color = WhiteSoft
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Text(
+                                                text = "👤",
+                                                fontSize = 32.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 
-                    Spacer(Modifier.height(20.dp))
-
-                    PrimaryButton(
-                        text = "Выбрать препятствия",
-                        backgroundColor = UrbanBrown,
-                        contentColor = WhiteSoft
-                    ) {
-                        onSelectObstacles()
+                    item {
+                        SectionTitle("Настройки достуности")
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    val context = LocalContext.current
-
-                    PrimaryButton(
-                        text = "Перейти на карту",
-                        backgroundColor = UrbanBrown,
-                        contentColor = WhiteSoft
-                    ) {
-                        val intent = Intent(context, MapActivity::class.java)
-                        context.startActivity(intent)
+                    item {
+                        ServiceCard(
+                            title = "Выбрать препятствия",
+                            description = "Настройте условия передвижения и доступности",
+                            onClick = onSelectObstacles
+                        )
                     }
 
-                    Spacer(Modifier.height(10.dp))
-
-                    PrimaryButton(
-                        text = "Мои отзывы",
-                        backgroundColor = SafeGreen,
-                        contentColor = WhiteSoft
-                    ) {
-                        onOpenReviews()
+                    item {
+                        SectionTitle("Мой вклад")
                     }
 
-                    Spacer(Modifier.height(10.dp))
+                    item {
+                        ServiceCard(
+                            title = "Задания",
+                            description = "Выполняйте задания и получайте баллы",
+                            onClick = onNavigateToTasks
+                        )
+                    }
 
-                    PrimaryButton(text = "Редактировать профиль", onClick = onEdit)
+                    item {
+                        ServiceCard(
+                            title = "Награды и баллы",
+                            description = "Магазин наград, история, рейтинг",
+                            onClick = onNavigateToRewards
+                        )
+                    }
 
-                    Spacer(Modifier.height(10.dp))
+                    item {
+                        ServiceCard(
+                            title = "Стать волонтёром",
+                            description = "Подключитесь к помощи другим пользователям",
+                            onClick = onBecomeVolunteer
+                        )
+                    }
 
-                    PrimaryButton(text = "Удалить аккаунт", onClick = onDelete)
+                    item {
+                        SectionTitle("Аккаунт")
+                    }
 
-                    Spacer(Modifier.height(10.dp))
+                    item {
+                        ServiceCard(
+                            title = "Редактировать профиль",
+                            description = "Изменить личные данные",
+                            onClick = onEdit
+                        )
+                    }
 
-                    PrimaryButton(text = "Выйти") {
-                        userViewModel.logout { onLogout() }
+                    item {
+                        ServiceCard(
+                            title = "Удалить аккаунт",
+                            description = "Безвозвратное удаление профиля",
+                            onClick = onDelete
+                        )
+                    }
+
+                    item {
+                        ServiceCard(
+                            title = "Выйти из аккаунта",
+                            description = "Завершить текущую сессию",
+                            onClick = { userViewModel.logout { onLogout() } }
+                        )
                     }
                 }
             }
@@ -161,6 +210,54 @@ fun UserProfileScreen(
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
+        }
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = UrbanBrown
+    )
+}
+
+@Composable
+private fun ServiceCard(
+    title: String,
+    description: String,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        colors = CardDefaults.cardColors(
+            containerColor = SurfaceWarm
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 1.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary
+            )
+
+            Spacer(Modifier.height(4.dp))
+
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
+            )
         }
     }
 }

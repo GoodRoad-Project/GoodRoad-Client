@@ -1,0 +1,98 @@
+package com.example.goodroad.modules.tasks.presentation
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.goodroad.modules.tasks.data.CompletedTaskDto
+import com.example.goodroad.modules.tasks.data.TaskCreateReq
+import com.example.goodroad.modules.tasks.data.TaskViewDto
+import com.example.goodroad.modules.tasks.data.TasksRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
+class TasksViewModel(
+    private val repository: TasksRepository
+) : ViewModel() {
+
+    private val _tasks = MutableStateFlow<List<TaskViewDto>>(emptyList())
+    val tasks: StateFlow<List<TaskViewDto>> = _tasks.asStateFlow()
+
+    private val _completedTasks = MutableStateFlow<List<CompletedTaskDto>>(emptyList())
+    val completedTasks: StateFlow<List<CompletedTaskDto>> = _completedTasks.asStateFlow()
+
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
+    fun loadTasks(
+        activityType: String? = null,
+        latitude: Double? = null,
+        longitude: Double? = null
+    ) {
+        viewModelScope.launch {
+            try {
+                _loading.value = true
+                _error.value = null
+
+                _tasks.value = repository.loadTasks(
+                    activityType = activityType,
+                    latitude = latitude,
+                    longitude = longitude
+                )
+
+            } catch (e: Exception) {
+                _error.value = e.message
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
+    fun loadCompletedTasks() {
+        viewModelScope.launch {
+            try {
+                _loading.value = true
+                _error.value = null
+
+                _completedTasks.value =
+                    repository.loadCompletedTasks()
+
+            } catch (e: Exception) {
+                _error.value = e.message
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
+    fun completeTarget(taskId: String, targetId: String, onSuccess: () -> Unit = {}) {
+        viewModelScope.launch {
+            try {
+                repository.completeTarget(taskId, targetId)
+
+                val currentTasks = _tasks.value.toMutableList()
+                val taskIndex = currentTasks.indexOfFirst { it.id == taskId }
+                if (taskIndex != -1) {
+                    val task = currentTasks[taskIndex]
+                    val updatedTargets = task.targets.map { target ->
+                        if (target.id == targetId) target.copy(done = true) else target
+                    }
+                    val newCompletedCount = updatedTargets.count { it.done }
+                    val updatedTask = task.copy(
+                        targets = updatedTargets,
+                        completedCount = newCompletedCount
+                    )
+                    currentTasks[taskIndex] = updatedTask
+                    _tasks.value = currentTasks
+                }
+
+                onSuccess()
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
+}

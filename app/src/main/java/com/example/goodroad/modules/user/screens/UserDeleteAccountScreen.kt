@@ -61,23 +61,13 @@ fun UserDeleteAccountScreen(
 
         PrimaryButton(
             text = "Удалить аккаунт",
+            backgroundColor = AlertRed,
+            contentColor = AlertRed,
             enabled = !isLoading
         ) {
             viewModel.deleteUser(password) {
                 onExit()
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        PrimaryButton(
-            text = "Назад в профиль",
-            backgroundColor = UrbanBrown,
-            contentColor = WhiteSoft,
-            onClick = {
-                viewModel.clearMessages()
-                onBack()
-            }
-        )
     }
 }

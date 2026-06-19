@@ -160,16 +160,6 @@ fun ReviewDetailsScreen(
                     showDeleteDialog = true
                 }
             }
-
-            Spacer(Modifier.height(12.dp))
-
-            ReviewSquareActionButton(
-                text = "Назад к отзывам",
-                backgroundColor = UrbanBrown,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                onBack()
-            }
         }
     }
 }

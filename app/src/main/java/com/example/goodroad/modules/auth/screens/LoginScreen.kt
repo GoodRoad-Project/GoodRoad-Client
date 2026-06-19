@@ -25,6 +25,7 @@ import com.example.goodroad.validation.normalizeRequiredRussianPhone
 
 @Composable
 fun LoginScreen(
+    viewModel: AuthViewModel,
     onLoginSuccess: (AuthResp) -> Unit,
     onSignUp: () -> Unit,
     onForgotPassword: () -> Unit
@@ -34,7 +35,6 @@ fun LoginScreen(
     var phoneWarning by rememberSaveable { mutableStateOf<String?>(null) }
     var errorText by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val viewModel: AuthViewModel = viewModel()
     val loginResult by viewModel.loginResult.observeAsState()
     val error by viewModel.error.observeAsState()
     val loading by viewModel.isLoading.observeAsState(initial = false)
