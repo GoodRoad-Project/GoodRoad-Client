@@ -77,21 +77,40 @@ http://10.0.2.2:8080/
 
 ### Структура проекта
 
-```text
+```text    
 app/src/main/java/com/example/goodroad/
 ├── MainActivity.kt
+├── MapActivity.kt
 ├── data/
-│   ├── auth/
-│   ├── network/
-│   ├── obstacle/
-│   ├── review/
-│   └── user/
-└── ui/
+│   ├── network
+│   └── obstacle
+├── domain/model
+├── ui/
+│   ├── buttons/
+│   ├── errors/
+│   ├── fields/
+│   ├── map/
+│   └── theme/
+├── validation
+└── modules/
     ├── auth/
-    ├── common/
     ├── maps/
-    ├── reviews/
-    ├── theme/
+    ├── moderationReview/
+    ├── moderator/
+    ├── rewards/
+    ├── tasks/
     ├── user/
-    └── viewmodel/
+    └── volunteer/
+    
+app/src/test/java/com/example/goodroad/
+├── data/
+│   ├── network
+│   └── obstacle
+└── modules/
+    ├── auth/
+    ├── moderationReview/
+    ├── moderator/
+    ├── review/
+    ├── rewards/
+    └── user/
 ```
