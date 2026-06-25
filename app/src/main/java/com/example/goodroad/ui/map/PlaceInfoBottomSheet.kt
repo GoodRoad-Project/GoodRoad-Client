@@ -1,8 +1,10 @@
 package com.example.goodroad.ui.map
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -11,9 +13,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import coil.compose.AsyncImage
 import com.example.goodroad.data.place.PlaceInfoResponse
-import com.example.goodroad.data.place.ReviewResp
 import com.example.goodroad.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,7 +55,7 @@ fun PlaceInfoBottomSheet(
                         color = UrbanBrown
                     )
                     Text(
-                        text = placeInfo.address,
+                        text = placeInfo.address ?: "Адрес не указан",
                         fontSize = 14.sp,
                         color = UrbanBrown.copy(alpha = 0.7f)
                     )
@@ -72,7 +78,7 @@ fun PlaceInfoBottomSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "📝 ${reviews.size} отзывов",
+                text = "📝 ${reviews?.size ?: 0} отзывов",
                 fontSize = 14.sp,
                 color = UrbanBrown
             )
@@ -83,7 +89,7 @@ fun PlaceInfoBottomSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (reviews.isNotEmpty()) {
+            if (reviews?.isNotEmpty() == true) {
                 val review = reviews[currentIndex]
 
                 Card(
@@ -142,7 +148,7 @@ fun PlaceInfoBottomSheet(
                                             .clip(RoundedCornerShape(8.dp))
                                             .background(Color.LightGray),
                                         contentScale = ContentScale.Crop,
-                                        placeholder = painterResource(R.drawable.placeholder_image)
+                                        //placeholder = painterResource(R.drawable.placeholder_image) // мб стоит сделать картинку заглушку
                                     )
                                 }
                             }

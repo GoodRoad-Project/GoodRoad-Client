@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -17,7 +18,6 @@ import com.example.goodroad.data.network.location.LocationTracker
 import com.example.goodroad.data.network.route.RouteRequest
 import com.example.goodroad.data.network.route.RouteObstaclePolicy
 import com.example.goodroad.data.network.route.PathResponse
-import com.example.goodroad.data.network.GoodRoadApi
 import com.example.goodroad.data.network.route.RouteResponse
 import com.example.goodroad.data.network.utils.decodePoints
 import kotlinx.coroutines.Dispatchers
@@ -30,16 +30,18 @@ import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.layers.PropertyFactory
-import com.example.goodroad.data.network.ApiClient
 import kotlin.collections.firstOrNull
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import org.maplibre.android.style.layers.CircleLayer
 import com.example.goodroad.domain.model.LocationPoint
 import org.maplibre.android.style.sources.GeoJsonSource
 import java.util.Locale
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
+import com.example.goodroad.ui.map.CoordinatesBottomSheet
+import com.example.goodroad.ui.theme.GoodRoadTheme
+import com.example.goodroad.data.place.PlaceInfoResponse
+import com.example.goodroad.ui.map.PlaceInfoBottomSheet
 
 class MapActivity : AppCompatActivity() {
 
@@ -57,9 +59,9 @@ class MapActivity : AppCompatActivity() {
     private var fastRoute: PathResponse? = null
     private var balancedRoute: PathResponse? = null
     private var safeRoute: PathResponse? = null
-    private var showCoordinatesBottomSheet by mutableStateOf(false)
-    private var clickedLat by mutableStateOf(0.0)
-    private var clickedLon by mutableStateOf(0.0)
+
+    private var showPlaceInfoBottomSheet by mutableStateOf(false)
+    private var selectedPlaceInfo by mutableStateOf<PlaceInfoResponse?>(null)
 
     private val api: GoodRoadApi by lazy {
         ApiClient.routeApi
@@ -97,7 +99,8 @@ class MapActivity : AppCompatActivity() {
                     try {
                         val response = api.getPlaceInfo(point.latitude, point.longitude)
                         if (response.isSuccessful && response.body() != null) {
-                            showPlaceInfoBottomSheet(response.body())
+                            selectedPlaceInfo = response.body()
+                            showPlaceInfoBottomSheet = true
                         } else {
                             Toast.makeText(this@MapActivity, "Заведение не найдено", Toast.LENGTH_SHORT).show()
                         }
@@ -105,16 +108,20 @@ class MapActivity : AppCompatActivity() {
                         Toast.makeText(this@MapActivity, "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
+                true
             }
+            true
         }
 
         findViewById<ComposeView>(R.id.composeView).setContent {
             GoodRoadTheme {
-                if (showCoordinatesBottomSheet) {
-                    CoordinatesBottomSheet(
-                        lat = clickedLat,
-                        lon = clickedLon,
-                        onDismiss = { showCoordinatesBottomSheet = false }
+                if (showPlaceInfoBottomSheet && selectedPlaceInfo != null) {
+                    PlaceInfoBottomSheet(
+                        placeInfo = selectedPlaceInfo!!,
+                        onDismiss = {
+                            showPlaceInfoBottomSheet = false
+                            selectedPlaceInfo = null
+                        }
                     )
                 }
             }
@@ -137,7 +144,7 @@ class MapActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        // блокируем возврат назад
+        super.onBackPressed()
     }
 
     private fun addTemporaryMarker(point: LatLng) {
@@ -370,11 +377,6 @@ class MapActivity : AppCompatActivity() {
                     }]
                 }
                 """.trimIndent()
-
-                val source = GeoJsonSource(
-                    "route-source",
-                    geojson
-                )
 
                 val source = GeoJsonSource(sourceId, geojson)
                 style.addSource(source)
