@@ -1,12 +1,29 @@
 package com.example.goodroad.modules.volunteer.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
@@ -21,21 +38,16 @@ fun HelpRequestCreateScreen(
     helpViewModel: VolunteerViewModel,
     onCreated: () -> Unit
 ) {
-
     val isLoading by helpViewModel.isLoading
     val error by helpViewModel.errorMessage
     val success by helpViewModel.successMessage
 
     var routeStart by rememberSaveable { mutableStateOf("") }
     var routeEnd by rememberSaveable { mutableStateOf("") }
-    var meetingDate by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue(""))
-    }
-    var meetingTime by rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue(""))
-    }
+    var meetingDate by rememberSaveable { mutableStateOf("") }
+    var meetingTime by rememberSaveable { mutableStateOf("") }
     var contact by rememberSaveable { mutableStateOf("") }
-    var specialNotes by rememberSaveable { mutableStateOf("") }
+    var socialNickname by rememberSaveable { mutableStateOf("") }
     var comment by rememberSaveable { mutableStateOf("") }
 
     var routeStartError by rememberSaveable { mutableStateOf<String?>(null) }
@@ -46,30 +58,6 @@ fun HelpRequestCreateScreen(
     var commentError by rememberSaveable { mutableStateOf<String?>(null) }
 
     val scrollState = rememberScrollState()
-
-    fun formatDate(input: String): String {
-        val digits = input.filter { it.isDigit() }.take(8)
-        val sb = StringBuilder()
-
-        for (i in digits.indices) {
-            sb.append(digits[i])
-            if (i == 1 || i == 3) sb.append('.')
-        }
-
-        return sb.toString()
-    }
-
-    fun formatTime(input: String): String {
-        val digits = input.filter { it.isDigit() }.take(4)
-        val sb = StringBuilder()
-
-        for (i in digits.indices) {
-            sb.append(digits[i])
-            if (i == 1) sb.append(':')
-        }
-
-        return sb.toString()
-    }
 
     fun validate(): Boolean {
         var valid = true
@@ -84,14 +72,14 @@ fun HelpRequestCreateScreen(
             "Обязательное поле"
         } else null
 
-        meetingDateError = if (meetingDate.text.isBlank()) {
+        meetingDateError = if (meetingDate.length != 8) {
             valid = false
-            "Обязательное поле"
+            "Введите дату полностью"
         } else null
 
-        meetingTimeError = if (meetingTime.text.isBlank()) {
+        meetingTimeError = if (meetingTime.length != 4) {
             valid = false
-            "Обязательное поле"
+            "Введите время полностью"
         } else null
 
         contactError = if (contact.isBlank()) {
@@ -111,14 +99,12 @@ fun HelpRequestCreateScreen(
         modifier = Modifier.fillMaxSize(),
         color = BackgroundLight
     ) {
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(24.dp)
         ) {
-
             UserDecor()
 
             Text(
@@ -162,21 +148,8 @@ fun HelpRequestCreateScreen(
 
             OutlinedTextField(
                 value = meetingDate,
-                onValueChange = { newValue ->
-                    val digits = newValue.text.filter { it.isDigit() }.take(8)
-
-                    val formatted = buildString {
-                        digits.forEachIndexed { index, c ->
-                            append(c)
-                            if (index == 1 || index == 3) append('.')
-                        }
-                    }
-
-                    meetingDate = TextFieldValue(
-                        text = formatted,
-                        selection = TextRange(formatted.length)
-                    )
-
+                onValueChange = { input ->
+                    meetingDate = input.filter { ch -> ch.isDigit() }.take(8)
                     meetingDateError = null
                 },
                 label = { Text("Дата (ДД.ММ.ГГГГ) *") },
@@ -184,28 +157,17 @@ fun HelpRequestCreateScreen(
                 supportingText = { meetingDateError?.let { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
-                singleLine = true
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                visualTransformation = DateVisualTransformation
             )
 
             Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = meetingTime,
-                onValueChange = { newValue ->
-                    val digits = newValue.text.filter { it.isDigit() }.take(4)
-
-                    val formatted = buildString {
-                        digits.forEachIndexed { index, c ->
-                            append(c)
-                            if (index == 1) append(':')
-                        }
-                    }
-
-                    meetingTime = TextFieldValue(
-                        text = formatted,
-                        selection = TextRange(formatted.length)
-                    )
-
+                onValueChange = { input ->
+                    meetingTime = input.filter { ch -> ch.isDigit() }.take(4)
                     meetingTimeError = null
                 },
                 label = { Text("Время (ЧЧ:ММ) *") },
@@ -213,7 +175,9 @@ fun HelpRequestCreateScreen(
                 supportingText = { meetingTimeError?.let { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
-                singleLine = true
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                visualTransformation = TimeVisualTransformation
             )
 
             Spacer(Modifier.height(12.dp))
@@ -237,8 +201,8 @@ fun HelpRequestCreateScreen(
             Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
-                value = specialNotes,
-                onValueChange = { specialNotes = it },
+                value = socialNickname,
+                onValueChange = { socialNickname = it },
                 label = { Text("Telegram / ВК / доп. контакт") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
@@ -283,14 +247,25 @@ fun HelpRequestCreateScreen(
                 text = if (isLoading) "Отправка..." else "Отправить заявку",
                 onClick = {
                     if (!validate()) return@PrimaryButton
+                    val formattedDate = if (meetingDate.length == 8) {
+                        "${meetingDate.substring(0, 2)}-${meetingDate.substring(2, 4)}-${meetingDate.substring(4, 8)}"
+                    } else {
+                        meetingDate
+                    }
+
+                    val formattedTime = if (meetingTime.length == 4) {
+                        "${meetingTime.substring(0, 2)}:${meetingTime.substring(2, 4)}"
+                    } else {
+                        meetingTime
+                    }
 
                     helpViewModel.createRequest(
                         routeStart = routeStart,
                         routeEnd = routeEnd,
-                        meetingDate = meetingDate.text,
-                        meetingTime = meetingTime.text,
+                        meetingDate = formattedDate,
+                        meetingTime = formattedTime,
                         contact = contact,
-                        specialNotes = specialNotes,
+                        socialNickname = socialNickname,
                         comment = comment
                     ) {
                         helpViewModel.clearMessages()
@@ -299,6 +274,74 @@ fun HelpRequestCreateScreen(
                 }
             )
         }
+    }
+}
+
+private object DateVisualTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val digits = text.text.filter { it.isDigit() }.take(8)
+
+        val formatted = buildString {
+            for (i in digits.indices) {
+                append(digits[i])
+                if (i == 1 || i == 3) append('.')
+            }
+        }
+
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                val safeOffset = offset.coerceIn(0, digits.length)
+                return when {
+                    safeOffset <= 2 -> safeOffset
+                    safeOffset <= 4 -> safeOffset + 1
+                    else -> safeOffset + 2
+                }.coerceAtMost(formatted.length)
+            }
+
+            override fun transformedToOriginal(offset: Int): Int {
+                val safeOffset = offset.coerceIn(0, formatted.length)
+                return when {
+                    safeOffset <= 2 -> safeOffset
+                    safeOffset <= 5 -> safeOffset - 1
+                    else -> safeOffset - 2
+                }.coerceIn(0, digits.length)
+            }
+        }
+
+        return TransformedText(AnnotatedString(formatted), offsetMapping)
+    }
+}
+
+private object TimeVisualTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val digits = text.text.filter { it.isDigit() }.take(4)
+
+        val formatted = buildString {
+            for (i in digits.indices) {
+                append(digits[i])
+                if (i == 1) append(':')
+            }
+        }
+
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                val safeOffset = offset.coerceIn(0, digits.length)
+                return when {
+                    safeOffset <= 2 -> safeOffset
+                    else -> safeOffset + 1
+                }.coerceAtMost(formatted.length)
+            }
+
+            override fun transformedToOriginal(offset: Int): Int {
+                val safeOffset = offset.coerceIn(0, formatted.length)
+                return when {
+                    safeOffset <= 2 -> safeOffset
+                    else -> safeOffset - 1
+                }.coerceIn(0, digits.length)
+            }
+        }
+
+        return TransformedText(AnnotatedString(formatted), offsetMapping)
     }
 }
 
