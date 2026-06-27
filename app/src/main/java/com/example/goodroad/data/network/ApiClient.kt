@@ -89,8 +89,8 @@ object ApiClient {
         refreshApi = createRefreshApi()
 
         OkHttpClient.Builder()
-            .addInterceptor(authInterceptor)
             .addInterceptor(logging)
+            .addInterceptor(authInterceptor)
             .authenticator(authenticator)
             .connectTimeout(20, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
