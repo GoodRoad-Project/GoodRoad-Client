@@ -1,11 +1,11 @@
 package com.example.goodroad.modules.auth.data
 
 import android.content.Context
-import android.util.Log
 import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.network.TokenManager
 import retrofit2.HttpException
 import java.io.IOException
+import android.util.Log
 
 class AuthRepository(private val context: Context) {
 
@@ -16,12 +16,16 @@ class AuthRepository(private val context: Context) {
         return try {
             Log.d("AuthRepo", "Login attempt for: $phone")
             val response = api.login(LoginReq(phone, password))
+            Log.d("AuthRepo", "Response received, accessToken: ${response.accessToken?.take(50)}")
 
             response.accessToken?.let { accessToken ->
-                tokenManager.saveTokens(
-                    accessToken = accessToken,
-                    refreshToken = response.refreshToken.orEmpty()
-                )
+                response.refreshToken?.let { refreshToken ->
+                    Log.d("AuthRepo", "Saving tokens...")
+                    tokenManager.saveTokens(accessToken, refreshToken)
+                    Log.d("AuthRepo", "Tokens saved, checking...")
+                    Log.d("AuthRepo", "AccessToken exists: ${tokenManager.getAccessToken() != null}")
+                    Log.d("AuthRepo", "RefreshToken exists: ${tokenManager.getRefreshToken() != null}")
+                } ?: Log.e("AuthRepo", "No refreshToken in response!")
             } ?: Log.e("AuthRepo", "No accessToken in response!")
 
             response
@@ -42,14 +46,11 @@ class AuthRepository(private val context: Context) {
     ): AuthResp {
         return try {
             val response = api.register(RegisterReq(firstName, lastName, phone, password))
-
             response.accessToken?.let { accessToken ->
-                tokenManager.saveTokens(
-                    accessToken = accessToken,
-                    refreshToken = response.refreshToken.orEmpty()
-                )
+                response.refreshToken?.let { refreshToken ->
+                    tokenManager.saveTokens(accessToken, refreshToken)
+                }
             }
-
             response
         } catch (e: HttpException) {
             throw e

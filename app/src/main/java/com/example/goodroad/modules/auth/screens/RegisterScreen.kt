@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.BuildConfig
 import com.example.goodroad.ui.buttons.*
 import com.example.goodroad.ui.AuthFooter
@@ -44,6 +45,7 @@ fun RegisterScreen(
     var phoneWarning by rememberSaveable { mutableStateOf<String?>(null) }
     var errorText by rememberSaveable { mutableStateOf<String?>(null) }
 
+    val viewModel: AuthViewModel = viewModel()
     val registerResult by viewModel.loginResult.observeAsState()
     val error by viewModel.error.observeAsState()
     val loading by viewModel.isLoading.observeAsState(initial = false)
@@ -71,7 +73,8 @@ fun RegisterScreen(
                 val lastNameNormalized = normalizeRequiredCyrillic(lastName)
                 if (lastNameNormalized == null) {
                     lastNameWarning = CYRILLIC_WARNING
-                    errorText = "Фамилия обязательна и должна содержать только кириллицу, пробел и -"
+                    errorText =
+                        "Фамилия обязательна и должна содержать только кириллицу, пробел и -"
                     return@PrimaryButton
                 }
 
