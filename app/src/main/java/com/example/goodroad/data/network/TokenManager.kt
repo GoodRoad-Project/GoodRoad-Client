@@ -28,16 +28,12 @@ class TokenManager(private val context: Context) {
     }
 
     fun saveTokens(accessToken: String, refreshToken: String) {
-        val saved = prefs.edit()
-            .putString("access_token", accessToken)
-            .putString("refresh_token", refreshToken)
-            .commit()
-
-        if (saved) {
-            Log.d("TokenManager", "Tokens saved")
-        } else {
-            Log.e("TokenManager", "Failed to save tokens")
+        prefs.edit().apply {
+            putString("access_token", accessToken)
+            putString("refresh_token", refreshToken)
+            apply()
         }
+        Log.d("TokenManager", "✅ Tokens saved")
     }
 
     fun getAccessToken(): String? = prefs.getString("access_token", null)
@@ -50,12 +46,12 @@ class TokenManager(private val context: Context) {
             remove("refresh_token")
             apply()
         }
-        Log.d("TokenManager", "🗑Tokens cleared")
+        Log.d("TokenManager", "🗑️ Tokens cleared")
     }
 
     fun updateAccessToken(newAccessToken: String) {
         prefs.edit().putString("access_token", newAccessToken).apply()
-        Log.d("TokenManager", " Access token updated")
+        Log.d("TokenManager", "🔄 Access token updated")
     }
 
     fun isLoggedIn(): Boolean = !getAccessToken().isNullOrBlank()
