@@ -1,5 +1,6 @@
 package com.example.goodroad.data.obstacle
 
+import com.example.goodroad.data.obstacle.model.ObstacleCardResp
 import com.example.goodroad.data.obstacle.model.PolicyItem
 import com.example.goodroad.data.obstacle.model.ReplacePolicyReq
 import retrofit2.HttpException
