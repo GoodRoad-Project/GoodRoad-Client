@@ -31,6 +31,7 @@ import com.example.goodroad.validation.normalizeRequiredRussianPhone
 
 @Composable
 fun RegisterScreen(
+    viewModel: AuthViewModel,
     onRegisterSuccess: (String) -> Unit,
     onLogin: () -> Unit
 ) {

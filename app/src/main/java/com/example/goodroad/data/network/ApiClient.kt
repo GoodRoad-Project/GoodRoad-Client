@@ -1,5 +1,6 @@
 package com.example.goodroad.data.network
 
+import android.content.Context
 import com.example.goodroad.BuildConfig
 import com.example.goodroad.modules.moderator.data.ModeratorApi
 import com.example.goodroad.modules.moderationReview.data.ModerationReviewApi
@@ -12,53 +13,90 @@ import retrofit2.converter.gson.*
 import java.time.Instant
 import java.util.concurrent.*
 import com.example.goodroad.modules.auth.data.AuthApi
+import com.example.goodroad.modules.auth.data.UserDto
 import com.example.goodroad.modules.review.data.ReviewApi
 import com.example.goodroad.modules.user.data.UserApi
 import com.example.goodroad.modules.volunteer.data.VolunteerApi
 import com.example.goodroad.modules.moderator.data.VolunteerModerationApi
 import com.example.goodroad.modules.rewards.data.RewardsApi
 import com.example.goodroad.modules.tasks.data.TasksApi
+import retrofit2.http.POST
+import retrofit2.http.Body
 
 object ApiClient {
 
+    private lateinit var tokenManager: TokenManager
+    private lateinit var refreshApi: RefreshApi
+
+    fun init(context: Context) {
+        tokenManager = TokenManager(context.applicationContext)
+    }
+
     private val logging = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
-    }
-
-    private var userPhone: String? = null
-    private var userPassword: String? = null
-
-    fun updateCredentials(phone: String? = null, password: String? = null) {
-        if (!phone.isNullOrBlank()) {
-            userPhone = phone
-        }
-        if (!password.isNullOrBlank()) {
-            userPassword = password
+        level = if (BuildConfig.DEBUG) {
+            HttpLoggingInterceptor.Level.BODY
+        } else {
+            HttpLoggingInterceptor.Level.NONE
         }
     }
 
-    fun clearCredentials() {
-        userPhone = null
-        userPassword = null
-    }
+    private val authInterceptor = Interceptor { chain ->
+        val original = chain.request()
+        val token = tokenManager.getAccessToken()
 
-    private val client: OkHttpClient
-        get() = OkHttpClient.Builder()
-            .addInterceptor(logging)
-            .addInterceptor { chain ->
-                val requestBuilder = chain.request().newBuilder()
-                val phone = userPhone
-                val password = userPassword
-                if (!phone.isNullOrBlank() && !password.isNullOrBlank()) {
-                    val credential = Credentials.basic(phone, password)
-                    requestBuilder.addHeader("Authorization", credential)
-                }
-                chain.proceed(requestBuilder.build())
+        val request = original.newBuilder().apply {
+            if (!token.isNullOrBlank() && !original.url.encodedPath.startsWith("/auth/")) {
+                header("Authorization", "Bearer $token")
             }
+        }.build()
+
+        chain.proceed(request)
+    }
+
+    private val authenticator = object : okhttp3.Authenticator {
+        override fun authenticate(route: Route?, response: okhttp3.Response): Request? {
+            if (response.code != 401) return null
+            if (responseCount(response) >= 2) return null
+
+            val refreshResponse = kotlinx.coroutines.runBlocking {
+                refreshTokens()
+            } ?: return null
+
+            return response.request.newBuilder()
+                .header("Authorization", "Bearer ${refreshResponse.accessToken}")
+                .build()
+        }
+    }
+
+    private fun createRefreshApi(): RefreshApi {
+        val client = OkHttpClient.Builder()
+            .addInterceptor(logging)
             .connectTimeout(20, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
             .writeTimeout(20, TimeUnit.SECONDS)
             .build()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(BuildConfig.GOODROAD_SERVER_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        return retrofit.create(RefreshApi::class.java)
+    }
+
+    private val client: OkHttpClient by lazy {
+        refreshApi = createRefreshApi()
+
+        OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .addInterceptor(authInterceptor)
+            .authenticator(authenticator)
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
+            .build()
+    }
 
     private fun retrofit(): Retrofit {
         val gson = GsonBuilder()
@@ -115,5 +153,57 @@ object ApiClient {
     val tasksApi: TasksApi by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         retrofit().create(TasksApi::class.java)
     }
+
+    fun isLoggedIn(): Boolean = tokenManager.isLoggedIn()
+
+    fun logout() {
+        tokenManager.clearTokens()
+    }
+
+    fun getCurrentToken(): String? = tokenManager.getAccessToken()
+
+    suspend fun refreshTokens(): AuthRefreshResponse? {
+        val refreshToken = tokenManager.getRefreshToken()
+        if (refreshToken.isNullOrBlank()) {
+            tokenManager.clearTokens()
+            return null
+        }
+
+        return try {
+            if (!::refreshApi.isInitialized) {
+                refreshApi = createRefreshApi()
+            }
+
+            val response = refreshApi.refreshToken(RefreshRequest(refreshToken))
+            tokenManager.saveTokens(response.accessToken, response.refreshToken)
+            response
+        } catch (e: Exception) {
+            tokenManager.clearTokens()
+            null
+        }
+    }
+
+    private fun responseCount(response: okhttp3.Response): Int {
+        var result = 1
+        var prior = response.priorResponse
+        while (prior != null) {
+            result++
+            prior = prior.priorResponse
+        }
+        return result
+    }
 }
 
+interface RefreshApi {
+    @POST("auth/refresh")
+    suspend fun refreshToken(@Body request: RefreshRequest): AuthRefreshResponse
+}
+
+data class RefreshRequest(val refreshToken: String)
+
+data class AuthRefreshResponse(
+    val user: UserDto? = null,
+    val accessToken: String,
+    val refreshToken: String,
+    val tokenType: String? = null
+)

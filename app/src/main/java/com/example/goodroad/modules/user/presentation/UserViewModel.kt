@@ -99,12 +99,14 @@ class UserViewModel(
 
                 if (req.phone != null) {
                     user.value = repository.updateCurrentUser(req)
-                    ApiClient.updateCredentials(phone = req.phone)
+                    val updatedUser = repository.updateCurrentUser(req)
+                    user.value = updatedUser
                 }
 
                 if (hasPasswordChange) {
                     repository.changePassword(oldPassword!!, newPassword!!)
-                    ApiClient.updateCredentials(password = newPassword)
+                    successMessage.value = "Пароль изменён. Пожалуйста, войдите заново."
+                    ApiClient.logout()
                 }
 
                 successMessage.value = "Профиль обновлён"
@@ -172,8 +174,7 @@ class UserViewModel(
 
             try {
                 repository.deleteCurrentUser(DeleteAccountReq(password))
-
-                ApiClient.clearCredentials()
+                ApiClient.logout()
                 user.value = null
                 isDeleted = true
 
@@ -188,7 +189,7 @@ class UserViewModel(
     }
 
     fun logout(onSuccess: () -> Unit) {
-        ApiClient.clearCredentials()
+        ApiClient.logout()
         user.value = null
         isDeleted = false
         errorMessage.value = null
