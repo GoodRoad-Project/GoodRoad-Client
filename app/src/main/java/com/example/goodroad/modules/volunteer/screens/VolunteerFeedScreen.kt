@@ -211,18 +211,18 @@ private fun VolunteerRequestCard(
                 color = TextPrimary
             )
 
-            if (item.specialNotes.isNotBlank()) {
+            if (item.socialNickname.isNotBlank()) {
                 Spacer(Modifier.height(10.dp))
 
                 Text(
-                    text = "Дополнительно:",
+                    text = "Telegram / ВК:",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = UrbanBrown
                 )
 
                 Text(
-                    text = item.specialNotes,
+                    text = item.socialNickname,
                     style = MaterialTheme.typography.bodyLarge,
                     color = TextPrimary
                 )

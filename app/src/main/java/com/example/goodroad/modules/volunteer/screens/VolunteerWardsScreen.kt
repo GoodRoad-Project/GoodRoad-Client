@@ -1,9 +1,11 @@
 package com.example.goodroad.modules.volunteer.screens
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +18,7 @@ import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel.Re
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.*
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun VolunteerWardsScreen(
@@ -173,29 +176,25 @@ private fun WardRequestCard(
             Text("Телефон:", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
             Text(item.contact.ifBlank { "Не указан" }, color = TextPrimary)
 
-            if (item.specialNotes.isNotBlank()) {
+            if (item.socialNickname.isNotBlank()) {
                 Spacer(Modifier.height(10.dp))
-                Text("Дополнительно:", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
-                Text(item.specialNotes, color = TextPrimary)
+                Text("Telegram / ВК:", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
+                Text(item.socialNickname, color = TextPrimary)
             }
 
             Spacer(Modifier.height(10.dp))
 
-            Text(
-                text = when (item.status) {
-                    RequestStatus.CANCELLED -> "Заявка отменена"
-                    RequestStatus.COMPLETED -> "Заявка выполнена"
-                    RequestStatus.ACCEPTED -> "Вы приняли заявку на выполнение"
-                    else -> "Активная заявка"
-                },
-                color = when (item.status) {
-                    RequestStatus.CANCELLED -> AlertRed
-                    RequestStatus.COMPLETED -> SafeGreen
-                    RequestStatus.ACCEPTED -> SafeGreen
-                    else -> UrbanBrown
-                },
-                fontWeight = FontWeight.SemiBold
-            )
+            Column {
+                Text(
+                    text = "Статус",
+                    color = UrbanBrown,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Spacer(Modifier.height(4.dp))
+
+                StatusBadgeWards(status = item.status)
+            }
 
             Spacer(Modifier.height(14.dp))
 
@@ -216,5 +215,52 @@ private fun WardRequestCard(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun StatusBadgeWards(status: RequestStatus) {
+    fun statusText(status: RequestStatus): String {
+        return when (status) {
+            RequestStatus.PENDING -> "В обработке"
+            RequestStatus.APPROVED -> "Одобрено"
+            RequestStatus.REJECTED -> "Отклонено"
+            RequestStatus.OPEN -> "Открыта"
+            RequestStatus.ACCEPTED -> "Принята Вами"
+            RequestStatus.CANCELLED -> "Отменена"
+            RequestStatus.COMPLETED -> "Выполнена"
+            RequestStatus.UNKNOWN -> "Неизвестно"
+        }
+    }
+
+    fun statusColor(status: RequestStatus): Color {
+        return when (status) {
+            RequestStatus.PENDING -> Color(0xFFFFA000)
+            RequestStatus.OPEN -> SafeGreen
+            RequestStatus.APPROVED -> SafeGreen
+            RequestStatus.ACCEPTED -> SafeGreen
+            RequestStatus.REJECTED -> AlertRed
+            RequestStatus.CANCELLED -> Color(0xFF757575)
+            RequestStatus.COMPLETED -> Color(0xFF2E7D32)
+            RequestStatus.UNKNOWN -> Color.Gray
+        }
+    }
+
+    val color = statusColor(status)
+
+    Surface(
+        modifier = Modifier.wrapContentWidth(),
+        color = color.copy(alpha = 0.14f),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.5.dp, color)
+    ) {
+        Text(
+            text = statusText(status),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            color = color,
+            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center
+        )
     }
 }

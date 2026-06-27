@@ -14,9 +14,7 @@ import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import retrofit2.HttpException
 import java.io.File
-import java.io.IOException
 
 class VolunteerViewModel(
     private val repository: VolunteerRepository
@@ -39,7 +37,7 @@ class VolunteerViewModel(
         val routeEnd: String,
         val dateTime: String,
         val contact: String,
-        val specialNotes: String,
+        val socialNickname: String,
         val comment: String,
         val status: RequestStatus = RequestStatus.OPEN
     )
@@ -202,7 +200,7 @@ class VolunteerViewModel(
         meetingDate: String,
         meetingTime: String,
         contact: String,
-        specialNotes: String,
+        socialNickname: String,
         comment: String,
         onSuccess: () -> Unit
     ) {
@@ -218,7 +216,7 @@ class VolunteerViewModel(
                     date = meetingDate.replace(".", "-"),
                     time = meetingTime,
                     phone = contact,
-                    socialNickname = specialNotes.takeIf { it.isNotBlank() },
+                    socialNickname = socialNickname.takeIf { it.isNotBlank() },
                     comment = comment
                 )
 
@@ -386,7 +384,7 @@ class VolunteerViewModel(
             routeEnd = routeEnd,
             dateTime = dateTime,
             contact = contact,
-            specialNotes = specialNotes.ifBlank { "—" },
+            socialNickname = socialNickname.ifBlank { "—" },
             comment = comment.ifBlank { "—" },
             status = status.toUiStatus()
         )
