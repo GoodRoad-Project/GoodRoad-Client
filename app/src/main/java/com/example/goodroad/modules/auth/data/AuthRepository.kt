@@ -3,27 +3,19 @@ package com.example.goodroad.modules.auth.data
 import android.content.Context
 import android.util.Log
 import com.example.goodroad.data.network.ApiClient
-import com.example.goodroad.data.network.TokenManager
 import retrofit2.HttpException
 import java.io.IOException
 
 class AuthRepository(private val context: Context) {
 
     private val api = ApiClient.authApi
-    private val tokenManager = TokenManager(context)
 
     suspend fun loginUser(phone: String, password: String): AuthResp {
         return try {
             Log.d("AuthRepo", "Login attempt for: $phone")
             val response = api.login(LoginReq(phone, password))
 
-            response.accessToken?.let { accessToken ->
-                tokenManager.saveTokens(
-                    accessToken = accessToken,
-                    refreshToken = response.refreshToken.orEmpty()
-                )
-            } ?: Log.e("AuthRepo", "No accessToken in response!")
-
+            saveTokensFrom(response)
             response
         } catch (e: HttpException) {
             Log.e("AuthRepo", "HTTP error: ${e.code()} - ${e.message()}")
@@ -43,19 +35,26 @@ class AuthRepository(private val context: Context) {
         return try {
             val response = api.register(RegisterReq(firstName, lastName, phone, password))
 
-            response.accessToken?.let { accessToken ->
-                tokenManager.saveTokens(
-                    accessToken = accessToken,
-                    refreshToken = response.refreshToken.orEmpty()
-                )
-            }
-
+            saveTokensFrom(response)
             response
         } catch (e: HttpException) {
             throw e
         } catch (e: IOException) {
             throw IOException()
         }
+    }
+
+    private fun saveTokensFrom(response: AuthResp) {
+        val accessToken = response.accessToken
+        if (accessToken.isNullOrBlank()) {
+            Log.e("AuthRepo", "No accessToken in auth response")
+            throw IllegalStateException("Сервер не вернул токен авторизации")
+        }
+
+        ApiClient.saveTokens(
+            accessToken = accessToken,
+            refreshToken = response.refreshToken.orEmpty()
+        )
     }
 
     suspend fun recoverPassword(

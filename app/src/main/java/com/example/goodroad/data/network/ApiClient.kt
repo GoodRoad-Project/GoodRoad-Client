@@ -156,6 +156,10 @@ object ApiClient {
 
     fun isLoggedIn(): Boolean = tokenManager.isLoggedIn()
 
+    fun saveTokens(accessToken: String, refreshToken: String) {
+        tokenManager.saveTokens(accessToken, refreshToken)
+    }
+
     fun logout() {
         tokenManager.clearTokens()
     }
