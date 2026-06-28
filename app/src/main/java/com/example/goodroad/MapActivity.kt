@@ -82,6 +82,11 @@ class MapActivity : AppCompatActivity() {
         mapView = findViewById(R.id.mapView)
         mapView.onCreate(savedInstanceState)
 
+        mapView.isClickable = true
+        mapView.isFocusable = true
+        mapView.isFocusableInTouchMode = true
+        mapView.requestFocus()
+
         addressEditText = findViewById(R.id.addressEditText)
         setDestinationButton = findViewById(R.id.setDestinationButton)
 
