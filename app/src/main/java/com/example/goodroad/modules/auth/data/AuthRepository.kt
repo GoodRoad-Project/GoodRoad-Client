@@ -7,24 +7,24 @@ import retrofit2.HttpException
 import java.io.IOException
 import android.util.Log
 
-class AuthRepository(private val context: Context) {
-
-    private val api = ApiClient.authApi
-    private val tokenManager = TokenManager(context)
-
+class AuthRepository(
+    context: Context,
+    private val api: AuthApi = ApiClient.authApi,
+    private val tokenManager: TokenManager = TokenManager(context)
+) {
     suspend fun loginUser(phone: String, password: String): AuthResp {
         return try {
-            Log.d("AuthRepo", "Login attempt for: $phone")
+            //Log.d("AuthRepo", "Login attempt for: $phone")
             val response = api.login(LoginReq(phone, password))
-            Log.d("AuthRepo", "Response received, accessToken: ${response.accessToken?.take(50)}")
+            //Log.d("AuthRepo", "Response received, accessToken: ${response.accessToken?.take(50)}")
 
             response.accessToken?.let { accessToken ->
                 response.refreshToken?.let { refreshToken ->
-                    Log.d("AuthRepo", "Saving tokens...")
+                    //Log.d("AuthRepo", "Saving tokens...")
                     tokenManager.saveTokens(accessToken, refreshToken)
-                    Log.d("AuthRepo", "Tokens saved, checking...")
-                    Log.d("AuthRepo", "AccessToken exists: ${tokenManager.getAccessToken() != null}")
-                    Log.d("AuthRepo", "RefreshToken exists: ${tokenManager.getRefreshToken() != null}")
+                    //Log.d("AuthRepo", "Tokens saved, checking...")
+                    //Log.d("AuthRepo", "AccessToken exists: ${tokenManager.getAccessToken() != null}")
+                    //Log.d("AuthRepo", "RefreshToken exists: ${tokenManager.getRefreshToken() != null}")
                 } ?: Log.e("AuthRepo", "No refreshToken in response!")
             } ?: Log.e("AuthRepo", "No accessToken in response!")
 
