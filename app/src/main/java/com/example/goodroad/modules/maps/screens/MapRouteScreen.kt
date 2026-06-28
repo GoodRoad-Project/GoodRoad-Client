@@ -20,12 +20,15 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.data.network.ApiClient
 import com.example.goodroad.data.network.GoodRoadApi
 import com.example.goodroad.data.network.location.LocationTracker
 import com.example.goodroad.data.network.route.RouteRequest
 import com.example.goodroad.data.network.route.RouteResponse
 import com.example.goodroad.data.network.utils.decodePoints
+import com.example.goodroad.modules.maps.presentation.MapViewModel
+import com.example.goodroad.modules.maps.presentation.MapViewModelFactory
 import com.example.goodroad.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,6 +42,10 @@ import org.maplibre.android.maps.Style
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.android.style.sources.GeoJsonSource
+import com.example.goodroad.data.obstacle.ObstacleRepository
+import com.example.goodroad.modules.maps.services.MapService
+import com.example.goodroad.ui.map.PlaceInfoBottomSheet
+import java.util.Locale
 
 @Composable
 fun MapRouteScreen(
@@ -53,29 +60,43 @@ fun MapRouteScreen(
     MapLibre.getInstance(context)
 
     val locationTracker = remember { LocationTracker(context) }
-    val api: GoodRoadApi = remember { ApiClient.routeApi }
+    val obstacleRepository = remember {
+        ObstacleRepository(ApiClient.obstacleApi)
+    }
+
+    val viewModel: MapViewModel = viewModel(
+        factory = MapViewModelFactory(
+            locationTracker = locationTracker,
+            obstacleRepository = obstacleRepository
+        )
+    )
+
+    val uiState by viewModel.uiState.collectAsState()
+    val routes by viewModel.routes.collectAsState()
+    val userLocation by viewModel.userLocation.collectAsState()
+    val selectedPlaceInfo by viewModel.selectedPlaceInfo.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val viewModelMessage by viewModel.message.collectAsState()
 
     var address by rememberSaveable { mutableStateOf("") }
-
-    var startLat by remember { mutableStateOf(0.0) }
-    var startLon by remember { mutableStateOf(0.0) }
 
     var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
     var styleReady by remember { mutableStateOf(false) }
 
-    var message by remember { mutableStateOf<String?>(null) }
-    var isLoadingMessage by remember { mutableStateOf(false) }
+    //var message by remember { mutableStateOf<String?>(null) }
+    //var isLoadingMessage by remember { mutableStateOf(false) }
 
-    lateinit var loadUserLocation: () -> Unit
+    var showPlaceInfo by remember { mutableStateOf(false) }
+    val mapService = remember { MapService() }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
 
         if (granted) {
-            loadUserLocation()
+            viewModel.getUserLocation()
         } else {
-            message = "Нет доступа к геолокации"
+            //message = "Нет доступа к геолокации"
         }
     }
 
@@ -114,23 +135,6 @@ fun MapRouteScreen(
         }
     }
 
-    loadUserLocation = {
-
-        scope.launch {
-
-            val loc = locationTracker.getCurrentLocation()
-
-            if (loc != null) {
-
-                startLat = loc.latitude
-                startLon = loc.longitude
-
-            } else {
-                message = "Не удалось определить местоположение"
-            }
-        }
-    }
-
     LaunchedEffect(mapView) {
 
         mapView.getMapAsync { map ->
@@ -145,13 +149,19 @@ fun MapRouteScreen(
 
                 styleReady = true
 
+                map.addOnMapClickListener { point ->
+                    viewModel.getPlaceInfo(point.latitude, point.longitude)
+                    true
+                }
+
                 val hasPermission = ContextCompat.checkSelfPermission(
                     context,
                     Manifest.permission.ACCESS_FINE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
 
                 if (hasPermission) {
-                    loadUserLocation()
+                    //loadUserLocation()
+                    viewModel.getUserLocation()
                 } else {
                     permissionLauncher.launch(
                         Manifest.permission.ACCESS_FINE_LOCATION
@@ -161,124 +171,86 @@ fun MapRouteScreen(
         }
     }
 
-    fun drawRoute(response: RouteResponse) {
-
-        val path = response.paths.firstOrNull() ?: return
-
-        val points = decodePoints(path.points)
-
-        if (points.isEmpty()) return
-
-        val latLngs = points.map {
-            LatLng(it.latitude, it.longitude)
-        }
-
-        val map = mapLibreMap ?: return
-
-        map.getStyle { style ->
-
-            style.removeLayer("route-layer")
-            style.removeSource("route-source")
-
-            val coords = latLngs.joinToString(", ") {
-                "[${it.longitude}, ${it.latitude}]"
+    LaunchedEffect(userLocation) {
+        userLocation?.let { location ->
+            mapLibreMap?.let { map ->
+                mapService.addMarker(
+                    map = map,
+                    point = LatLng(location.latitude, location.longitude),
+                    markerId = "user-marker",
+                    color = "#4F87C9",
+                    radius = 8f
+                )
             }
-
-            val geojson = """
-                {
-                  "type": "FeatureCollection",
-                  "features": [{
-                    "type": "Feature",
-                    "geometry": {
-                      "type": "LineString",
-                      "coordinates": [$coords]
-                    }
-                  }]
-                }
-            """.trimIndent()
-
-            style.addSource(
-                GeoJsonSource("route-source", geojson)
-            )
-
-            style.addLayer(
-                LineLayer("route-layer", "route-source").apply {
-
-                    setProperties(
-                        PropertyFactory.lineColor("#887058"),
-                        PropertyFactory.lineWidth(6f),
-                        PropertyFactory.lineOpacity(0.9f)
-                    )
-                }
-            )
-
-            map.animateCamera(
-                CameraUpdateFactory.newLatLngZoom(
-                    latLngs.first(),
-                    14.0
-                ),
-                1000
-            )
-
-            message = "Маршрут построен"
-            isLoadingMessage = false
         }
     }
 
-    fun buildRoute(endLat: Double, endLon: Double) {
+    LaunchedEffect(routes) {
+        routes?.let { routeData ->
+            mapLibreMap?.let { map ->
+                mapService.clearRouteLayers(map)
 
-        scope.launch {
+                routeData.fast?.let { path ->
+                    val points = decodePoints(path.points).map { LatLng(it.latitude, it.longitude) }
+                    mapService.drawRouteWithSegments(map, points, path.obstacles, "fast")
+                }
 
-            if (!styleReady || mapLibreMap == null) return@launch
-            if (startLat == 0.0 || startLon == 0.0) return@launch
+                routeData.balanced?.let { path ->
+                    val points = decodePoints(path.points).map { LatLng(it.latitude, it.longitude) }
+                    mapService.drawRouteWithSegments(map, points, path.obstacles, "balanced")
+                }
 
-            val policies = ApiClient
-                .obstacleApi
-                .getUserObstaclePolicies()
-                .body()
-                ?: return@launch
+                routeData.safe?.let { path ->
+                    val points = decodePoints(path.points).map { LatLng(it.latitude, it.longitude) }
+                    mapService.drawRouteWithSegments(map, points, path.obstacles, "safe")
+                }
 
-            message = "Поиск маршрута..."
-            isLoadingMessage = true
-
-            val request = RouteRequest(
-                start = "$startLat,$startLon",
-                end = "$endLat,$endLon",
-
-                avoidStairs = policies.any {
-                    it.obstacleType == "STAIRS" && it.selected
-                },
-
-                maxCurbHeight = policies
-                    .find { it.obstacleType == "CURB" }
-                    ?.maxAllowedSeverity
-                    ?.toInt(),
-
-                maxSlopeAngle = policies
-                    .find { it.obstacleType == "ROAD_SLOPE" }
-                    ?.maxAllowedSeverity
-                    ?.toDouble(),
-
-                avoidBadRoad = policies.any {
-                    it.obstacleType == "POTHOLES" && it.selected
-                },
-
-                avoidSurfaceTypes = policies
-                    .filter { it.selected }
-                    .map { it.obstacleType }
-            )
-
-            try {
-
-                val response = api.getRoute(request)
-
-                drawRoute(response)
-
-            } catch (e: Exception) {
-
-                message = e.message ?: "Ошибка построения маршрута"
-                isLoadingMessage = false
+                routeData.fast?.let { path ->
+                    val points = decodePoints(path.points)
+                    if (points.isNotEmpty()) {
+                        map.animateCamera(
+                            CameraUpdateFactory.newLatLngZoom(
+                                LatLng(points.first().latitude, points.first().longitude),
+                                14.0
+                            ),
+                            1000
+                        )
+                    }
+                }
             }
+        }
+    }
+
+    LaunchedEffect(selectedPlaceInfo) {
+        selectedPlaceInfo?.let { placeInfo ->
+            showPlaceInfo = true
+        }
+    }
+
+    fun searchAddressAndBuildRoute() {
+        scope.launch {
+            if (address.isBlank()) {
+                return@launch
+            }
+
+            val addresses = withContext(Dispatchers.IO) {
+                try {
+                    Geocoder(context, Locale.getDefault())
+                        .getFromLocationName(address, 1)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+
+            if (addresses.isNullOrEmpty()) {
+                return@launch
+            }
+
+            val destination = addresses[0]
+            viewModel.buildRoute(
+                destination.latitude,
+                destination.longitude
+            )
         }
     }
 
@@ -363,100 +335,72 @@ fun MapRouteScreen(
                 )
 
                 Button(
-                    onClick = {
-
-                        scope.launch {
-
-                            message = "Поиск адреса..."
-                            isLoadingMessage = true
-
-                            val geo = withContext(Dispatchers.IO) {
-
-                                try {
-
-                                    Geocoder(context)
-                                        .getFromLocationName(address, 1)
-
-                                } catch (e: Exception) {
-                                    null
-                                }
-                            }
-
-                            val dest = geo?.firstOrNull()
-
-                            if (dest == null) {
-
-                                message = "Адрес не найден"
-                                isLoadingMessage = false
-
-                                return@launch
-                            }
-
-                            buildRoute(
-                                dest.latitude,
-                                dest.longitude
-                            )
-                        }
-                    },
-
+                    onClick = { searchAddressAndBuildRoute() },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = UrbanBrown,
                         contentColor = WhiteSoft
                     ),
-
                     shape = RoundedCornerShape(16.dp),
-
                     contentPadding = PaddingValues(
                         horizontal = 18.dp,
                         vertical = 14.dp
-                    )
+                    ),
+                    enabled = !isLoading
                 ) {
-
-                    Text("Маршрут")
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = WhiteSoft,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Маршрут")
+                    }
                 }
             }
         }
 
-        if (message != null) {
-
+        if (viewModelMessage != null && viewModelMessage!!.isNotEmpty()) {
             Surface(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = 100.dp),
-
                 color = SurfaceWarm,
-
                 shadowElevation = 8.dp,
-
                 shape = RoundedCornerShape(18.dp)
             ) {
-
                 Row(
                     modifier = Modifier.padding(
                         horizontal = 14.dp,
                         vertical = 12.dp
                     ),
-
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
-                    if (isLoadingMessage) {
-
+                    if (isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(18.dp),
                             color = UrbanBrown,
                             strokeWidth = 2.dp
                         )
-
                         Spacer(Modifier.width(8.dp))
                     }
 
                     Text(
-                        text = message ?: "",
+                        text = viewModelMessage ?: "",
                         color = TextPrimary
                     )
                 }
             }
+        }
+
+        if (showPlaceInfo && selectedPlaceInfo != null) {
+            PlaceInfoBottomSheet(
+                placeInfo = selectedPlaceInfo!!,
+                onDismiss = {
+                    showPlaceInfo = false
+                    viewModel.clearSelectedPlace()
+                }
+            )
         }
     }
 }
