@@ -149,7 +149,10 @@ class MapViewModel(
             try {
                 val response = api.getPlaceInfo(lat, lon)
                 if (response.isSuccessful && response.body() != null) {
-                    _selectedPlaceInfo.value = response.body()
+                    val placeInfo = response.body()
+                    placeInfo?.latitude = lat
+                    placeInfo?.longitude = lon
+                    _selectedPlaceInfo.value = placeInfo
                 } else {
                     _message.value = "Заведение не найдено"
                 }

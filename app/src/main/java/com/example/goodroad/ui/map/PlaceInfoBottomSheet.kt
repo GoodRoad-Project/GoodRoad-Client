@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
 import com.example.goodroad.data.place.PlaceInfoResponse
 import com.example.goodroad.ui.theme.*
+import androidx.compose.material.icons.filled.Add
 
 private val obstacleTypeMap = mapOf(
     "STAIRS" to "Лестницы",
@@ -39,7 +40,8 @@ private fun getObstacleTypeRussian(englishType: String?): String {
 @Composable
 fun PlaceInfoBottomSheet(
     placeInfo: PlaceInfoResponse,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onAddReview: (String, Double, Double) -> Unit
 ) {
     val reviews = placeInfo.reviews
     var currentIndex by remember { mutableStateOf(0) }
@@ -215,6 +217,39 @@ fun PlaceInfoBottomSheet(
                 }
             } else {
                 Text("Нет отзывов", color = UrbanBrown)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    android.util.Log.d("PlaceInfoBottomSheet", "🔴 КНОПКА НАЖАТА!")
+                    android.util.Log.d("PlaceInfoBottomSheet", "placeName: ${placeInfo.placeName}")
+                    android.util.Log.d("PlaceInfoBottomSheet", "latitude: ${placeInfo.latitude}")
+                    android.util.Log.d("PlaceInfoBottomSheet", "longitude: ${placeInfo.longitude}")
+
+                    onAddReview(
+                        placeInfo.placeName ?: "",
+                        placeInfo.latitude ?: 0.0,
+                        placeInfo.longitude ?: 0.0
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = UrbanBrown,
+                    contentColor = WhiteSoft
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Добавить отзыв")
             }
 
             Spacer(modifier = Modifier.height(24.dp))

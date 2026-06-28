@@ -121,19 +121,19 @@ class MapActivity : AppCompatActivity() {
             true
         }
 
-        findViewById<ComposeView>(R.id.composeView).setContent {
-            GoodRoadTheme {
-                if (showPlaceInfoBottomSheet && selectedPlaceInfo != null) {
-                    PlaceInfoBottomSheet(
-                        placeInfo = selectedPlaceInfo!!,
-                        onDismiss = {
-                            showPlaceInfoBottomSheet = false
-                            selectedPlaceInfo = null
-                        }
-                    )
-                }
-            }
-        }
+//        findViewById<ComposeView>(R.id.composeView).setContent {
+//            GoodRoadTheme {
+//                if (showPlaceInfoBottomSheet && selectedPlaceInfo != null) {
+//                    PlaceInfoBottomSheet(
+//                        placeInfo = selectedPlaceInfo!!,
+//                        onDismiss = {
+//                            showPlaceInfoBottomSheet = false
+//                            selectedPlaceInfo = null
+//                        },
+//                    )
+//                }
+//            }
+//        }
 
         setDestinationButton.setOnClickListener {
 

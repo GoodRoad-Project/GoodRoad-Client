@@ -50,7 +50,8 @@ import java.util.Locale
 @Composable
 fun MapRouteScreen(
     modifier: Modifier = Modifier,
-    onBack: (() -> Unit)? = null
+    onBack: (() -> Unit)? = null,
+    onNavigateToReview: (String, Double, Double) -> Unit = { _, _, _ -> }
 ) {
 
     val context = LocalContext.current
@@ -394,13 +395,25 @@ fun MapRouteScreen(
         }
 
         if (showPlaceInfo && selectedPlaceInfo != null) {
-            PlaceInfoBottomSheet(
-                placeInfo = selectedPlaceInfo!!,
-                onDismiss = {
-                    showPlaceInfo = false
-                    viewModel.clearSelectedPlace()
-                }
-            )
+            selectedPlaceInfo?.let { placeInfo ->
+                PlaceInfoBottomSheet(
+                    placeInfo = placeInfo,
+                    onDismiss = {
+                        showPlaceInfo = false
+                        viewModel.clearSelectedPlace()
+                    },
+                    onAddReview = { placeName, lat, lon ->
+                        android.util.Log.d("MapRouteScreen", "🔴 onAddReview ВЫЗВАН!")
+                        android.util.Log.d("MapRouteScreen", "placeName: $placeName, lat: $lat, lon: $lon")
+
+                        showPlaceInfo = false
+                        viewModel.clearSelectedPlace()
+                        android.util.Log.d("MapRouteScreen", "🔴 ВЫЗЫВАЕМ onNavigateToReview")
+                        onNavigateToReview(placeName, lat, lon)
+                        android.util.Log.d("MapRouteScreen", "🔴 onNavigateToReview ВЫЗВАН")
+                    }
+                )
+            }
         }
     }
 }
