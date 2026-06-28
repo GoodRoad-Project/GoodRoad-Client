@@ -28,7 +28,7 @@ class MapService {
             }
 
             val defaultColor = when (routeType) {
-                "fast" -> "#4F87C9"      // Синий
+                "fast" -> "#244975"      // Синий
                 "balanced" -> "#8B7AC6"  // Фиолетовый
                 "safe" -> "#6FAE8A"      // Зеленый
                 else -> "#887058"        // Коричневый (дефолт)
@@ -84,7 +84,7 @@ class MapService {
                 segmentCenterLat, segmentCenterLon,
                 obstacle.latitude, obstacle.longitude
             )
-            distance < 50.0 // Радиус поиска 50 метров
+            distance < 10.0 // Радиус поиска 50 метров
         }
 
         return when (routeType) {
