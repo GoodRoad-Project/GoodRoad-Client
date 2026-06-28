@@ -154,6 +154,15 @@ class MapViewModel(
                     placeInfo?.longitude = lon
                     _selectedPlaceInfo.value = placeInfo
                 } else {
+                    val emptyPlaceInfo = PlaceInfoResponse(
+                        placeName = null,
+                        address = null,
+                        averageSeverity = null,
+                        reviews = emptyList(),
+                        latitude = lat,
+                        longitude = lon
+                    )
+                    _selectedPlaceInfo.value = emptyPlaceInfo
                     _message.value = "Заведение не найдено"
                 }
             } catch (e: Exception) {
