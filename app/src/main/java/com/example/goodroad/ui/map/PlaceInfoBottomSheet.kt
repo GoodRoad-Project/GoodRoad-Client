@@ -22,6 +22,19 @@ import coil.compose.AsyncImage
 import com.example.goodroad.data.place.PlaceInfoResponse
 import com.example.goodroad.ui.theme.*
 
+private val obstacleTypeMap = mapOf(
+    "STAIRS" to "Лестницы",
+    "CURB" to "Поребрики",
+    "ROAD_SLOPE" to "Уклоны дороги",
+    "POTHOLES" to "Ямы",
+    "SAND" to "Песок",
+    "GRAVEL" to "Гравий"
+)
+
+private fun getObstacleTypeRussian(englishType: String?): String {
+    return englishType?.let { obstacleTypeMap[it] } ?: (englishType ?: "Неизвестно")
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaceInfoBottomSheet(
@@ -49,7 +62,7 @@ fun PlaceInfoBottomSheet(
             ) {
                 Column {
                     Text(
-                        text = "📍 ${placeInfo.placeName}",
+                        text = "📍 ${placeInfo.placeName ?: "Без названия"}",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = UrbanBrown
@@ -68,8 +81,14 @@ fun PlaceInfoBottomSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            val averageRating = if (reviews != null && reviews.isNotEmpty()) {
+                reviews.mapNotNull { it.rating }.average()
+            } else {
+                0.0
+            }
+
             Text(
-                text = "⭐ Средняя оценка: ${String.format("%.1f", placeInfo.averageSeverity)}",
+                text = "Средняя оценка: ${String.format("%.1f", averageRating)}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = TextPrimary
@@ -101,28 +120,18 @@ fun PlaceInfoBottomSheet(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = review.comment,
+                            text = review.comment ?: "Без комментария",
                             fontSize = 14.sp,
                             color = TextPrimary
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        review.obstacles.forEach { obstacle ->
-                            Row {
+                        val obstacles = review.obstacles
+                        if (obstacles != null && obstacles.isNotEmpty()) {
+                            obstacles.forEach { obstacle ->
                                 Text(
-                                    text = when (obstacle.obstacleType) {
-                                        "STAIRS" -> "🪜 "
-                                        "CURB" -> "📏 "
-                                        "ROAD_SLOPE" -> "⛰️ "
-                                        "POTHOLES" -> "🕳️ "
-                                        else -> "⚠️ "
-                                    },
-                                    fontSize = 13.sp,
-                                    color = UrbanBrown
-                                )
-                                Text(
-                                    text = "${obstacle.obstacleType}: тяжесть ${obstacle.severity}",
+                                    text = "${getObstacleTypeRussian(obstacle.obstacleType)}: тяжесть ${obstacle.severity ?: 0}",
                                     fontSize = 13.sp,
                                     color = UrbanBrown
                                 )
@@ -131,31 +140,43 @@ fun PlaceInfoBottomSheet(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        if (review.photoUrls.isNotEmpty()) {
+                        val photoUrls = review.photoUrls
+                        if (photoUrls != null && photoUrls.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(12.dp))
-
                             LazyRow(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                items(review.photoUrls) { photoUrl ->
-                                    AsyncImage(
-                                        model = photoUrl,
-                                        contentDescription = "Фото",
-                                        modifier = Modifier
-                                            .width(80.dp)
-                                            .height(80.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(Color.LightGray),
-                                        contentScale = ContentScale.Crop,
-                                        //placeholder = painterResource(R.drawable.placeholder_image) // мб стоит сделать картинку заглушку
-                                    )
+                                items(photoUrls) { photoUrl ->
+                                    if (photoUrl != null && photoUrl.isNotBlank()) {
+                                        AsyncImage(
+                                            model = photoUrl,
+                                            contentDescription = "Фото",
+                                            modifier = Modifier
+                                                .width(80.dp)
+                                                .height(80.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Color.LightGray),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    } else {
+                                        Box(
+                                            modifier = Modifier
+                                                .width(80.dp)
+                                                .height(80.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Color.LightGray),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text("📷", fontSize = 24.sp)
+                                        }
+                                    }
                                 }
                             }
                         }
 
                         Text(
-                            text = "⭐ Оценка: ${review.rating}",
+                            text = "⭐ Оценка: ${review.rating ?: 0}",
                             fontSize = 12.sp,
                             color = UrbanBrown.copy(alpha = 0.7f)
                         )
