@@ -6,6 +6,7 @@ import android.location.Geocoder
 import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
@@ -405,7 +407,10 @@ fun MapRouteScreen(
                     },
                     onAddReview = { placeName, lat, lon ->
                         android.util.Log.d("MapRouteScreen", "🔴 onAddReview ВЫЗВАН!")
-                        android.util.Log.d("MapRouteScreen", "placeName: $placeName, lat: $lat, lon: $lon")
+                        android.util.Log.d(
+                            "MapRouteScreen",
+                            "placeName: $placeName, lat: $lat, lon: $lon"
+                        )
 
                         showPlaceInfo = false
                         viewModel.clearSelectedPlace()
@@ -414,6 +419,83 @@ fun MapRouteScreen(
                         android.util.Log.d("MapRouteScreen", "🔴 onNavigateToReview ВЫЗВАН")
                     }
                 )
+            }
+        }
+
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(12.dp),
+            color = SurfaceWarm.copy(alpha = 0.92f),
+            shadowElevation = 8.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .background(Color(0xFF4F87C9), RoundedCornerShape(4.dp))
+                        )
+                        Text(
+                            text = "Быстрый",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextPrimary
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .background(Color(0xFF8B7AC6), RoundedCornerShape(4.dp))
+                        )
+                        Text(
+                            text = "Сбалансированный",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextPrimary
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .background(Color(0xFF6FAE8A), RoundedCornerShape(4.dp))
+                        )
+                        Text(
+                            text = "Безопасный",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextPrimary
+                        )
+                    }
+                }
             }
         }
     }

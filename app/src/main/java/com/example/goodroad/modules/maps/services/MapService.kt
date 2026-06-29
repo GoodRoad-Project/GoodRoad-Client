@@ -84,7 +84,7 @@ class MapService {
                 segmentCenterLat, segmentCenterLon,
                 obstacle.latitude, obstacle.longitude
             )
-            distance < 10.0 // Радиус поиска 50 метров
+            distance < 10.0 // Радиус поиска 10 метров
         }
 
         return when (routeType) {
