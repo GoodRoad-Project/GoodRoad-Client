@@ -40,6 +40,8 @@ data class ObstacleResponse(
 
     val type: String,                        // STAIRS, CURB и т.д.
 
+    val severity: Short?,
+
     val details: ObstacleDetailsResponse? = null
 )
 

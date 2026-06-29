@@ -79,7 +79,8 @@ enum class OverlayScreen {
 @Composable
 fun UserNav(
     navController: NavHostController,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onNavigateToReview: (String, Double, Double) -> Unit = { _, _, _ -> }
 ) {
 
     val userApi = ApiClient.userApi
@@ -194,7 +195,9 @@ fun UserNav(
 
                 when (currentTab) {
 
-                    BottomTab.MAP -> MapRouteScreen()
+                    BottomTab.MAP -> MapRouteScreen(
+                        onNavigateToReview = onNavigateToReview
+                    )
 
                     BottomTab.REVIEWS -> UserReviewsScreen(
                         reviewsViewModel = reviewsViewModel,
