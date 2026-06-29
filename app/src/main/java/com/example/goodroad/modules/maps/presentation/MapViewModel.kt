@@ -1,5 +1,7 @@
 package com.example.goodroad.modules.maps.presentation
 
+import android.content.Context
+import android.location.Geocoder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.goodroad.data.network.ApiClient
@@ -11,12 +13,16 @@ import com.example.goodroad.data.network.route.RouteRequest
 import com.example.goodroad.data.obstacle.ObstacleRepository
 import com.example.goodroad.data.place.PlaceInfoResponse
 import com.example.goodroad.domain.model.LocationPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Locale
 
 class MapViewModel(
+    private val context: Context,
     private val locationTracker: LocationTracker,
     private val obstacleRepository: ObstacleRepository,
     private val api: GoodRoadApi = ApiClient.routeApi
@@ -144,26 +150,63 @@ class MapViewModel(
         }
     }
 
+    private suspend fun getAddressFromCoordinates(
+        lat: Double,
+        lon: Double
+    ): String? = withContext(Dispatchers.IO) {
+        try {
+            val ctx = context ?: return@withContext null
+            val geocoder = Geocoder(ctx, Locale("ru"))
+            val addresses = geocoder.getFromLocation(lat, lon, 1)
+
+            if (!addresses.isNullOrEmpty()) {
+                val address = addresses[0]
+                val parts = listOf(
+                    address.countryName,
+                    address.adminArea,
+                    address.locality,
+                    address.thoroughfare,
+                    address.subThoroughfare
+                ).filter { !it.isNullOrBlank() }
+
+                if (parts.isNotEmpty()) {
+                    parts.joinToString(", ")
+                } else {
+                    null
+                }
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
     fun getPlaceInfo(lat: Double, lon: Double) {
         viewModelScope.launch {
             try {
+                val address = getAddressFromCoordinates(lat, lon)
                 val response = api.getPlaceInfo(lat, lon)
                 if (response.isSuccessful && response.body() != null) {
                     val placeInfo = response.body()
                     placeInfo?.latitude = lat
                     placeInfo?.longitude = lon
+                    if (placeInfo?.address.isNullOrBlank()) {
+                        placeInfo?.address = address
+                    }
                     _selectedPlaceInfo.value = placeInfo
                 } else {
                     val emptyPlaceInfo = PlaceInfoResponse(
                         placeName = null,
-                        address = null,
+                        address = address ?: "Место на карте",
                         averageSeverity = null,
                         reviews = emptyList(),
                         latitude = lat,
                         longitude = lon
                     )
                     _selectedPlaceInfo.value = emptyPlaceInfo
-                    _message.value = "Заведение не найдено"
+                    _message.value = null
                 }
             } catch (e: Exception) {
                 _message.value = "Ошибка: ${e.message}"

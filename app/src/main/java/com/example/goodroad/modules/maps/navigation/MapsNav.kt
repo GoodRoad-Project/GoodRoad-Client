@@ -47,6 +47,7 @@ fun MapsNav(
 
     val mapViewModel: MapViewModel = viewModel(
         factory = MapViewModelFactory(
+            context = context,
             locationTracker = locationTracker,
             obstacleRepository = obstacleRepository
         )

@@ -67,6 +67,7 @@ fun MapRouteScreen(
 
     val viewModel: MapViewModel = viewModel(
         factory = MapViewModelFactory(
+            context = context,
             locationTracker = locationTracker,
             obstacleRepository = obstacleRepository
         )

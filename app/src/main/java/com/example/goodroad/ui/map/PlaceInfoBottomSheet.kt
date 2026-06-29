@@ -4,7 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -56,6 +58,7 @@ fun PlaceInfoBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
 
@@ -79,7 +82,7 @@ fun PlaceInfoBottomSheet(
                         )
                     } else {
                         Text(
-                            text = "📍 Заведение не найдено",
+                            text = "📍 ${placeInfo.address ?: "Место на карте"}",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = UrbanBrown
