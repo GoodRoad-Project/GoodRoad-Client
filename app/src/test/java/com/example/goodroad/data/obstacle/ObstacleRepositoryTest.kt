@@ -9,6 +9,7 @@ import org.junit.Assert.assertThrows
 import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
+import com.example.goodroad.data.obstacle.model.ObstacleCardResp
 
 class ObstacleRepositoryTest {
 
@@ -50,7 +51,8 @@ class ObstacleRepositoryTest {
 
     private class FakeObstacleApi(
         private val getResp: Response<List<PolicyItem>> = Response.success(emptyList()),
-        private val replaceResp: Response<List<PolicyItem>> = Response.success(emptyList())
+        private val replaceResp: Response<List<PolicyItem>> = Response.success(emptyList()),
+        private val cardResp: Response<ObstacleCardResp> = Response.success(null)
     ) : ObstacleApi {
         var replaceReq: ReplacePolicyReq? = null
 
@@ -60,6 +62,7 @@ class ObstacleRepositoryTest {
             replaceReq = req
             return replaceResp
         }
+        override suspend fun getObstacleCard(id: String): Response<ObstacleCardResp> = cardResp
     }
 
     private fun <T> errorResponse(): Response<T> {
