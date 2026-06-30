@@ -46,7 +46,7 @@
 
 ## Детали запуска приложения
 
-Достаточно скачать приложение по <a href="https://github.com/SanriaArgos/GoodRoad/releases">ссылке</a>.  
+Достаточно скачать приложение по <a href="https://github.com/GoodRoad-Project/GoodRoad-Client/releases/tag/goodroad-v1.0.0">ссылке</a>.  
 Для запуска перейдите в GoodRoadRelease.zip → release → GoodRoad.exe
 
 ## Технологии клиента
