@@ -29,6 +29,8 @@ import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.BackgroundLight
+import com.example.goodroad.validation.isValidRussianPhoneDigits
+import java.time.LocalDateTime
 
 @Composable
 fun HelpRequestCreateScreen(
@@ -52,6 +54,7 @@ fun HelpRequestCreateScreen(
     var meetingDateError by rememberSaveable { mutableStateOf<String?>(null) }
     var meetingTimeError by rememberSaveable { mutableStateOf<String?>(null) }
     var contactError by rememberSaveable { mutableStateOf<String?>(null) }
+    var socialNicknameError by rememberSaveable { mutableStateOf<String?>(null) }
     var commentError by rememberSaveable { mutableStateOf<String?>(null) }
 
     val scrollState = rememberScrollState()
@@ -69,20 +72,51 @@ fun HelpRequestCreateScreen(
             "Обязательное поле"
         } else null
 
-        meetingDateError = if (meetingDate.length != 8) {
-            valid = false
-            "Введите дату полностью"
-        } else null
+        meetingDateError = when {
+            meetingDate.length != 8 -> {
+                valid = false
+                "Введите дату полностью (ДДММГГГГ)"
+            }
+            !isValidDate(meetingDate) -> {
+                valid = false
+                "Некорректная дата"
+            }
+            else -> null
+        }
 
-        meetingTimeError = if (meetingTime.length != 4) {
-            valid = false
-            "Введите время полностью"
-        } else null
+        meetingTimeError = when {
+            meetingTime.length != 4 -> {
+                valid = false
+                "Введите время полностью (ЧЧММ)"
+            }
+            !isValidTime(meetingTime) -> {
+                valid = false
+                "Некорректное время"
+            }
+            else -> null
+        }
 
-        contactError = if (contact.isBlank()) {
-            valid = false
-            "Обязательное поле"
-        } else null
+        if (meetingDateError == null && meetingTimeError == null) {
+            val dateTimeError = isDateTimeInPast(meetingDate, meetingTime)
+            if (dateTimeError != null) {
+                valid = false
+                meetingDateError = dateTimeError
+            }
+        }
+
+        contactError = when {
+            contact.isBlank() -> {
+                valid = false
+                "Обязательное поле"
+            }
+            !isValidRussianPhoneDigits(contact.trim()) -> {
+                valid = false
+                "Введите корректный номер телефона"
+            }
+            else -> null
+        }
+
+        socialNicknameError = null
 
         commentError = if (comment.isBlank()) {
             valid = false
@@ -179,28 +213,29 @@ fun HelpRequestCreateScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            OutlinedTextField(
+            PhoneFieldForRequest(
                 value = contact,
                 onValueChange = {
-                    contact = it.filter { ch ->
-                        ch.isLetterOrDigit() || ch in "+@._-() "
-                    }
+                    contact = it
                     contactError = null
                 },
-                label = { Text("Номер телефона *") },
+                label = "Номер телефона *",
                 isError = contactError != null,
-                supportingText = { contactError?.let { Text(it) } },
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                singleLine = true
+                supportingText = contactError,
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(Modifier.height(12.dp))
 
             OutlinedTextField(
                 value = socialNickname,
-                onValueChange = { socialNickname = it },
+                onValueChange = {
+                    socialNickname = it
+                    socialNicknameError = null
+                },
                 label = { Text("Telegram / ВК / доп. контакт") },
+                isError = socialNicknameError != null,
+                supportingText = { socialNicknameError?.let { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
                 singleLine = true
@@ -245,14 +280,12 @@ fun HelpRequestCreateScreen(
                 onClick = {
                     if (!validate()) return@PrimaryButton
 
-                    // Форматируем дату из ДДММГГГГ в ДД-ММ-ГГГГ
                     val formattedDate = if (meetingDate.length == 8) {
                         "${meetingDate.substring(0, 2)}-${meetingDate.substring(2, 4)}-${meetingDate.substring(4, 8)}"
                     } else {
                         meetingDate
                     }
 
-                    // Форматируем время из ЧЧММ в ЧЧ:ММ
                     val formattedTime = if (meetingTime.length == 4) {
                         "${meetingTime.substring(0, 2)}:${meetingTime.substring(2, 4)}"
                     } else {
@@ -275,6 +308,28 @@ fun HelpRequestCreateScreen(
             )
         }
     }
+}
+
+@Composable
+fun PhoneFieldForRequest(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    isError: Boolean = false,
+    supportingText: String? = null,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        isError = isError,
+        supportingText = { supportingText?.let { Text(it) } },
+        modifier = modifier,
+        shape = MaterialTheme.shapes.large,
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+    )
 }
 
 private object DateVisualTransformation : VisualTransformation {
@@ -342,6 +397,62 @@ private object TimeVisualTransformation : VisualTransformation {
         }
 
         return TransformedText(AnnotatedString(formatted), offsetMapping)
+    }
+}
+
+private fun isValidDate(dateStr: String): Boolean {
+    if (dateStr.length != 8) return false
+    return try {
+        val day = dateStr.substring(0, 2).toInt()
+        val month = dateStr.substring(2, 4).toInt()
+        val year = dateStr.substring(4, 8).toInt()
+
+        if (year !in 2020..2100 || month !in 1..12) return false
+
+        val daysInMonth = when (month) {
+            1, 3, 5, 7, 8, 10, 12 -> 31
+            4, 6, 9, 11 -> 30
+            2 -> if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) 29 else 28
+            else -> return false
+        }
+
+        day in 1..daysInMonth
+    } catch (_: Exception) {
+        false
+    }
+}
+
+private fun isValidTime(timeStr: String): Boolean {
+    if (timeStr.length != 4) return false
+    return try {
+        val hour = timeStr.substring(0, 2).toInt()
+        val minute = timeStr.substring(2, 4).toInt()
+        hour in 0..23 && minute in 0..59
+    } catch (_: Exception) {
+        false
+    }
+}
+
+private fun isDateTimeInPast(dateStr: String, timeStr: String): String? {
+    if (dateStr.length != 8 || timeStr.length != 4) return null
+
+    return try {
+        val day = dateStr.substring(0, 2).toInt()
+        val month = dateStr.substring(2, 4).toInt()
+        val year = dateStr.substring(4, 8).toInt()
+        val hour = timeStr.substring(0, 2).toInt()
+        val minute = timeStr.substring(2, 4).toInt()
+
+        val dateTime = LocalDateTime.of(year, month, day, hour, minute)
+        val now = LocalDateTime.now()
+
+        when {
+            dateTime.isBefore(now) -> "Дата и время не могут быть в прошлом"
+            dateTime.isBefore(now.plusMinutes(5)) -> "Выберите время с запасом минимум 5 минут"
+            else -> null
+        }
+    } catch (_: Exception) {
+        null
     }
 }
 
