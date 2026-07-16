@@ -22,6 +22,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -38,10 +42,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.goodroad.modules.review.data.ReviewAddress
 import com.example.goodroad.modules.review.data.ReviewCardResp
 import com.example.goodroad.modules.review.data.ReviewObstacle
@@ -59,6 +65,7 @@ import com.example.goodroad.ui.theme.BorderWarm
 import com.example.goodroad.ui.theme.SafeGreen
 import com.example.goodroad.ui.theme.TextPrimary
 import com.example.goodroad.ui.theme.UrbanBrown
+import com.example.goodroad.ui.theme.WhiteSoft
 import com.example.goodroad.validation.COMMENT_MAX_LENGTH
 import com.example.goodroad.validation.COORDINATE_MAX_LENGTH
 import com.example.goodroad.validation.PLACE_NAME_MAX_LENGTH
@@ -82,9 +89,6 @@ fun ReviewFormScreen(
     val isEdit = initialReview != null
     val reviewKey = initialReview?.id ?: "new"
 
-    //var placeName by remember(reviewKey) { mutableStateOf(initialReview?.address?.placeName ?: "") }
-    //var latitude by remember(reviewKey) { mutableStateOf(initialReview?.latitude?.toString() ?: "") }
-    //var longitude by remember(reviewKey) { mutableStateOf(initialReview?.longitude?.toString() ?: "") }
     var rating by remember(reviewKey) { mutableStateOf(initialReview?.rating?.toInt()) }
     var comment by remember(reviewKey) { mutableStateOf(initialReview?.comment ?: "") }
     var formError by remember(reviewKey) { mutableStateOf<String?>(null) }
@@ -105,15 +109,28 @@ fun ReviewFormScreen(
         }
     }
 
-    val obstacleSeverities = remember(reviewKey) {
-        mutableStateMapOf<String, Int>().apply {
+    val obstacleSelected = remember(reviewKey) {
+        mutableStateMapOf<String, Boolean>().apply {
             ReviewObstacleTypes.forEach { type ->
-                val current = initialReview?.obstacles
+                val initialSeverity = initialReview?.obstacles
                     ?.firstOrNull { it.obstacleType == type }
                     ?.severity
                     ?.toInt()
                     ?: 0
-                put(type, current)
+                put(type, initialSeverity > 0)
+            }
+        }
+    }
+
+    val obstacleSeverities = remember(reviewKey) {
+        mutableStateMapOf<String, Int>().apply {
+            ReviewObstacleTypes.forEach { type ->
+                val initialSeverity = initialReview?.obstacles
+                    ?.firstOrNull { it.obstacleType == type }
+                    ?.severity
+                    ?.toInt()
+                    ?: 0
+                put(type, if (initialSeverity > 0) initialSeverity else 1)
             }
         }
     }
@@ -240,30 +257,120 @@ fun ReviewFormScreen(
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                text = "0 — нет такого препятствия, 1 — слабая тяжесть, 2 — средняя тяжесть, 3 — сильная тяжесть.",
+                text = "Если чекбокс не выбран — препятствия нет. При выборе укажите тяжесть: 1 — слабая, 2 — средняя, 3 — сильная.",
                 style = MaterialTheme.typography.bodySmall,
                 color = UrbanBrown
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "Хотя бы у одного препятствия тяжесть должна быть больше 0.",
+                text = "Хотя бы у одного препятствия должна быть выбрана тяжесть.",
                 style = MaterialTheme.typography.bodySmall,
                 color = UrbanBrown
             )
 
             ReviewObstacleTypes.forEach { type ->
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    text = obstacleLabel(type),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextPrimary
-                )
-                Spacer(Modifier.height(6.dp))
-                SeveritySelector(
-                    value = obstacleSeverities[type] ?: 0,
-                    range = 0..3,
-                    onValueChange = { obstacleSeverities[type] = it }
-                )
+                val selected = obstacleSelected[type] == true
+                val severity = obstacleSeverities[type] ?: 1
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = selected,
+                            onCheckedChange = { isChecked ->
+                                obstacleSelected[type] = isChecked
+                                if (!isChecked) {
+                                    obstacleSeverities[type] = 1
+                                }
+                                formError = null
+                            },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = UrbanBrown,
+                                uncheckedColor = UrbanBrown,
+                                checkmarkColor = WhiteSoft
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Text(
+                            text = obstacleLabel(type),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = UrbanBrown
+                        )
+                    }
+
+                    if (selected) {
+                        Column(
+                            modifier = Modifier.padding(start = 18.dp)
+                        ) {
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = "Максимальная допустимая тяжесть",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = UrbanBrown
+                            )
+
+                            val severityDescription = when (type) {
+                                "STAIRS" -> "1 — 1-3 ступеньки, 2 — 4-10 ступенек, 3 — более 10 ступенек"
+                                "CURB" -> "1 — маленький бордюр, 2 — обычный бордюр, 3 — высокий бордюр"
+                                "ROAD_SLOPE" -> "1 — незначительный подъём, 2 — заметный подъём, 3 — крутой подъём"
+                                "POTHOLES" -> "1 — маленькая яма, 2 — обычная яма, 3 — большая яма"
+                                "SAND", "GRAVEL" -> "1 — укатанный, 2 — немного рыхлый, 3 — сильно рыхлый"
+                                else -> "1 — слабая, 2 — средняя, 3 — сильная"
+                            }
+
+                            Text(
+                                text = severityDescription,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = UrbanBrown.copy(alpha = 0.7f),
+                                fontSize = 11.sp
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                (1..3).forEach { value ->
+                                    FilterChip(
+                                        selected = severity == value,
+                                        onClick = {
+                                            obstacleSeverities[type] = value
+                                            formError = null
+                                        },
+                                        label = {
+                                            Text(
+                                                text = value.toString(),
+                                                style = MaterialTheme.typography.bodyLarge
+                                            )
+                                        },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = SafeGreen.copy(alpha = 0.18f),
+                                            selectedLabelColor = SafeGreen,
+                                            containerColor = BackgroundLight,
+                                            labelColor = UrbanBrown
+                                        ),
+                                        border = FilterChipDefaults.filterChipBorder(
+                                            enabled = true,
+                                            selected = severity == value,
+                                            borderColor = if (severity == value) SafeGreen else BorderWarm,
+                                            selectedBorderColor = SafeGreen
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             Spacer(Modifier.height(20.dp))
@@ -359,6 +466,7 @@ fun ReviewFormScreen(
                             latitude = latitude,
                             longitude = longitude,
                             rating = rating,
+                            obstacleSelected = obstacleSelected,
                             obstacleSeverities = obstacleSeverities
                         )
 
@@ -381,17 +489,21 @@ fun ReviewFormScreen(
                         formError = null
                         reviewsViewModel.clearMessages()
 
+                        val obstacles = ReviewObstacleTypes.map { type ->
+                            ReviewObstacle(
+                                obstacleType = type,
+                                severity = if (obstacleSelected[type] == true) {
+                                    (obstacleSeverities[type] ?: 1).toShort()
+                                } else 0
+                            )
+                        }
+
                         val request = UpsertReviewReq(
                             latitude = lat,
                             longitude = lon,
                             address = generatedAddress,
                             rating = rating!!.toShort(),
-                            obstacles = ReviewObstacleTypes.map { type ->
-                                ReviewObstacle(
-                                    obstacleType = type,
-                                    severity = (obstacleSeverities[type] ?: 0).toShort()
-                                )
-                            },
+                            obstacles = obstacles,
                             comment = comment.trim().ifBlank { null },
                             photoUrls = photoUrls.filter { it.isNotBlank() }
                         )
@@ -418,6 +530,7 @@ private fun validateReviewForm(
     latitude: String,
     longitude: String,
     rating: Int?,
+    obstacleSelected: Map<String, Boolean>,
     obstacleSeverities: Map<String, Int>
 ): String? {
     val lat = latitude.trim().replace(',', '.').toDoubleOrNull()
@@ -431,8 +544,8 @@ private fun validateReviewForm(
     if (rating == null) {
         return "Поставьте оценку отзыву"
     }
-    if (obstacleSeverities.values.none { it > 0 }) {
-        return "Укажите тяжесть хотя бы для одного препятствия"
+    if (obstacleSelected.values.none { it }) {
+        return "Выберите хотя бы одно препятствие"
     }
     return null
 }

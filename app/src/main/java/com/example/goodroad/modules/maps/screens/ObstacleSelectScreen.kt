@@ -151,62 +151,66 @@ fun ObstacleSelectScreen(
                         }
 
                         if (checked) {
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                text = "Максимальная допустимая тяжесть",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = UrbanBrown
-                            )
-
-                            val severityDescription = when (obstacle.obstacleType) {
-                                "STAIRS" -> "1 — 1-3 ступеньки, 2 — 4-10 ступенек, 3 — более 10 ступенек"
-                                "CURB" -> "1 — маленький бордюр, 2 — обычный бордюр, 3 — высокий бордюр"
-                                "ROAD_SLOPE" -> "1 — незначительный подъём, 2 — заметный подъём, 3 — крутой подъём"
-                                "POTHOLES" -> "1 — маленькая яма, 2 — обычная яма, 3 — большая яма"
-                                "SAND", "GRAVEL" -> "1 — укатанный, 2 — немного рыхлый, 3 — сильно рыхлый"
-                                else -> "1 — слабая, 2 — средняя, 3 — сильная"
-                            }
-
-                            Text(
-                                text = severityDescription,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = UrbanBrown.copy(alpha = 0.7f),
-                                fontSize = 11.sp
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            Column(
+                                modifier = Modifier.padding(start = 18.dp)
                             ) {
-                                (1..3).forEach { value ->
-                                    FilterChip(
-                                        selected = severity == value,
-                                        onClick = {
-                                            severityMap[obstacle.obstacleType] = value
-                                            mapsViewModel.clearMessages()
-                                        },
-                                        label = {
-                                            Text(
-                                                text = value.toString(),
-                                                style = MaterialTheme.typography.bodyLarge
-                                            )
-                                        },
-                                        colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = SafeGreen.copy(alpha = 0.18f),
-                                            selectedLabelColor = SafeGreen,
-                                            containerColor = BackgroundLight,
-                                            labelColor = UrbanBrown
-                                        ),
-                                        border = FilterChipDefaults.filterChipBorder(
-                                            enabled = true,
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(
+                                    text = "Максимальная допустимая тяжесть",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = UrbanBrown
+                                )
+
+                                val severityDescription = when (obstacle.obstacleType) {
+                                    "STAIRS" -> "1 — 1-3 ступеньки, 2 — 4-10 ступенек, 3 — более 10 ступенек"
+                                    "CURB" -> "1 — маленький бордюр, 2 — обычный бордюр, 3 — высокий бордюр"
+                                    "ROAD_SLOPE" -> "1 — незначительный подъём, 2 — заметный подъём, 3 — крутой подъём"
+                                    "POTHOLES" -> "1 — маленькая яма, 2 — обычная яма, 3 — большая яма"
+                                    "SAND", "GRAVEL" -> "1 — укатанный, 2 — немного рыхлый, 3 — сильно рыхлый"
+                                    else -> "1 — слабая, 2 — средняя, 3 — сильная"
+                                }
+
+                                Text(
+                                    text = severityDescription,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = UrbanBrown.copy(alpha = 0.7f),
+                                    fontSize = 11.sp
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    (1..3).forEach { value ->
+                                        FilterChip(
                                             selected = severity == value,
-                                            borderColor = if (severity == value) SafeGreen else BorderWarm,
-                                            selectedBorderColor = SafeGreen
+                                            onClick = {
+                                                severityMap[obstacle.obstacleType] = value
+                                                mapsViewModel.clearMessages()
+                                            },
+                                            label = {
+                                                Text(
+                                                    text = value.toString(),
+                                                    style = MaterialTheme.typography.bodyLarge
+                                                )
+                                            },
+                                            colors = FilterChipDefaults.filterChipColors(
+                                                selectedContainerColor = SafeGreen.copy(alpha = 0.18f),
+                                                selectedLabelColor = SafeGreen,
+                                                containerColor = BackgroundLight,
+                                                labelColor = UrbanBrown
+                                            ),
+                                            border = FilterChipDefaults.filterChipBorder(
+                                                enabled = true,
+                                                selected = severity == value,
+                                                borderColor = if (severity == value) SafeGreen else BorderWarm,
+                                                selectedBorderColor = SafeGreen
+                                            )
                                         )
-                                    )
+                                    }
                                 }
                             }
                         }
