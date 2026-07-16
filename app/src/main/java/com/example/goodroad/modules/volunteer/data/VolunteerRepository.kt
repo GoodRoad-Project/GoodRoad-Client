@@ -57,18 +57,8 @@ class VolunteerRepository(
         )
         return created.toUi()
     }
-
-    suspend fun loadAvailableRequests(
-        latitude: Double? = null,
-        longitude: Double? = null
-    ): List<HelpRequestItem> =
-        api.listAvailableRequests(latitude, longitude).map { it.toUi() }
-
     suspend fun loadMyWards(): List<HelpRequestItem> =
         api.listMyWards().map { it.toUi() }
-
-    suspend fun getRequest(id: String): HelpRequestItem =
-        api.getHelpRequest(id).toUi()
 
     suspend fun acceptRequest(id: String): HelpRequestItem =
         api.acceptRequest(id).toUi()
@@ -82,20 +72,6 @@ class VolunteerRepository(
     suspend fun deleteOwnRequest(id: String) {
         api.deleteOwnRequest(id)
     }
-
-    suspend fun setWalkRoute(
-        id: String,
-        points: String? = null,
-        routePoints: List<RoutePointReqDto>? = null
-    ): HelpRequestItem =
-        api.setWalkRoute(id, WalkRouteReqDto(points = points, routePoints = routePoints)).toUi()
-
-    suspend fun startWalk(
-        id: String,
-        points: String? = null,
-        routePoints: List<RoutePointReqDto>? = null
-    ): HelpRequestItem =
-        api.startWalk(id, WalkRouteReqDto(points = points, routePoints = routePoints)).toUi()
 
     suspend fun finishWalk(id: String): HelpRequestItem =
         api.finishWalk(id).toUi()

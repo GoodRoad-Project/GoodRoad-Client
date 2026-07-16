@@ -18,6 +18,7 @@ import com.example.goodroad.ui.obstacleLabel
 import com.example.goodroad.ui.obstacleSeverityText
 import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.UserDecor
+import com.example.goodroad.ui.buttons.PrimaryButton
 
 @Composable
 fun ReviewDetailsScreen(
@@ -144,18 +145,18 @@ fun ReviewDetailsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ReviewSquareActionButton(
+                PrimaryButton(
                     text = "Редактировать",
                     backgroundColor = SafeGreen,
                     modifier = Modifier.weight(1f)
                 ) {
                     onEdit()
                 }
-                ReviewSquareActionButton(
+                PrimaryButton(
                     text = if (isSubmitting) "Удаляем..." else "Удалить",
                     backgroundColor = AlertRed,
-                    modifier = Modifier.weight(1f),
-                    enabled = !isSubmitting
+                    enabled = !isSubmitting,
+                    modifier = Modifier.weight(1f)
                 ) {
                     showDeleteDialog = true
                 }

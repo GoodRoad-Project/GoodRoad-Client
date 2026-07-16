@@ -239,19 +239,19 @@ private fun VolunteerApplicationCard(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Button(
+                PrimaryButton(
+                    text = "Одобрить",
+                    backgroundColor = SafeGreen,
                     onClick = onApprove,
-                    colors = ButtonDefaults.buttonColors(containerColor = SafeGreen)
-                ) {
-                    Text("Одобрить")
-                }
+                    modifier = Modifier.weight(1f)
+                )
 
-                Button(
+                PrimaryButton(
+                    text = "Отклонить",
+                    backgroundColor = AlertRed,
                     onClick = onReject,
-                    colors = ButtonDefaults.buttonColors(containerColor = AlertRed)
-                ) {
-                    Text("Отклонить")
-                }
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }

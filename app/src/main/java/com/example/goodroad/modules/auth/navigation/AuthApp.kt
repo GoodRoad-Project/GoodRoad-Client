@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -33,6 +34,13 @@ import com.example.goodroad.modules.moderator.screens.VolunteerManagementScreen
 import com.example.goodroad.modules.moderationReview.screens.ReviewModerationScreen
 import com.example.goodroad.modules.moderator.data.VolunteerModerationRepository
 import com.example.goodroad.modules.moderator.presentation.VolunteerModerationViewModel
+import com.example.goodroad.modules.review.data.ReviewRepository
+import com.example.goodroad.modules.review.presentation.ReviewsViewModel
+import com.example.goodroad.modules.review.screens.ReviewFormScreen
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 @Composable
 fun AuthApp(
@@ -145,15 +153,68 @@ fun AuthApp(
                 )
             }
 
+//            composable(USER_HOME_ROUTE) {
+//                UserNav(
+//                    navController = navController,
+//                    onLogout = {
+//                        navController.navigate(LOGIN_ROUTE) {
+//                            popUpTo(USER_HOME_ROUTE) { inclusive = true }
+//                        }
+//                    }
+//                )
+//            }
+
             composable(USER_HOME_ROUTE) {
-                UserNav(
-                    navController = navController,
-                    onLogout = {
-                        navController.navigate(LOGIN_ROUTE) {
-                            popUpTo(USER_HOME_ROUTE) { inclusive = true }
+                var showReviewForm by remember { mutableStateOf(false) }
+                var reviewPlaceName by remember { mutableStateOf("") }
+                var reviewLat by remember { mutableStateOf(0.0) }
+                var reviewLon by remember { mutableStateOf(0.0) }
+
+                val reviewRepository = remember { ReviewRepository(ApiClient.reviewApi) }
+                val reviewsViewModel: ReviewsViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            if (modelClass.isAssignableFrom(ReviewsViewModel::class.java)) {
+                                @Suppress("UNCHECKED_CAST")
+                                return ReviewsViewModel(reviewRepository) as T
+                            }
+                            throw IllegalArgumentException("Unknown ViewModel class")
                         }
                     }
                 )
+
+                if (showReviewForm) {
+                    ReviewFormScreen(
+                        reviewsViewModel = reviewsViewModel,
+                        initialReview = null,
+                        initialPlaceName = reviewPlaceName,
+                        initialLatitude = reviewLat.toString(),
+                        initialLongitude = reviewLon.toString(),
+                        onBack = {
+                            showReviewForm = false
+                        },
+                        onSaved = {
+                            showReviewForm = false
+                        }
+                    )
+                } else {
+                    UserNav(
+                        navController = navController,
+                        onLogout = {
+                            navController.navigate(LOGIN_ROUTE) {
+                                popUpTo(USER_HOME_ROUTE) { inclusive = true }
+                            }
+                        },
+                        onNavigateToReview = { placeName, lat, lon ->
+                            android.util.Log.d("AuthApp", "🔴 onNavigateToReview В AuthApp!")
+                            reviewPlaceName = placeName
+                            reviewLat = lat
+                            reviewLon = lon
+                            showReviewForm = true
+                            android.util.Log.d("AuthApp", "showReviewForm = $showReviewForm")
+                        }
+                    )
+                }
             }
 
             composable("admin_home") {

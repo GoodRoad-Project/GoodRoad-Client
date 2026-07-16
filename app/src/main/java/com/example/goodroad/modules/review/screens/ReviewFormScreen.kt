@@ -71,6 +71,9 @@ import java.util.Locale
 fun ReviewFormScreen(
     reviewsViewModel: ReviewsViewModel,
     initialReview: ReviewCardResp?,
+    initialPlaceName: String = "",
+    initialLatitude: String = "",
+    initialLongitude: String = "",
     onBack: () -> Unit,
     onSaved: () -> Unit
 ) {
@@ -79,12 +82,22 @@ fun ReviewFormScreen(
     val isEdit = initialReview != null
     val reviewKey = initialReview?.id ?: "new"
 
-    var placeName by remember(reviewKey) { mutableStateOf(initialReview?.address?.placeName ?: "") }
-    var latitude by remember(reviewKey) { mutableStateOf(initialReview?.latitude?.toString() ?: "") }
-    var longitude by remember(reviewKey) { mutableStateOf(initialReview?.longitude?.toString() ?: "") }
+    //var placeName by remember(reviewKey) { mutableStateOf(initialReview?.address?.placeName ?: "") }
+    //var latitude by remember(reviewKey) { mutableStateOf(initialReview?.latitude?.toString() ?: "") }
+    //var longitude by remember(reviewKey) { mutableStateOf(initialReview?.longitude?.toString() ?: "") }
     var rating by remember(reviewKey) { mutableStateOf(initialReview?.rating?.toInt()) }
     var comment by remember(reviewKey) { mutableStateOf(initialReview?.comment ?: "") }
     var formError by remember(reviewKey) { mutableStateOf<String?>(null) }
+
+    var placeName by remember(reviewKey) {
+        mutableStateOf(initialReview?.address?.placeName ?: initialPlaceName)
+    }
+    var latitude by remember(reviewKey) {
+        mutableStateOf(initialReview?.latitude?.toString() ?: initialLatitude)
+    }
+    var longitude by remember(reviewKey) {
+        mutableStateOf(initialReview?.longitude?.toString() ?: initialLongitude)
+    }
 
     val photoUrls = remember(reviewKey) {
         mutableStateListOf<String>().apply {

@@ -309,7 +309,6 @@ fun VolunteerApplicationFormScreen(
                         socialNickname = nickname.ifBlank { null },
                         uris = selectedUris,
                         onSuccess = {
-                            viewModel.loadVolunteerMenu()
                             onSubmitted()
                         }
                     )
