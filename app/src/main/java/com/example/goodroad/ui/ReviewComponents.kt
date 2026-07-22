@@ -229,11 +229,6 @@ fun ReviewPhotosStrip(
     onRemove: ((String) -> Unit)? = null
 ) {
     if (photoUrls.isEmpty()) {
-        Text(
-            text = "Фото не добавлены",
-            style = MaterialTheme.typography.bodyMedium,
-            color = UrbanBrown
-        )
         return
     }
 

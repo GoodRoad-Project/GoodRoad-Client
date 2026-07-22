@@ -87,11 +87,6 @@ fun PlaceInfoBottomSheet(
                             fontWeight = FontWeight.Bold,
                             color = UrbanBrown
                         )
-                        Text(
-                            text = "Вы можете оставить отзыв об этом месте",
-                            fontSize = 14.sp,
-                            color = UrbanBrown.copy(alpha = 0.7f)
-                        )
                     }
 
                 }
