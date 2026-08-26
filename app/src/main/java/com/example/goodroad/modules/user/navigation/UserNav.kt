@@ -47,6 +47,7 @@ import com.example.goodroad.modules.tasks.screens.TasksScreen
 import com.example.goodroad.modules.tasks.data.TaskViewDto
 import com.example.goodroad.modules.tasks.screens.CompletedTasksHistoryScreen
 import com.example.goodroad.modules.tasks.screens.TaskExecutionScreen
+import com.example.goodroad.modules.rewards.screens.CouponsScreen
 
 enum class BottomTab {
     MAP,
@@ -73,7 +74,8 @@ enum class OverlayScreen {
     LEADERBOARD,
     TASKS_SHOP,
     TASK_DETAIL,
-    TASKS_HISTORY
+    TASKS_HISTORY,
+    COUPONS
 }
 
 @Composable
@@ -294,6 +296,10 @@ fun UserNav(
                     }
                 }
 
+                OverlayScreen.COUPONS -> CouponsScreen(
+                    onBack = { overlayScreen = OverlayScreen.REWARDS_SHOP }
+                )
+
                 OverlayScreen.OBSTACLES -> ObstacleSelectScreen(
                     mapsViewModel = mapsViewModel,
                     onBackToProfile = { overlayScreen = OverlayScreen.NONE },
@@ -334,6 +340,7 @@ fun UserNav(
                     },
                     onNavigateToHistory = { overlayScreen = OverlayScreen.REWARDS_HISTORY },
                     onNavigateToLeaderboard = { overlayScreen = OverlayScreen.LEADERBOARD },
+                    onNavigateToCoupons = { overlayScreen = OverlayScreen.COUPONS },
                     onBack = { overlayScreen = OverlayScreen.NONE }
                 )
 

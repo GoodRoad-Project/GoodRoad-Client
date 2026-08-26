@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Leaderboard
+import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,7 +26,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.goodroad.modules.rewards.presentation.RewardsViewModel
 import com.example.goodroad.modules.rewards.data.RewardOffer
 import com.example.goodroad.ui.theme.BackgroundLight
-import com.example.goodroad.ui.theme.SafeGreen
 import com.example.goodroad.ui.theme.SafeRoute
 import com.example.goodroad.ui.theme.TextPrimary
 import com.example.goodroad.ui.theme.UrbanBrown
@@ -39,6 +39,7 @@ fun RewardsShopScreen(
     onRewardClick: (RewardOffer) -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToLeaderboard: () -> Unit,
+    onNavigateToCoupons: () -> Unit,
     onBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -103,10 +104,10 @@ fun RewardsShopScreen(
                                 tint = UrbanBrown.copy(alpha = 0.7f)
                             )
                         }
-                        IconButton(onClick = onBack) {
+                        IconButton(onClick = onNavigateToCoupons) {
                             Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Назад",
+                                imageVector = Icons.Default.CardGiftcard,
+                                contentDescription = "Купоны",
                                 tint = UrbanBrown.copy(alpha = 0.7f)
                             )
                         }
