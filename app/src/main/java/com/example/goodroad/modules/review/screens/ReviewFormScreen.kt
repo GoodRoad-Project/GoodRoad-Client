@@ -15,11 +15,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -81,6 +83,7 @@ fun ReviewFormScreen(
     initialPlaceName: String = "",
     initialLatitude: String = "",
     initialLongitude: String = "",
+    isLocationLocked: Boolean = false,
     onBack: () -> Unit,
     onSaved: () -> Unit
 ) {
@@ -89,16 +92,26 @@ fun ReviewFormScreen(
     val isEdit = initialReview != null
     val reviewKey = initialReview?.id ?: "new"
 
-    var rating by remember(reviewKey) { mutableStateOf(initialReview?.rating?.toInt()) }
-    var comment by remember(reviewKey) { mutableStateOf(initialReview?.comment ?: "") }
-    var formError by remember(reviewKey) { mutableStateOf<String?>(null) }
+    var rating by remember(reviewKey) {
+        mutableStateOf(initialReview?.rating?.toInt())
+    }
+
+    var comment by remember(reviewKey) {
+        mutableStateOf(initialReview?.comment ?: "")
+    }
+
+    var formError by remember(reviewKey) {
+        mutableStateOf<String?>(null)
+    }
 
     var placeName by remember(reviewKey) {
         mutableStateOf(initialReview?.address?.placeName ?: initialPlaceName)
     }
+
     var latitude by remember(reviewKey) {
         mutableStateOf(initialReview?.latitude?.toString() ?: initialLatitude)
     }
+
     var longitude by remember(reviewKey) {
         mutableStateOf(initialReview?.longitude?.toString() ?: initialLongitude)
     }
@@ -117,6 +130,7 @@ fun ReviewFormScreen(
                     ?.severity
                     ?.toInt()
                     ?: 0
+
                 put(type, initialSeverity > 0)
             }
         }
@@ -130,7 +144,11 @@ fun ReviewFormScreen(
                     ?.severity
                     ?.toInt()
                     ?: 0
-                put(type, if (initialSeverity > 0) initialSeverity else 1)
+
+                put(
+                    type,
+                    if (initialSeverity > 0) initialSeverity else 1
+                )
             }
         }
     }
@@ -139,7 +157,10 @@ fun ReviewFormScreen(
     val isPhotoUploading by reviewsViewModel.isPhotoUploading
     val serverError by reviewsViewModel.errorMessage
 
-    var isPreparingSubmit by remember(reviewKey) { mutableStateOf(false) }
+    var isPreparingSubmit by remember(reviewKey) {
+        mutableStateOf(false)
+    }
+
     val submitInProgress = isSubmitting || isPreparingSubmit
 
     LaunchedEffect(isSubmitting) {
@@ -170,27 +191,36 @@ fun ReviewFormScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
+
             Text(
-                text = if (isEdit) "Редактирование отзыва" else "Новый отзыв",
+                text = if (isEdit) {
+                    "Редактирование отзыва"
+                } else {
+                    "Новый отзыв"
+                },
                 style = MaterialTheme.typography.headlineLarge,
                 color = TextPrimary
             )
 
             Spacer(Modifier.height(20.dp))
 
+            /*
+             * Адрес и координаты.
+             *
+             * Если отзыв создаётся из выполнения цели,
+             * isLocationLocked = true и менять эти поля нельзя.
+             */
+
             PlainField(
                 value = placeName,
-                onValueChange = { placeName = it },
+                onValueChange = {
+                    if (!isLocationLocked) {
+                        placeName = it
+                    }
+                },
                 label = "Название места",
-                maxLength = PLACE_NAME_MAX_LENGTH
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = "Название места можно не заполнять.",
-                style = MaterialTheme.typography.bodySmall,
-                color = UrbanBrown
+                maxLength = PLACE_NAME_MAX_LENGTH,
+                readOnly = isLocationLocked
             )
 
             Spacer(Modifier.height(16.dp))
@@ -199,40 +229,83 @@ fun ReviewFormScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+
                 PlainField(
                     value = latitude,
-                    onValueChange = { latitude = it },
+                    onValueChange = {
+                        if (!isLocationLocked) {
+                            latitude = it
+                        }
+                    },
                     label = "Широта",
                     maxLength = COORDINATE_MAX_LENGTH,
                     modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal
+                    ),
+                    readOnly = isLocationLocked
                 )
 
                 PlainField(
                     value = longitude,
-                    onValueChange = { longitude = it },
+                    onValueChange = {
+                        if (!isLocationLocked) {
+                            longitude = it
+                        }
+                    },
                     label = "Долгота",
                     maxLength = COORDINATE_MAX_LENGTH,
                     modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal
+                    ),
+                    readOnly = isLocationLocked
                 )
             }
 
             Spacer(Modifier.height(12.dp))
 
-            Text(
-                text = "Адрес будет определен автоматически по введенным координатам.",
-                style = MaterialTheme.typography.bodySmall,
-                color = UrbanBrown
-            )
+            if (isLocationLocked) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = UrbanBrown,
+                        modifier = Modifier
+                            .padding(top = 2.dp)
+                            .size(18.dp)
+                    )
 
-            Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.width(8.dp))
 
-            Text(
-                text = "Координаты должны быть в числовом формате. Можно использовать точку или запятую.",
-                style = MaterialTheme.typography.bodySmall,
-                color = UrbanBrown
-            )
+                    Text(
+                        text = "Адрес и координаты нельзя изменить, " +
+                                "поскольку отзыв создаётся для конкретной " +
+                                "цели задания. Местоположение уже задано " +
+                                "этой целью и должно оставаться неизменным.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextPrimary
+                    )
+                }
+            } else {
+                Text(
+                    text = "Адрес будет определен автоматически по введенным координатам.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = UrbanBrown
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Text(
+                    text = "Координаты должны быть в числовом формате. " +
+                            "Можно использовать точку или запятую.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = UrbanBrown
+                )
+            }
 
             Spacer(Modifier.height(20.dp))
 
@@ -241,7 +314,9 @@ fun ReviewFormScreen(
                 style = MaterialTheme.typography.titleMedium,
                 color = UrbanBrown
             )
+
             Spacer(Modifier.height(8.dp))
+
             SeveritySelector(
                 value = rating,
                 range = 1..5,
@@ -255,13 +330,19 @@ fun ReviewFormScreen(
                 style = MaterialTheme.typography.titleMedium,
                 color = UrbanBrown
             )
+
             Spacer(Modifier.height(8.dp))
+
             Text(
-                text = "Если чекбокс не выбран — препятствия нет. При выборе укажите тяжесть: 1 — слабая, 2 — средняя, 3 — сильная.",
+                text = "Если чекбокс не выбран — препятствия нет. " +
+                        "При выборе укажите тяжесть: 1 — слабая, " +
+                        "2 — средняя, 3 — сильная.",
                 style = MaterialTheme.typography.bodySmall,
                 color = UrbanBrown
             )
+
             Spacer(Modifier.height(4.dp))
+
             Text(
                 text = "Хотя бы у одного препятствия должна быть выбрана тяжесть.",
                 style = MaterialTheme.typography.bodySmall,
@@ -269,6 +350,7 @@ fun ReviewFormScreen(
             )
 
             ReviewObstacleTypes.forEach { type ->
+
                 val selected = obstacleSelected[type] == true
                 val severity = obstacleSeverities[type] ?: 1
 
@@ -277,17 +359,21 @@ fun ReviewFormScreen(
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                 ) {
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+
                         Checkbox(
                             checked = selected,
                             onCheckedChange = { isChecked ->
                                 obstacleSelected[type] = isChecked
+
                                 if (!isChecked) {
                                     obstacleSeverities[type] = 1
                                 }
+
                                 formError = null
                             },
                             colors = CheckboxDefaults.colors(
@@ -307,9 +393,11 @@ fun ReviewFormScreen(
                     }
 
                     if (selected) {
+
                         Column(
                             modifier = Modifier.padding(start = 18.dp)
                         ) {
+
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
@@ -319,12 +407,28 @@ fun ReviewFormScreen(
                             )
 
                             val severityDescription = when (type) {
-                                "STAIRS" -> "1 — 1-3 ступеньки, 2 — 4-10 ступенек, 3 — более 10 ступенек"
-                                "CURB" -> "1 — маленький бордюр, 2 — обычный бордюр, 3 — высокий бордюр"
-                                "ROAD_SLOPE" -> "1 — незначительный подъём, 2 — заметный подъём, 3 — крутой подъём"
-                                "POTHOLES" -> "1 — маленькая яма, 2 — обычная яма, 3 — большая яма"
-                                "SAND", "GRAVEL" -> "1 — укатанный, 2 — немного рыхлый, 3 — сильно рыхлый"
-                                else -> "1 — слабая, 2 — средняя, 3 — сильная"
+                                "STAIRS" ->
+                                    "1 — 1-3 ступеньки, 2 — 4-10 ступенек, " +
+                                            "3 — более 10 ступенек"
+
+                                "CURB" ->
+                                    "1 — маленький бордюр, 2 — обычный бордюр, " +
+                                            "3 — высокий бордюр"
+
+                                "ROAD_SLOPE" ->
+                                    "1 — незначительный подъём, " +
+                                            "2 — заметный подъём, 3 — крутой подъём"
+
+                                "POTHOLES" ->
+                                    "1 — маленькая яма, 2 — обычная яма, " +
+                                            "3 — большая яма"
+
+                                "SAND", "GRAVEL" ->
+                                    "1 — укатанный, 2 — немного рыхлый, " +
+                                            "3 — сильно рыхлый"
+
+                                else ->
+                                    "1 — слабая, 2 — средняя, 3 — сильная"
                             }
 
                             Text(
@@ -340,7 +444,9 @@ fun ReviewFormScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
+
                                 (1..3).forEach { value ->
+
                                     FilterChip(
                                         selected = severity == value,
                                         onClick = {
@@ -354,17 +460,24 @@ fun ReviewFormScreen(
                                             )
                                         },
                                         colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = SafeGreen.copy(alpha = 0.18f),
+                                            selectedContainerColor =
+                                                SafeGreen.copy(alpha = 0.18f),
                                             selectedLabelColor = SafeGreen,
                                             containerColor = BackgroundLight,
                                             labelColor = UrbanBrown
                                         ),
-                                        border = FilterChipDefaults.filterChipBorder(
-                                            enabled = true,
-                                            selected = severity == value,
-                                            borderColor = if (severity == value) SafeGreen else BorderWarm,
-                                            selectedBorderColor = SafeGreen
-                                        )
+                                        border =
+                                            FilterChipDefaults.filterChipBorder(
+                                                enabled = true,
+                                                selected = severity == value,
+                                                borderColor =
+                                                    if (severity == value) {
+                                                        SafeGreen
+                                                    } else {
+                                                        BorderWarm
+                                                    },
+                                                selectedBorderColor = SafeGreen
+                                            )
                                     )
                                 }
                             }
@@ -391,7 +504,9 @@ fun ReviewFormScreen(
                         color = UrbanBrown
                     )
                 },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary),
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    color = TextPrimary
+                ),
                 singleLine = false,
                 minLines = 1,
                 maxLines = 5,
@@ -409,7 +524,9 @@ fun ReviewFormScreen(
             Spacer(Modifier.height(16.dp))
 
             OutlinedButton(
-                onClick = { photoPickerLauncher.launch("image/*") },
+                onClick = {
+                    photoPickerLauncher.launch("image/*")
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -419,14 +536,21 @@ fun ReviewFormScreen(
                 ),
                 border = BorderStroke(1.dp, BorderWarm)
             ) {
+
                 Icon(
                     imageVector = Icons.Filled.Photo,
                     contentDescription = null,
                     tint = UrbanBrown
                 )
+
                 Spacer(Modifier.width(12.dp))
+
                 Text(
-                    text = if (isPhotoUploading) "Загружаем фото..." else "Добавить фотографии",
+                    text = if (isPhotoUploading) {
+                        "Загружаем фото..."
+                    } else {
+                        "Добавить фотографии"
+                    },
                     color = UrbanBrown
                 )
             }
@@ -457,11 +581,14 @@ fun ReviewFormScreen(
                 },
                 enabled = !submitInProgress && !isPhotoUploading
             ) {
+
                 scope.launch {
+
                     isPreparingSubmit = true
                     var sentToViewModel = false
 
                     try {
+
                         val validationError = validateReviewForm(
                             latitude = latitude,
                             longitude = longitude,
@@ -475,8 +602,15 @@ fun ReviewFormScreen(
                             return@launch
                         }
 
-                        val lat = latitude.trim().replace(',', '.').toDouble()
-                        val lon = longitude.trim().replace(',', '.').toDouble()
+                        val lat = latitude
+                            .trim()
+                            .replace(',', '.')
+                            .toDouble()
+
+                        val lon = longitude
+                            .trim()
+                            .replace(',', '.')
+                            .toDouble()
 
                         val generatedAddress = resolveReviewAddress(
                             context = context,
@@ -490,11 +624,14 @@ fun ReviewFormScreen(
                         reviewsViewModel.clearMessages()
 
                         val obstacles = ReviewObstacleTypes.map { type ->
+
                             ReviewObstacle(
                                 obstacleType = type,
                                 severity = if (obstacleSelected[type] == true) {
                                     (obstacleSeverities[type] ?: 1).toShort()
-                                } else 0
+                                } else {
+                                    0
+                                }
                             )
                         }
 
@@ -511,11 +648,20 @@ fun ReviewFormScreen(
                         sentToViewModel = true
 
                         if (isEdit) {
-                            reviewsViewModel.updateReview(initialReview!!.id, request, onSaved)
+                            reviewsViewModel.updateReview(
+                                initialReview!!.id,
+                                request,
+                                onSaved
+                            )
                         } else {
-                            reviewsViewModel.createReview(request, onSaved)
+                            reviewsViewModel.createReview(
+                                request,
+                                onSaved
+                            )
                         }
+
                     } finally {
+
                         if (!sentToViewModel) {
                             isPreparingSubmit = false
                         }
@@ -533,20 +679,35 @@ private fun validateReviewForm(
     obstacleSelected: Map<String, Boolean>,
     obstacleSeverities: Map<String, Int>
 ): String? {
-    val lat = latitude.trim().replace(',', '.').toDoubleOrNull()
-    val lon = longitude.trim().replace(',', '.').toDoubleOrNull()
+
+    val lat = latitude
+        .trim()
+        .replace(',', '.')
+        .toDoubleOrNull()
+
+    val lon = longitude
+        .trim()
+        .replace(',', '.')
+        .toDoubleOrNull()
+
     if (lat == null || lon == null) {
         return "Введите корректные координаты"
     }
-    if (lat < -90.0 || lat > 90.0 || lon < -180.0 || lon > 180.0) {
+
+    if (lat < -90.0 || lat > 90.0 ||
+        lon < -180.0 || lon > 180.0
+    ) {
         return "Координаты выходят за допустимый диапазон"
     }
+
     if (rating == null) {
         return "Поставьте оценку отзыву"
     }
+
     if (obstacleSelected.values.none { it }) {
         return "Выберите хотя бы одно препятствие"
     }
+
     return null
 }
 
@@ -557,7 +718,10 @@ private suspend fun resolveReviewAddress(
     placeName: String,
     fallbackAddress: ReviewAddress?
 ): ReviewAddress = withContext(Dispatchers.IO) {
-    val normalizedPlaceName = placeName.trim().ifBlank { null }
+
+    val normalizedPlaceName =
+        placeName.trim().ifBlank { null }
+
     val baseAddress = fallbackAddress ?: ReviewAddress(
         country = "Россия",
         region = "Регион не указан",
@@ -567,54 +731,103 @@ private suspend fun resolveReviewAddress(
         house = "Без номера",
         placeName = normalizedPlaceName
     )
-    val geocoder = Geocoder(context, Locale("ru"))
+
+    val geocoder = Geocoder(
+        context,
+        Locale("ru")
+    )
 
     return@withContext try {
-        val rawAddress = geocoder.getFromLocation(latitude, longitude, 1)?.firstOrNull()
+
+        val rawAddress = geocoder
+            .getFromLocation(latitude, longitude, 1)
+            ?.firstOrNull()
+
         if (rawAddress == null) {
-            baseAddress.copy(placeName = normalizedPlaceName)
+
+            baseAddress.copy(
+                placeName = normalizedPlaceName
+            )
+
         } else {
+
             ReviewAddress(
-                country = rawAddress.countryName?.takeIf { it.isNotBlank() }
-                    ?: baseAddress.country,
-                region = listOf(rawAddress.adminArea, rawAddress.subAdminArea)
-                    .firstNotBlank()
-                    ?: baseAddress.region,
-                localityType = detectLocalityType(rawAddress, baseAddress),
-                city = listOf(
-                    rawAddress.locality,
-                    rawAddress.subLocality,
-                    rawAddress.subAdminArea,
-                    rawAddress.adminArea
-                )
-                    .firstNotBlank()
-                    ?: baseAddress.city,
-                street = listOf(
-                    rawAddress.thoroughfare,
-                    rawAddress.subLocality,
-                    rawAddress.featureName
-                )
-                    .firstNotBlank()
-                    ?: baseAddress.street,
-                house = listOf(rawAddress.subThoroughfare, rawAddress.premises)
-                    .firstNotBlank()
-                    ?: baseAddress.house,
+                country =
+                    rawAddress.countryName
+                        ?.takeIf { it.isNotBlank() }
+                        ?: baseAddress.country,
+
+                region =
+                    listOf(
+                        rawAddress.adminArea,
+                        rawAddress.subAdminArea
+                    )
+                        .firstNotBlank()
+                        ?: baseAddress.region,
+
+                localityType =
+                    detectLocalityType(
+                        rawAddress,
+                        baseAddress
+                    ),
+
+                city =
+                    listOf(
+                        rawAddress.locality,
+                        rawAddress.subLocality,
+                        rawAddress.subAdminArea,
+                        rawAddress.adminArea
+                    )
+                        .firstNotBlank()
+                        ?: baseAddress.city,
+
+                street =
+                    listOf(
+                        rawAddress.thoroughfare,
+                        rawAddress.subLocality,
+                        rawAddress.featureName
+                    )
+                        .firstNotBlank()
+                        ?: baseAddress.street,
+
+                house =
+                    listOf(
+                        rawAddress.subThoroughfare,
+                        rawAddress.premises
+                    )
+                        .firstNotBlank()
+                        ?: baseAddress.house,
+
                 placeName = normalizedPlaceName
             )
         }
+
     } catch (_: Exception) {
-        baseAddress.copy(placeName = normalizedPlaceName)
+
+        baseAddress.copy(
+            placeName = normalizedPlaceName
+        )
     }
 }
 
 private fun List<String?>.firstNotBlank(): String? {
-    return firstOrNull { !it.isNullOrBlank() }?.trim()
+    return firstOrNull {
+        !it.isNullOrBlank()
+    }?.trim()
 }
 
-private fun detectLocalityType(address: Address, fallbackAddress: ReviewAddress): String {
+private fun detectLocalityType(
+    address: Address,
+    fallbackAddress: ReviewAddress
+): String {
     return when {
-        !address.locality.isNullOrBlank() -> "город"
-        !address.subAdminArea.isNullOrBlank() -> "район"
-        else -> fallbackAddress.localityType
+        !address.locality.isNullOrBlank() ->
+            "город"
+
+        !address.subAdminArea.isNullOrBlank() ->
+            "район"
+
+        else ->
+            fallbackAddress.localityType
     }
 }

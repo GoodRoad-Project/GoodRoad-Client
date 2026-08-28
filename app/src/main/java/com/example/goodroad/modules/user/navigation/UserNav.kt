@@ -48,6 +48,7 @@ import com.example.goodroad.modules.tasks.data.TaskViewDto
 import com.example.goodroad.modules.tasks.screens.CompletedTasksHistoryScreen
 import com.example.goodroad.modules.tasks.screens.TaskExecutionScreen
 import com.example.goodroad.modules.rewards.screens.CouponsScreen
+import com.example.goodroad.modules.tasks.data.TargetViewDto
 
 enum class BottomTab {
     MAP,
@@ -75,7 +76,8 @@ enum class OverlayScreen {
     TASKS_SHOP,
     TASK_DETAIL,
     TASKS_HISTORY,
-    COUPONS
+    COUPONS,
+    REVIEW_FORM_FROM_TASK,
 }
 
 @Composable
@@ -139,7 +141,7 @@ fun UserNav(
     var selectedReview by remember { mutableStateOf<ReviewCardResp?>(null) }
     var selectedReward by remember { mutableStateOf<RewardOffer?>(null) }
     var selectedTask by remember { mutableStateOf<TaskViewDto?>(null) }
-
+    var selectedTaskTarget by remember { mutableStateOf<TargetViewDto?>(null) }
     Scaffold(
         bottomBar = {
             NavigationBar {
@@ -365,6 +367,31 @@ fun UserNav(
                     }
                 }
 
+                OverlayScreen.REVIEW_FORM_FROM_TASK -> {
+                    val target = selectedTaskTarget
+
+                    if (target != null) {
+                        ReviewFormScreen(
+                            reviewsViewModel = reviewsViewModel,
+                            initialReview = null,
+                            initialPlaceName = target.title,
+                            initialLatitude = target.latitude?.toString() ?: "",
+                            initialLongitude = target.longitude?.toString() ?: "",
+                            isLocationLocked = true,
+                            onBack = {
+                                selectedTaskTarget = null
+                                overlayScreen = OverlayScreen.TASK_DETAIL
+                            },
+                            onSaved = {
+                                selectedTaskTarget = null
+                                overlayScreen = OverlayScreen.TASK_DETAIL
+                            }
+                        )
+                    } else {
+                        overlayScreen = OverlayScreen.TASK_DETAIL
+                    }
+                }
+
                 OverlayScreen.REWARDS_HISTORY -> RewardsHistoryScreen(
                     viewModel = rewardsViewModel,
                     onBack = { overlayScreen = OverlayScreen.REWARDS_SHOP }
@@ -392,19 +419,19 @@ fun UserNav(
 
                 OverlayScreen.TASK_DETAIL -> {
                     val task = selectedTask
+
                     if (task != null) {
                         TaskExecutionScreen(
                             task = task,
-                            onTargetComplete = { target ->
-                                tasksViewModel.completeTarget(task.id, target.id)
+
+                            onTargetClick = { target ->
+                                selectedTaskTarget = target
+                                overlayScreen = OverlayScreen.REVIEW_FORM_FROM_TASK
                             },
-                            onComplete = {
-                                selectedTask = null
-                                overlayScreen = OverlayScreen.TASKS_SHOP
-                                tasksViewModel.loadTasks()
-                            },
+
                             onBack = {
                                 selectedTask = null
+                                selectedTaskTarget = null
                                 overlayScreen = OverlayScreen.TASKS_SHOP
                             }
                         )

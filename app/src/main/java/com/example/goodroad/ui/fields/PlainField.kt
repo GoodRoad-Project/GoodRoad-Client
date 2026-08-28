@@ -22,7 +22,8 @@ fun PlainField(
     trailing: @Composable (() -> Unit)? = null,
     prefix: @Composable (() -> Unit)? = null,
     warning: String? = null,
-    maxLength: Int = Int.MAX_VALUE
+    maxLength: Int = Int.MAX_VALUE,
+    readOnly: Boolean = false
 ) {
     TextField(
         value = value,
@@ -34,6 +35,7 @@ fun PlainField(
         modifier = modifier.fillMaxWidth(),
         label = { Text(label, color = UrbanBrown) },
         singleLine = true,
+        readOnly = readOnly,
         keyboardOptions = keyboardOptions,
         visualTransformation = visualTransformation,
         leadingIcon = icon,

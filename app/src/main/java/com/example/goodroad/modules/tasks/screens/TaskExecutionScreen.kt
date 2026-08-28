@@ -8,7 +8,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -26,10 +30,13 @@ import com.example.goodroad.ui.theme.SafeGreen
 @Composable
 fun TaskExecutionScreen(
     task: TaskViewDto,
-    onTargetComplete: (TargetViewDto) -> Unit,
+    onTargetClick: (TargetViewDto) -> Unit,
     onBack: () -> Unit
 ) {
-    var targetsState by remember { mutableStateOf(task.targets.toList()) }
+    var targetsState by remember {
+        mutableStateOf(task.targets.toList())
+    }
+
     val completedTargets = targetsState.count { it.done }
 
     Surface(
@@ -41,6 +48,7 @@ fun TaskExecutionScreen(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -81,6 +89,7 @@ fun TaskExecutionScreen(
                         fontWeight = FontWeight.Bold,
                         color = UrbanBrown
                     )
+
                     Text(
                         text = "⭐",
                         fontSize = 16.sp
@@ -91,7 +100,13 @@ fun TaskExecutionScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             LinearProgressIndicator(
-                progress = completedTargets.toFloat() / task.targetCount,
+                progress = {
+                    if (task.targetCount > 0) {
+                        completedTargets.toFloat() / task.targetCount
+                    } else {
+                        0f
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp),
@@ -119,20 +134,18 @@ fun TaskExecutionScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 itemsIndexed(targetsState) { idx, target ->
+
                     TargetItem(
                         target = target,
                         index = idx,
                         isCompleted = target.done,
                         onComplete = {
                             if (!target.done) {
-                                val updatedTarget = target.copy(done = true)
-                                targetsState = targetsState.mapIndexed { index, t ->
-                                    if (index == idx) updatedTarget else t
-                                }
-                                onTargetComplete(updatedTarget)
+                                onTargetClick(target)
                             }
                         }
                     )
@@ -153,7 +166,9 @@ private fun TargetItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = !isCompleted) {
-                if (!isCompleted) onComplete()
+                if (!isCompleted) {
+                    onComplete()
+                }
             },
         colors = CardDefaults.cardColors(
             containerColor = SurfaceWarm
@@ -166,11 +181,13 @@ private fun TargetItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+
             Row(
                 modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
                 if (isCompleted) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
@@ -210,7 +227,7 @@ private fun TargetItem(
                     backgroundColor = SafeGreen,
                     modifier = Modifier.width(100.dp),
                     onClick = {
-                        if (!isCompleted) onComplete()
+                        onComplete()
                     }
                 )
             }
