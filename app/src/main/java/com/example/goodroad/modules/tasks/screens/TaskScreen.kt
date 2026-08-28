@@ -164,7 +164,6 @@ private fun TaskCard(
     onClick: () -> Unit
 ) {
     val isCompleted = task.completedCount >= task.targetCount
-    val isInProgress = task.completedCount > 0 && !isCompleted
 
     Card(
         modifier = Modifier
@@ -230,15 +229,6 @@ private fun TaskCard(
             }
 
             Spacer(modifier = Modifier.width(16.dp))
-
-            if (!isCompleted) {
-                PrimaryButton(
-                    text = if (isInProgress) "Продолжить" else "Начать",
-                    backgroundColor = SafeGreen,
-                    modifier = Modifier.width(120.dp),
-                    onClick = onClick
-                )
-            }
         }
     }
 }

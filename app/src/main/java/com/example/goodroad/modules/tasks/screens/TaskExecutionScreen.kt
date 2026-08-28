@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,18 +22,15 @@ import com.example.goodroad.ui.theme.TextPrimary
 import com.example.goodroad.ui.theme.UrbanBrown
 import com.example.goodroad.ui.theme.SurfaceWarm
 import com.example.goodroad.ui.theme.SafeGreen
-import com.example.goodroad.ui.theme.AlertRed
 
 @Composable
 fun TaskExecutionScreen(
     task: TaskViewDto,
     onTargetComplete: (TargetViewDto) -> Unit,
-    onComplete: () -> Unit,
     onBack: () -> Unit
 ) {
     var targetsState by remember { mutableStateOf(task.targets.toList()) }
     val completedTargets = targetsState.count { it.done }
-    val allCompleted = completedTargets >= task.targetCount
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -90,31 +86,6 @@ fun TaskExecutionScreen(
                         fontSize = 16.sp
                     )
                 }
-
-                if (allCompleted) {
-                    Surface(
-                        shape = MaterialTheme.shapes.small,
-                        color = SafeGreen.copy(alpha = 0.2f)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = SafeGreen,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = "Готово к завершению",
-                                fontSize = 12.sp,
-                                color = SafeGreen
-                            )
-                        }
-                    }
-                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -167,16 +138,6 @@ fun TaskExecutionScreen(
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            PrimaryButton(
-                text = "Завершить задание",
-                backgroundColor = if (allCompleted) SafeGreen else UrbanBrown.copy(alpha = 0.5f),
-                modifier = Modifier.fillMaxWidth(),
-                enabled = allCompleted,
-                onClick = onComplete
-            )
         }
     }
 }
@@ -191,7 +152,9 @@ private fun TargetItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = !isCompleted) { if (!isCompleted) onComplete() },
+            .clickable(enabled = !isCompleted) {
+                if (!isCompleted) onComplete()
+            },
         colors = CardDefaults.cardColors(
             containerColor = SurfaceWarm
         )
@@ -231,29 +194,13 @@ private fun TargetItem(
                         text = target.title,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium,
-                        color = if (isCompleted) UrbanBrown.copy(alpha = 0.6f) else TextPrimary,
+                        color = if (isCompleted) {
+                            UrbanBrown.copy(alpha = 0.6f)
+                        } else {
+                            TextPrimary
+                        },
                         lineHeight = 26.sp
                     )
-
-                    if (target.latitude != null && target.longitude != null) {
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = null,
-                                tint = AlertRed,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = "Отметить на карте",
-                                fontSize = 14.sp,
-                                color = AlertRed
-                            )
-                        }
-                    }
                 }
             }
 
