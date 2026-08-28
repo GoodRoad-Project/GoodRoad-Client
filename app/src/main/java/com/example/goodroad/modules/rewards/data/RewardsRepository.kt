@@ -30,4 +30,8 @@ class RewardsRepository(
     suspend fun getLeaderboard(): List<LeaderboardItem> {
         return api.getLeaderboard()
     }
+
+    suspend fun getCurrentUserRewards(): UserRewardsResp {
+        return api.getCurrentUserRewards()
+    }
 }

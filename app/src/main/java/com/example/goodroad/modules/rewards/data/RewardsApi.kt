@@ -29,4 +29,7 @@ interface RewardsApi {
 
     @GET("rewards/leaderboard")
     suspend fun getLeaderboard(): List<LeaderboardItem>
+
+    @GET("rewards/me")
+    suspend fun getCurrentUserRewards(): UserRewardsResp
 }

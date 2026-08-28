@@ -42,3 +42,22 @@ data class PointTransaction(
     val balanceAfter: Int,
     val createdAt: String
 )
+
+data class UserRewardsResp(
+    val active: List<UserRewardView>,
+    val inactive: List<UserRewardView>
+)
+
+data class UserRewardView(
+    val id: String?,
+    val offerId: String,
+    val partnerName: String,
+    val title: String,
+    val rewardType: String,
+    val code: String,
+    val pricePaid: Int,
+    val status: String,
+    val purchasedAt: String?,
+    val expiresAt: String?,
+    val redeemedAt: String?
+)

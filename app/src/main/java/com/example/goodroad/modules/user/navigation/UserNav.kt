@@ -297,6 +297,7 @@ fun UserNav(
                 }
 
                 OverlayScreen.COUPONS -> CouponsScreen(
+                    viewModel = rewardsViewModel,
                     onBack = { overlayScreen = OverlayScreen.REWARDS_SHOP }
                 )
 
