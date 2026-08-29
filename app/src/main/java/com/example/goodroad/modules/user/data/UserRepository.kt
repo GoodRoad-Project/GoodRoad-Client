@@ -3,33 +3,67 @@ package com.example.goodroad.modules.user.data
 import okhttp3.MultipartBody
 import retrofit2.HttpException
 
-class UserRepository(private val api: UserApi) {
+class UserRepository(
+    private val api: UserApi
+) {
 
     suspend fun getCurrentUser(): SettingsView? {
         val response = api.getCurrentUser()
-        if (response.isSuccessful) return response.body()
+
+        if (response.isSuccessful) {
+            return response.body()
+        }
+
         throw HttpException(response)
     }
 
-    suspend fun updateCurrentUser(req: UpdateUserReq): SettingsView? {
+    suspend fun updateCurrentUser(
+        req: UpdateUserReq
+    ): SettingsView? {
         val response = api.updateCurrentUser(req)
-        if (response.isSuccessful) return response.body()
+
+        if (response.isSuccessful) {
+            return response.body()
+        }
+
         throw HttpException(response)
     }
 
-    suspend fun changePassword(oldPassword: String, newPassword: String) {
-        val response = api.changePassword(oldPassword, newPassword)
-        if (!response.isSuccessful) throw HttpException(response)
+    suspend fun changePassword(
+        oldPassword: String,
+        newPassword: String
+    ) {
+        val response = api.changePassword(
+            ChangePasswordReq(
+                oldPassword = oldPassword,
+                newPassword = newPassword
+            )
+        )
+
+        if (!response.isSuccessful) {
+            throw HttpException(response)
+        }
     }
 
-    suspend fun uploadAvatar(file: MultipartBody.Part): AvatarUploadResp? {
+    suspend fun uploadAvatar(
+        file: MultipartBody.Part
+    ): AvatarUploadResp? {
         val response = api.uploadAvatar(file)
-        if (response.isSuccessful) return response.body()
+
+        if (response.isSuccessful) {
+            return response.body()
+        }
+
         throw HttpException(response)
     }
 
-    suspend fun deleteCurrentUser(req: DeleteAccountReq) {
+    suspend fun deleteCurrentUser(
+        req: DeleteAccountReq
+    ) {
         val response = api.deleteCurrentUser(req)
-        if (!response.isSuccessful) throw HttpException(response)
+
+        if (!response.isSuccessful) {
+            throw HttpException(response)
+        }
     }
 }

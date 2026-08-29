@@ -13,7 +13,13 @@ data class UpdateUserReq(
     val firstName: String? = null,
     val lastName: String? = null,
     val photoUrl: String? = null,
-    val phone: String? = null
+    val phone: String? = null,
+    val currentPassword: String? = null
+)
+
+data class ChangePhoneReq(
+    val phone: String,
+    val currentPassword: String
 )
 
 data class AvatarUploadResp(

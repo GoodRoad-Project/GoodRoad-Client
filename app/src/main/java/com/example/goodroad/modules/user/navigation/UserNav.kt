@@ -49,6 +49,9 @@ import com.example.goodroad.modules.tasks.screens.CompletedTasksHistoryScreen
 import com.example.goodroad.modules.tasks.screens.TaskExecutionScreen
 import com.example.goodroad.modules.rewards.screens.CouponsScreen
 import com.example.goodroad.modules.tasks.data.TargetViewDto
+import com.example.goodroad.ui.user.SecurityScreen
+import com.example.goodroad.ui.user.ChangePasswordScreen
+import com.example.goodroad.ui.user.ChangePhoneScreen
 
 enum class BottomTab {
     MAP,
@@ -61,6 +64,9 @@ enum class OverlayScreen {
     NONE,
     EDIT_PROFILE,
     DELETE_PROFILE,
+    SECURITY,
+    CHANGE_PASSWORD,
+    CHANGE_PHONE,
     REVIEW_FORM,
     REVIEW_DETAILS,
     OBSTACLES,
@@ -243,6 +249,9 @@ fun UserNav(
                         onSelectObstacles = {
                             overlayScreen = OverlayScreen.OBSTACLES
                         },
+                        onSecurity = {
+                            overlayScreen = OverlayScreen.SECURITY
+                        },
                         onBecomeVolunteer = {
                             overlayScreen = OverlayScreen.VOLUNTEER_APPLICATION
                         },
@@ -268,6 +277,32 @@ fun UserNav(
                     viewModel = userViewModel,
                     onBack = { overlayScreen = OverlayScreen.NONE },
                     onExit = onLogout
+                )
+
+                OverlayScreen.SECURITY -> SecurityScreen(
+                    onBack = {
+                        overlayScreen = OverlayScreen.NONE
+                    },
+                    onChangePassword = {
+                        overlayScreen = OverlayScreen.CHANGE_PASSWORD
+                    },
+                    onChangePhone = {
+                        overlayScreen = OverlayScreen.CHANGE_PHONE
+                    }
+                )
+
+                OverlayScreen.CHANGE_PASSWORD -> ChangePasswordScreen(
+                    userViewModel = userViewModel,
+                    onBack = {
+                        overlayScreen = OverlayScreen.SECURITY
+                    }
+                )
+
+                OverlayScreen.CHANGE_PHONE -> ChangePhoneScreen(
+                    userViewModel = userViewModel,
+                    onBack = {
+                        overlayScreen = OverlayScreen.SECURITY
+                    }
                 )
 
                 OverlayScreen.REVIEW_FORM -> ReviewFormScreen(

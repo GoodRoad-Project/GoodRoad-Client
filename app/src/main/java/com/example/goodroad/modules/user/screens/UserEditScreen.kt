@@ -371,8 +371,8 @@ fun UserEditScreen(
                     firstName = firstNameNormalized,
                     lastName = lastNameNormalized,
                     phone = phoneDigits?.let { formatPhoneForRequest(it) },
-                    oldPassword = oldPass,
-                    newPassword = newPass
+                    //oldPassword = oldPass,
+                    //newPassword = newPass
                 )
 
                 oldPassword = ""
