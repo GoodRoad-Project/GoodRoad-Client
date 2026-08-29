@@ -33,7 +33,7 @@ fun TaskExecutionScreen(
     onTargetClick: (TargetViewDto) -> Unit,
     onBack: () -> Unit
 ) {
-    var targetsState by remember {
+    var targetsState by remember(task.targets) {
         mutableStateOf(task.targets.toList())
     }
 
