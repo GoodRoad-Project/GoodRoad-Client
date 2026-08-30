@@ -1,9 +1,12 @@
 package com.example.goodroad.ui.user
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.user.presentation.UserViewModel
@@ -13,6 +16,7 @@ import com.example.goodroad.ui.fields.PasswordField
 import com.example.goodroad.ui.fields.PhoneField
 import com.example.goodroad.ui.theme.BackgroundLight
 import com.example.goodroad.ui.theme.TextPrimary
+import com.example.goodroad.ui.theme.UrbanBrown
 import com.example.goodroad.validation.PHONE_FORMAT_WARNING
 import com.example.goodroad.validation.formatPhoneForRequest
 import com.example.goodroad.validation.isValidRussianPhoneDigits
@@ -72,11 +76,28 @@ fun ChangePhoneScreen(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
-            Text(
-                text = "Смена телефона",
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Смена телефона",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                IconButton(
+                    onClick = onBack,
+                    enabled = !isLoading
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = UrbanBrown.copy(alpha = 0.7f)
+                    )
+                }
+            }
 
             Spacer(
                 modifier = Modifier.height(24.dp)

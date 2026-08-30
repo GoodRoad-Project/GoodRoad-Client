@@ -23,21 +23,13 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.goodroad.modules.user.presentation.UserViewModel
 import com.example.goodroad.ui.AuthStatusText
-import com.example.goodroad.ui.AuthSuccessText
 import com.example.goodroad.ui.buttons.PrimaryButton
-import com.example.goodroad.ui.fields.PasswordField
-import com.example.goodroad.ui.fields.PhoneField
 import com.example.goodroad.ui.fields.PlainField
 import com.example.goodroad.ui.theme.*
 import com.example.goodroad.validation.CYRILLIC_WARNING
 import com.example.goodroad.validation.NAME_MAX_LENGTH
-import com.example.goodroad.validation.PHONE_CHARS_WARNING
-import com.example.goodroad.validation.PHONE_FORMAT_WARNING
-import com.example.goodroad.validation.formatPhoneForRequest
 import com.example.goodroad.validation.isAllowedCyrillicInput
-import com.example.goodroad.validation.isAllowedDigitsInput
 import com.example.goodroad.validation.normalizeRequiredCyrillic
-import com.example.goodroad.validation.normalizeRequiredRussianPhone
 
 @Composable
 fun UserEditScreen(
@@ -47,6 +39,13 @@ fun UserEditScreen(
 ) {
     val context = LocalContext.current
     val user = userViewModel.user.value
+
+    LaunchedEffect(userViewModel.successMessage.value) {
+        if (userViewModel.successMessage.value != null) {
+            userViewModel.clearMessages()
+            onBack()
+        }
+    }
 
     if (user == null) {
         Box(
@@ -60,48 +59,25 @@ fun UserEditScreen(
         var lastName by remember { mutableStateOf(user.lastName ?: "") }
         var selectedPhotoUri by remember { mutableStateOf<Uri?>(null) }
 
-        var phone by remember { mutableStateOf("") }
-
-        var oldPassword by remember { mutableStateOf("") }
-        var newPassword by remember { mutableStateOf("") }
-        var confirmNewPassword by remember { mutableStateOf("") }
-
         var firstNameWarning by remember { mutableStateOf<String?>(null) }
         var lastNameWarning by remember { mutableStateOf<String?>(null) }
-        var phoneWarning by remember { mutableStateOf<String?>(null) }
         var errorText by remember { mutableStateOf<String?>(null) }
 
         val errorMessage by userViewModel.errorMessage
-        val successMessage by userViewModel.successMessage
         val isLoading by userViewModel.isLoading
 
         val finalError = errorMessage ?: errorText
 
-        val hasProfileChanges =
-            firstName != (user.firstName ?: "") ||
-                    lastName != (user.lastName ?: "")
+        val hasProfileChanges = firstName != (user.firstName ?: "") ||
+                lastName != (user.lastName ?: "")
 
-        val hasPhoneChange = phone.isNotBlank()
-
-        val hasPasswordChanges =
-            oldPassword.isNotBlank() ||
-                    newPassword.isNotBlank() ||
-                    confirmNewPassword.isNotBlank()
-
-        val hasChanges =
-            hasProfileChanges ||
-                    hasPhoneChange ||
-                    hasPasswordChanges ||
-                    selectedPhotoUri != null
-
-        val canSave = hasChanges && !isLoading
+        val canSave = (hasProfileChanges || selectedPhotoUri != null) && !isLoading
 
         val photoPickerLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.GetContent()
         ) { uri ->
             if (uri != null) {
                 selectedPhotoUri = uri
-
                 userViewModel.uploadAvatar(context, uri) {
                     selectedPhotoUri = null
                 }
@@ -130,7 +106,6 @@ fun UserEditScreen(
                         !isAllowedCyrillicInput(value) -> {
                             firstNameWarning = CYRILLIC_WARNING
                         }
-
                         else -> {
                             firstName = value
                             firstNameWarning = null
@@ -159,7 +134,6 @@ fun UserEditScreen(
                         !isAllowedCyrillicInput(value) -> {
                             lastNameWarning = CYRILLIC_WARNING
                         }
-
                         else -> {
                             lastName = value
                             lastNameWarning = null
@@ -196,7 +170,6 @@ fun UserEditScreen(
                             contentScale = ContentScale.Crop
                         )
                     }
-
                     user.photoUrl?.isNotBlank() == true -> {
                         AsyncImage(
                             model = user.photoUrl,
@@ -207,7 +180,6 @@ fun UserEditScreen(
                             contentScale = ContentScale.Crop
                         )
                     }
-
                     else -> {
                         Surface(
                             modifier = Modifier.size(120.dp),
@@ -252,99 +224,13 @@ fun UserEditScreen(
                     tint = UrbanBrown,
                     modifier = Modifier.size(22.dp)
                 )
-
                 Spacer(Modifier.width(12.dp))
-
                 Text(
                     text = "Выбрать фото профиля",
                     style = MaterialTheme.typography.titleMedium,
                     color = UrbanBrown
                 )
             }
-
-            Spacer(Modifier.height(12.dp))
-
-            PhoneField(
-                value = phone,
-                onValueChange = { value ->
-                    phone = value
-                    errorText = null
-
-                    phoneWarning = when {
-                        !isAllowedDigitsInput(value) ->
-                            PHONE_CHARS_WARNING
-
-                        value.length > 11 ->
-                            PHONE_FORMAT_WARNING
-
-                        value.isNotEmpty() &&
-                                value.first() !in listOf('7', '8') ->
-                            PHONE_FORMAT_WARNING
-
-                        else ->
-                            null
-                    }
-                },
-                label = "Новый телефон",
-                warning = phoneWarning
-            )
-
-            Spacer(Modifier.height(4.dp))
-
-            Text(
-                text = "Оставьте поле пустым, если номер менять не нужно.",
-                style = MaterialTheme.typography.bodySmall,
-                color = UrbanBrown
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            PasswordField(
-                value = oldPassword,
-                onValueChange = {
-                    oldPassword = it
-                    errorText = null
-                },
-                label = "Старый пароль"
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            PasswordField(
-                value = newPassword,
-                onValueChange = {
-                    newPassword = it
-                    errorText = null
-                },
-                label = "Новый пароль"
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            PasswordField(
-                value = confirmNewPassword,
-                onValueChange = {
-                    confirmNewPassword = it
-                    errorText = null
-                },
-                label = "Подтвердите новый пароль"
-            )
-
-            Spacer(Modifier.height(4.dp))
-
-            Text(
-                text = "Чтобы сменить пароль, заполните старый пароль и дважды введите новый.",
-                style = MaterialTheme.typography.bodySmall,
-                color = UrbanBrown
-            )
-
-            AuthSuccessText(
-                text = successMessage,
-                onTimeout = {
-                    errorText = null
-                    userViewModel.clearMessages()
-                }
-            )
 
             AuthStatusText(
                 text = finalError,
@@ -357,147 +243,27 @@ fun UserEditScreen(
             Spacer(Modifier.height(20.dp))
 
             PrimaryButton(
-                text = if (isLoading) {
-                    "Сохраняем..."
-                } else {
-                    "Сохранить"
-                },
+                text = if (isLoading) "Сохраняем..." else "Сохранить",
                 enabled = canSave
             ) {
-
-                /*
-                 * Проверяем имя.
-                 */
-                val firstNameNormalized =
-                    normalizeRequiredCyrillic(firstName)
-
+                val firstNameNormalized = normalizeRequiredCyrillic(firstName)
                 if (firstNameNormalized == null) {
                     firstNameWarning = CYRILLIC_WARNING
                     errorText = "Имя должно содержать только кириллицу"
                     return@PrimaryButton
                 }
 
-                /*
-                 * Проверяем фамилию.
-                 */
-                val lastNameNormalized =
-                    normalizeRequiredCyrillic(lastName)
-
+                val lastNameNormalized = normalizeRequiredCyrillic(lastName)
                 if (lastNameNormalized == null) {
                     lastNameWarning = CYRILLIC_WARNING
                     errorText = "Фамилия должна содержать только кириллицу"
                     return@PrimaryButton
                 }
 
-                /*
-                 * Проверяем телефон только если пользователь его ввёл.
-                 */
-                val phoneDigits =
-                    phone
-                        .takeIf { it.isNotBlank() }
-                        ?.let { normalizeRequiredRussianPhone(it) }
-
-                if (phone.isNotBlank() && phoneDigits == null) {
-                    phoneWarning = PHONE_FORMAT_WARNING
-                    errorText = "Некорректный телефон"
-                    return@PrimaryButton
-                }
-
-                /*
-                 * Проверяем пароль.
-                 */
-                val oldPass =
-                    oldPassword.takeIf { it.isNotBlank() }
-
-                val newPass =
-                    newPassword.takeIf { it.isNotBlank() }
-
-                val confirmPass =
-                    confirmNewPassword.takeIf { it.isNotBlank() }
-
-                val passwordChangeRequested =
-                    oldPass != null ||
-                            newPass != null ||
-                            confirmPass != null
-
-                if (passwordChangeRequested) {
-
-                    if (
-                        oldPass.isNullOrBlank() ||
-                        newPass.isNullOrBlank() ||
-                        confirmPass.isNullOrBlank()
-                    ) {
-                        errorText =
-                            "Для смены пароля заполните все три поля"
-
-                        return@PrimaryButton
-                    }
-
-                    if (newPass != confirmPass) {
-                        errorText =
-                            "Новые пароли не совпадают"
-
-                        return@PrimaryButton
-                    }
-                }
-
-                /*
-                 * 1. Сохраняем имя и фамилию.
-                 *
-                 * Телефон сюда НЕ передаём.
-                 */
                 if (hasProfileChanges) {
                     userViewModel.updateUser(
                         firstName = firstNameNormalized,
                         lastName = lastNameNormalized
-                    )
-                }
-
-                /*
-                 * Если нужно изменить телефон,
-                 * он должен отправляться на отдельный endpoint:
-                 *
-                 * PUT /users/phone
-                 *
-                 * Но для этого нужен текущий пароль.
-                 */
-                if (hasPhoneChange) {
-
-                    if (oldPass.isNullOrBlank()) {
-                        errorText =
-                            "Для смены телефона введите текущий пароль"
-
-                        return@PrimaryButton
-                    }
-
-                    userViewModel.changePhone(
-                        newPhone = formatPhoneForRequest(
-                            phoneDigits!!
-                        ),
-                        currentPassword = oldPass,
-                        onSuccess = {
-                            phone = ""
-                        }
-                    )
-                }
-
-                /*
-                 * Отдельный endpoint:
-                 *
-                 * POST /users
-                 *
-                 * для смены пароля.
-                 */
-                if (passwordChangeRequested) {
-
-                    userViewModel.changePassword(
-                        oldPassword = oldPass!!,
-                        newPassword = newPass!!,
-                        onSuccess = {
-                            oldPassword = ""
-                            newPassword = ""
-                            confirmNewPassword = ""
-                        }
                     )
                 }
 
