@@ -14,13 +14,12 @@ import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.fields.PasswordField
 import com.example.goodroad.ui.fields.PhoneField
+import com.example.goodroad.ui.fields.PhoneValidation
+import com.example.goodroad.ui.fields.validatePhone
+import com.example.goodroad.ui.fields.toFormattedPhone
 import com.example.goodroad.ui.theme.BackgroundLight
 import com.example.goodroad.ui.theme.TextPrimary
 import com.example.goodroad.ui.theme.UrbanBrown
-import com.example.goodroad.validation.PHONE_FORMAT_WARNING
-import com.example.goodroad.validation.formatPhoneForRequest
-import com.example.goodroad.validation.isValidRussianPhoneDigits
-import com.example.goodroad.validation.normalizeRequiredRussianPhone
 
 @Composable
 fun ChangePhoneScreen(
@@ -36,31 +35,6 @@ fun ChangePhoneScreen(
 
     val serverError by userViewModel.errorMessage
     val isLoading by userViewModel.isLoading
-
-    val phoneValidation = remember(phone) {
-        when {
-            phone.isEmpty() -> PhoneValidation.Empty
-
-            !isValidRussianPhoneDigits(phone.trim()) ->
-                PhoneValidation.InvalidFormat
-
-            phone.length > 11 ->
-                PhoneValidation.InvalidFormat
-
-            phone.first() !in listOf('7', '8') ->
-                PhoneValidation.InvalidFormat
-
-            else -> {
-                val normalized = normalizeRequiredRussianPhone(phone)
-
-                if (normalized != null) {
-                    PhoneValidation.Valid(normalized)
-                } else {
-                    PhoneValidation.InvalidFormat
-                }
-            }
-        }
-    }
 
     LaunchedEffect(Unit) {
         userViewModel.clearMessages()
@@ -110,14 +84,7 @@ fun ChangePhoneScreen(
                     localError = null
                     userViewModel.clearMessages()
                 },
-                label = "Новый телефон",
-                warning = when (phoneValidation) {
-                    is PhoneValidation.InvalidFormat ->
-                        PHONE_FORMAT_WARNING
-
-                    else ->
-                        null
-                }
+                label = "Новый телефон"
             )
 
             Spacer(
@@ -158,9 +125,14 @@ fun ChangePhoneScreen(
                 },
                 enabled = !isLoading
             ) {
+                val phoneValidation = validatePhone(phone)
                 when (phoneValidation) {
                     is PhoneValidation.Empty -> {
                         localError = "Введите номер телефона"
+                    }
+
+                    is PhoneValidation.InvalidChars -> {
+                        localError = "Телефон должен содержать только цифры"
                     }
 
                     is PhoneValidation.InvalidFormat -> {
@@ -176,9 +148,7 @@ fun ChangePhoneScreen(
                         localError = null
 
                         userViewModel.changePhone(
-                            newPhone = formatPhoneForRequest(
-                                phoneValidation.phoneDigits
-                            ),
+                            newPhone = phoneValidation.toFormattedPhone()!!,
                             currentPassword = currentPassword,
                             onSuccess = onBack
                         )
@@ -187,14 +157,4 @@ fun ChangePhoneScreen(
             }
         }
     }
-}
-
-private sealed class PhoneValidation {
-    data object Empty : PhoneValidation()
-
-    data object InvalidFormat : PhoneValidation()
-
-    data class Valid(
-        val phoneDigits: String
-    ) : PhoneValidation()
 }

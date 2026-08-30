@@ -15,10 +15,6 @@ import com.example.goodroad.ui.AuthFooter
 import com.example.goodroad.ui.AuthScreenFrame
 import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.fields.*
-import com.example.goodroad.validation.PHONE_FORMAT_WARNING
-import com.example.goodroad.validation.formatPhoneForRequest
-import com.example.goodroad.validation.isValidRussianPhoneDigits
-import com.example.goodroad.validation.normalizeRequiredRussianPhone
 
 @Composable
 fun LoginScreen(
@@ -38,16 +34,6 @@ fun LoginScreen(
         loginResult?.let { onLoginSuccess(it) }
     }
 
-    val phoneValidation = remember(phone) {
-        when {
-            phone.isEmpty() -> PhoneValidation.Empty
-            !isValidRussianPhoneDigits(phone.trim()) -> PhoneValidation.InvalidFormat
-            phone.length > 11 -> PhoneValidation.InvalidFormat
-            phone.first() !in listOf('7', '8') -> PhoneValidation.InvalidFormat
-            else -> PhoneValidation.Valid(normalizeRequiredRussianPhone(phone)!!)
-        }
-    }
-
     AuthScreenFrame(
         title = "Вход",
         action = {
@@ -55,9 +41,14 @@ fun LoginScreen(
                 text = if (loading) "Входим..." else "Войти",
                 enabled = !loading
             ) {
+                val phoneValidation = validatePhone(phone)
                 when (phoneValidation) {
                     is PhoneValidation.Empty -> {
                         viewModel.setError("Введите номер телефона")
+                        return@PrimaryButton
+                    }
+                    is PhoneValidation.InvalidChars -> {
+                        viewModel.setError("Телефон должен содержать только цифры")
                         return@PrimaryButton
                     }
                     is PhoneValidation.InvalidFormat -> {
@@ -70,7 +61,7 @@ fun LoginScreen(
                             return@PrimaryButton
                         }
                         viewModel.login(
-                            formatPhoneForRequest(phoneValidation.phoneDigits),
+                            phoneValidation.toFormattedPhone()!!,
                             password
                         )
                     }
@@ -91,11 +82,7 @@ fun LoginScreen(
                 phone = it
                 viewModel.clearError()
             },
-            label = "Телефон",
-            warning = when (phoneValidation) {
-                is PhoneValidation.InvalidFormat -> PHONE_FORMAT_WARNING
-                else -> null
-            }
+            label = "Телефон"
         )
 
         Spacer(Modifier.height(12.dp))
@@ -125,10 +112,4 @@ fun LoginScreen(
             onTimeout = viewModel::clearError
         )
     }
-}
-
-sealed class PhoneValidation {
-    object Empty : PhoneValidation()
-    object InvalidFormat : PhoneValidation()
-    data class Valid(val phoneDigits: String) : PhoneValidation()
 }

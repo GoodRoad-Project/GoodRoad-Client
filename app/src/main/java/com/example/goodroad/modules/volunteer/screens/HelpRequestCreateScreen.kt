@@ -24,13 +24,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
+import com.example.goodroad.ui.fields.PhoneField
+import com.example.goodroad.ui.fields.PhoneValidation
+import com.example.goodroad.ui.fields.validatePhone
+import com.example.goodroad.ui.fields.toFormattedPhone
 import com.example.goodroad.ui.theme.BackgroundLight
-import com.example.goodroad.validation.isValidRussianPhoneDigits
 import java.time.LocalDateTime
 
 @Composable
@@ -105,16 +107,21 @@ fun HelpRequestCreateScreen(
             }
         }
 
-        contactError = when {
-            contact.isBlank() -> {
+        val phoneValidation = validatePhone(contact)
+        contactError = when (phoneValidation) {
+            is PhoneValidation.Empty -> {
                 valid = false
                 "Обязательное поле"
             }
-            !isValidRussianPhoneDigits(contact.trim()) -> {
+            is PhoneValidation.InvalidChars -> {
+                valid = false
+                "Телефон должен содержать только цифры"
+            }
+            is PhoneValidation.InvalidFormat -> {
                 valid = false
                 "Введите корректный номер телефона"
             }
-            else -> null
+            is PhoneValidation.Valid -> null
         }
 
         socialNicknameError = null
@@ -214,16 +221,16 @@ fun HelpRequestCreateScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            PhoneFieldForRequest(
+            PhoneField(
                 value = contact,
                 onValueChange = {
                     contact = it
                     contactError = null
                 },
                 label = "Номер телефона *",
-                isError = contactError != null,
-                supportingText = contactError,
-                modifier = Modifier.fillMaxWidth()
+                showPrefix = false,
+                showIcon = false,
+                allowEmptyWarning = true
             )
 
             Spacer(Modifier.height(12.dp))
@@ -293,12 +300,19 @@ fun HelpRequestCreateScreen(
                         meetingTime
                     }
 
+                    // Получаем форматированный номер
+                    val phoneValidation = validatePhone(contact)
+                    val formattedPhone = when (phoneValidation) {
+                        is PhoneValidation.Valid -> phoneValidation.toFormattedPhone()!!
+                        else -> contact // fallback
+                    }
+
                     helpViewModel.createRequest(
                         routeStart = routeStart,
                         routeEnd = routeEnd,
                         meetingDate = formattedDate,
                         meetingTime = formattedTime,
-                        contact = contact,
+                        contact = formattedPhone,
                         socialNickname = socialNickname,
                         comment = comment
                     ) {
@@ -309,28 +323,6 @@ fun HelpRequestCreateScreen(
             )
         }
     }
-}
-
-@Composable
-fun PhoneFieldForRequest(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    isError: Boolean = false,
-    supportingText: String? = null,
-    modifier: Modifier = Modifier
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        isError = isError,
-        supportingText = { supportingText?.let { Text(it) } },
-        modifier = modifier,
-        shape = MaterialTheme.shapes.large,
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
-    )
 }
 
 private object DateVisualTransformation : VisualTransformation {

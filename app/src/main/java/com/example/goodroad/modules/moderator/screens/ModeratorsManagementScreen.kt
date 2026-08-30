@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -47,7 +48,9 @@ import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.fields.PasswordField
 import com.example.goodroad.ui.fields.PhoneField
 import com.example.goodroad.ui.fields.PlainField
-import androidx.compose.foundation.layout.size
+import com.example.goodroad.ui.fields.PhoneValidation
+import com.example.goodroad.ui.fields.validatePhone
+import com.example.goodroad.ui.fields.toFormattedPhone
 import com.example.goodroad.ui.theme.AlertRed
 import com.example.goodroad.ui.theme.BackgroundLight
 import com.example.goodroad.ui.theme.BorderWarm
@@ -57,10 +60,6 @@ import com.example.goodroad.ui.theme.SurfaceWarm
 import com.example.goodroad.ui.theme.TextPrimary
 import com.example.goodroad.ui.theme.UrbanBrown
 import com.example.goodroad.ui.theme.WarningOrange
-import com.example.goodroad.validation.PHONE_FORMAT_WARNING
-import com.example.goodroad.validation.formatPhoneForRequest
-import com.example.goodroad.validation.isAllowedDigitsInput
-import com.example.goodroad.validation.normalizeRequiredRussianPhone
 
 @Composable
 private fun NameField(
@@ -385,7 +384,6 @@ private fun AddModeratorDialog(
     var lastName by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var phoneWarning by remember { mutableStateOf<String?>(null) }
     var errorText by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
@@ -393,17 +391,27 @@ private fun AddModeratorDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    val phoneDigits = normalizeRequiredRussianPhone(phone)
-                    if (firstName.isBlank() || lastName.isBlank() || password.isBlank() || phoneDigits == null) {
-                        errorText = "Заполните все поля корректно"
-                        phoneWarning = if (phoneDigits == null && phone.isNotBlank()) PHONE_FORMAT_WARNING else null
+                    val phoneValidation = validatePhone(phone)
+                    if (firstName.isBlank() || lastName.isBlank() || password.isBlank()) {
+                        errorText = "Заполните все поля"
                         return@Button
                     }
+
+                    if (phoneValidation !is PhoneValidation.Valid) {
+                        errorText = when (phoneValidation) {
+                            is PhoneValidation.Empty -> "Введите номер телефона"
+                            is PhoneValidation.InvalidChars -> "Телефон должен содержать только цифры"
+                            is PhoneValidation.InvalidFormat -> "Введите корректный номер телефона"
+                            else -> "Заполните все поля"
+                        }
+                        return@Button
+                    }
+
                     errorText = null
                     onAdd(
                         firstName.trim(),
                         lastName.trim(),
-                        formatPhoneForRequest(phoneDigits),
+                        phoneValidation.toFormattedPhone()!!,
                         password
                     )
                 }
@@ -429,18 +437,10 @@ private fun AddModeratorDialog(
                 )
                 PhoneField(
                     value = phone,
-                    onValueChange = { value ->
-                        phone = value
-                        phoneWarning = when {
-                            value.isEmpty() -> null
-                            !isAllowedDigitsInput(value) -> PHONE_FORMAT_WARNING
-                            value.length > 11 -> PHONE_FORMAT_WARNING
-                            value.firstOrNull() !in listOf('7', '8') -> PHONE_FORMAT_WARNING
-                            else -> null
-                        }
+                    onValueChange = {
+                        phone = it
                     },
-                    label = "Телефон",
-                    warning = phoneWarning
+                    label = "Телефон"
                 )
                 PasswordField(
                     value = password,
