@@ -29,6 +29,24 @@ class UserRepository(
         throw HttpException(response)
     }
 
+    suspend fun changePhone(
+        phone: String,
+        currentPassword: String
+    ): SettingsView? {
+        val response = api.changePhone(
+            ChangePhoneReq(
+                phone = phone,
+                currentPassword = currentPassword
+            )
+        )
+
+        if (response.isSuccessful) {
+            return response.body()
+        }
+
+        throw HttpException(response)
+    }
+
     suspend fun changePassword(
         oldPassword: String,
         newPassword: String

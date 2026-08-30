@@ -1,20 +1,9 @@
 package com.example.goodroad.modules.user.data
 
-data class UserDto(
-    val id: String,
-    val role: String,
-    val firstName: String?,
-    val lastName: String?,
-    val photoUrl: String?,
-    val active: Boolean
-)
-
 data class UpdateUserReq(
     val firstName: String? = null,
     val lastName: String? = null,
-    val photoUrl: String? = null,
-    val phone: String? = null,
-    val currentPassword: String? = null
+    val photoUrl: String? = null
 )
 
 data class ChangePhoneReq(

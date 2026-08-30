@@ -20,6 +20,11 @@ interface UserApi {
         @Body req: UpdateUserReq
     ): Response<SettingsView>
 
+    @PUT("/users/phone")
+    suspend fun changePhone(
+        @Body req: ChangePhoneReq
+    ): Response<SettingsView>
+
     @POST("/users")
     suspend fun changePassword(
         @Body req: ChangePasswordReq

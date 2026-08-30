@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.goodroad.data.network.ApiClient
+import com.example.goodroad.modules.user.data.ChangePhoneReq
 import com.example.goodroad.modules.user.data.DeleteAccountReq
 import com.example.goodroad.modules.user.data.SettingsView
 import com.example.goodroad.modules.user.data.UpdateUserReq
@@ -57,8 +58,7 @@ class UserViewModel(
     fun updateUser(
         firstName: String,
         lastName: String,
-        photoUrl: String? = null,
-        phone: String? = null
+        photoUrl: String? = null
     ) {
         viewModelScope.launch {
             isLoading.value = true
@@ -77,17 +77,13 @@ class UserViewModel(
                     },
                     photoUrl = photoUrl.takeIf {
                         it != current?.photoUrl
-                    },
-                    phone = phone?.takeIf {
-                        it.isNotBlank()
                     }
                 )
 
                 val hasChanges =
                     req.firstName != null ||
                             req.lastName != null ||
-                            req.photoUrl != null ||
-                            req.phone != null
+                            req.photoUrl != null
 
                 if (!hasChanges) {
                     throw IllegalArgumentException(
@@ -95,7 +91,15 @@ class UserViewModel(
                     )
                 }
 
-                user.value = repository.updateCurrentUser(req)
+                val updatedUser = repository.updateCurrentUser(req)
+
+                if (updatedUser == null) {
+                    throw IllegalStateException(
+                        "Сервер не вернул данные пользователя"
+                    )
+                }
+
+                user.value = updatedUser
 
                 successMessage.value = "Профиль обновлён"
 
@@ -130,12 +134,15 @@ class UserViewModel(
                     )
                 }
 
-                val req = UpdateUserReq(
+                val req = ChangePhoneReq(
                     phone = newPhone.trim(),
                     currentPassword = currentPassword
                 )
 
-                val updatedUser = repository.updateCurrentUser(req)
+                val updatedUser = repository.changePhone(
+                    phone = req.phone,
+                    currentPassword = req.currentPassword
+                )
 
                 if (updatedUser == null) {
                     throw IllegalStateException(

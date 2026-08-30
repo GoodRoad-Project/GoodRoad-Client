@@ -72,7 +72,6 @@ fun ChangePhoneScreen(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
-
             Text(
                 text = "Смена телефона",
                 style = MaterialTheme.typography.headlineLarge,
@@ -139,7 +138,6 @@ fun ChangePhoneScreen(
                 enabled = !isLoading
             ) {
                 when (phoneValidation) {
-
                     is PhoneValidation.Empty -> {
                         localError = "Введите номер телефона"
                     }
@@ -149,7 +147,6 @@ fun ChangePhoneScreen(
                     }
 
                     is PhoneValidation.Valid -> {
-
                         if (currentPassword.isBlank()) {
                             localError = "Введите текущий пароль"
                             return@PrimaryButton
