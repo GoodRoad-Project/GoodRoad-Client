@@ -51,6 +51,7 @@ import com.example.goodroad.ui.fields.PlainField
 import com.example.goodroad.ui.fields.PhoneValidation
 import com.example.goodroad.ui.fields.validatePhone
 import com.example.goodroad.ui.fields.toFormattedPhone
+import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.theme.AlertRed
 import com.example.goodroad.ui.theme.BackgroundLight
 import com.example.goodroad.ui.theme.BorderWarm
@@ -121,6 +122,8 @@ fun ModeratorsManagementScreen(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
+            UserDecor()
+
             Text(
                 text = "Модераторы",
                 style = MaterialTheme.typography.headlineLarge,

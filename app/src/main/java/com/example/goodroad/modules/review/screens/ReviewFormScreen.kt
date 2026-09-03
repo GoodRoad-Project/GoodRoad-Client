@@ -84,6 +84,7 @@ fun ReviewFormScreen(
     initialLatitude: String = "",
     initialLongitude: String = "",
     isLocationLocked: Boolean = false,
+    featureId: Long? = null,
     onBack: () -> Unit,
     onSaved: () -> Unit
 ) {
@@ -642,7 +643,8 @@ fun ReviewFormScreen(
                             rating = rating!!.toShort(),
                             obstacles = obstacles,
                             comment = comment.trim().ifBlank { null },
-                            photoUrls = photoUrls.filter { it.isNotBlank() }
+                            photoUrls = photoUrls.filter { it.isNotBlank() },
+                            featureId = featureId
                         )
 
                         sentToViewModel = true

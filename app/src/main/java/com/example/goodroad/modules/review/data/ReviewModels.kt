@@ -22,7 +22,8 @@ data class UpsertReviewReq(
     val rating: Short,
     val obstacles: List<ReviewObstacle>,
     val comment: String? = null,
-    val photoUrls: List<String> = emptyList()
+    val photoUrls: List<String> = emptyList(),
+    val featureId: Long? = null
 )
 
 data class ReviewCardResp(

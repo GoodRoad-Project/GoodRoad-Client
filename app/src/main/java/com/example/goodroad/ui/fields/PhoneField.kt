@@ -65,7 +65,6 @@ fun PhoneField(
     )
 }
 
-// Единая функция валидации для всех случаев
 fun validatePhone(
     phone: String,
     allowEmpty: Boolean = false
@@ -97,40 +96,6 @@ fun validatePhone(
         PhoneValidation.Valid(normalized)
     } else {
         PhoneValidation.InvalidFormat
-    }
-}
-
-// Проверка с кастомными сообщениями для отправки
-fun getPhoneErrorMessage(
-    phone: String,
-    required: Boolean = true
-): String? {
-    val trimmed = phone.trim()
-
-    if (required && trimmed.isEmpty()) {
-        return "Обязательное поле"
-    }
-
-    if (trimmed.isEmpty()) {
-        return null
-    }
-
-    val validation = validatePhone(phone, allowEmpty = true)
-
-    return when (validation) {
-        is PhoneValidation.InvalidChars -> "Телефон должен содержать только цифры"
-        is PhoneValidation.InvalidFormat -> "Введите корректный номер телефона (11 цифр, начинается с 7 или 8)"
-        is PhoneValidation.Empty -> null
-        is PhoneValidation.Valid -> null
-    }
-}
-
-// Получить форматированный номер для отправки
-fun getFormattedPhoneOrNull(phone: String): String? {
-    val validation = validatePhone(phone)
-    return when (validation) {
-        is PhoneValidation.Valid -> formatPhoneForRequest(validation.phoneDigits)
-        else -> null
     }
 }
 

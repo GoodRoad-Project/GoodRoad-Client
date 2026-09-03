@@ -413,6 +413,7 @@ fun UserNav(
                             initialLatitude = target.latitude?.toString() ?: "",
                             initialLongitude = target.longitude?.toString() ?: "",
                             isLocationLocked = true,
+                            featureId = target.targetId.toLong(),
                             onBack = {
                                 selectedTaskTarget = null
                                 overlayScreen = OverlayScreen.TASK_DETAIL
