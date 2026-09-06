@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -49,6 +50,7 @@ import com.example.goodroad.modules.tasks.screens.CompletedTasksHistoryScreen
 import com.example.goodroad.modules.tasks.screens.TaskExecutionScreen
 import com.example.goodroad.modules.rewards.screens.CouponsScreen
 import com.example.goodroad.modules.tasks.data.TargetViewDto
+import com.example.goodroad.ui.theme.*
 import com.example.goodroad.ui.user.SecurityScreen
 import com.example.goodroad.ui.user.ChangePasswordScreen
 import com.example.goodroad.ui.user.ChangePhoneScreen
@@ -150,51 +152,62 @@ fun UserNav(
     var selectedTaskTarget by remember { mutableStateOf<TargetViewDto?>(null) }
     Scaffold(
         bottomBar = {
-            NavigationBar {
-
-                NavigationBarItem(
-                    selected = currentTab == BottomTab.MAP,
-                    onClick = {
-                        currentTab = BottomTab.MAP
-                        overlayScreen = OverlayScreen.NONE
-                    },
-                    icon = { Icon(Icons.Default.Map, null) },
-                    label = { Text("Карта") }
+            Column {
+                Divider(
+                    color = BorderWarm,
+                    thickness = 0.5.dp,
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                NavigationBarItem(
-                    selected = currentTab == BottomTab.REVIEWS,
-                    onClick = {
-                        currentTab = BottomTab.REVIEWS
-                        overlayScreen = OverlayScreen.NONE
-                    },
-                    icon = { Icon(Icons.Default.Star, null) },
-                    label = { Text("Отзывы") }
-                )
+                NavigationBar(
+                    containerColor = BackgroundLight,
+                    contentColor = UrbanBrown,
+                    tonalElevation = 0.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    NavigationBarItem(
+                        selected = currentTab == BottomTab.MAP,
+                        onClick = {
+                            currentTab = BottomTab.MAP
+                            overlayScreen = OverlayScreen.NONE
+                        },
+                        icon = { Icon(Icons.Default.Map, null) },
+                        label = { Text("Карта") }
+                    )
 
-                NavigationBarItem(
-                    selected = currentTab == BottomTab.HELP,
-                    onClick = {
-                        currentTab = BottomTab.HELP
-                        overlayScreen = OverlayScreen.NONE
-                    },
-                    icon = { Icon(Icons.Default.VolunteerActivism, null) },
-                    label = { Text("Помощь") }
-                )
+                    NavigationBarItem(
+                        selected = currentTab == BottomTab.REVIEWS,
+                        onClick = {
+                            currentTab = BottomTab.REVIEWS
+                            overlayScreen = OverlayScreen.NONE
+                        },
+                        icon = { Icon(Icons.Default.Star, null) },
+                        label = { Text("Отзывы") }
+                    )
 
-                NavigationBarItem(
-                    selected = currentTab == BottomTab.PROFILE,
-                    onClick = {
-                        currentTab = BottomTab.PROFILE
-                        overlayScreen = OverlayScreen.NONE
-                    },
-                    icon = { Icon(Icons.Default.Person, null) },
-                    label = { Text("Профиль") }
-                )
+                    NavigationBarItem(
+                        selected = currentTab == BottomTab.HELP,
+                        onClick = {
+                            currentTab = BottomTab.HELP
+                            overlayScreen = OverlayScreen.NONE
+                        },
+                        icon = { Icon(Icons.Default.VolunteerActivism, null) },
+                        label = { Text("Помощь") }
+                    )
+
+                    NavigationBarItem(
+                        selected = currentTab == BottomTab.PROFILE,
+                        onClick = {
+                            currentTab = BottomTab.PROFILE
+                            overlayScreen = OverlayScreen.NONE
+                        },
+                        icon = { Icon(Icons.Default.Person, null) },
+                        label = { Text("Профиль") }
+                    )
+                }
             }
         }
     ) { padding ->
-
         Box(
             modifier = Modifier
                 .fillMaxSize()

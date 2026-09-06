@@ -45,6 +45,7 @@ import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.BackgroundLight
+import com.example.goodroad.ui.theme.TextPrimary
 import com.example.goodroad.ui.theme.UrbanBrown
 
 @Composable
@@ -110,7 +111,7 @@ fun VolunteerApplicationFormScreen(
                             else -> "Статус заявки"
                         },
                         style = MaterialTheme.typography.headlineLarge,
-                        color = UrbanBrown
+                        color = TextPrimary
                     )
 
                     Spacer(Modifier.height(12.dp))
@@ -118,11 +119,11 @@ fun VolunteerApplicationFormScreen(
                     Text(
                         text = when (applicationStatus) {
                             "PENDING" -> "Мы рассмотрим её и свяжемся с вами в течение недели!"
-                            "APPROVED" -> "У вас уже есть доступ к списку заявок на помощь"
+                            "APPROVED" -> "У вас уже есть доступ к списку заявок на помощь. Переходите на вкладку 'Помощь' на панели в нижней части экрана, а затем в раздел 'Волонтёрство'"
                             "REJECTED" -> "Причина отказа: ${rejectReason ?: "не указана"}"
                             else -> "Текущий статус: $applicationStatus"
                         },
-                        style = MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleMedium
                     )
 
                     Spacer(Modifier.weight(1f))
