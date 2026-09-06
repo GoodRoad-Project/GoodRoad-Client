@@ -139,19 +139,43 @@ fun SeveritySelector(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         range.forEach { item ->
-            val selected = item == value
-            OutlinedButton(
-                onClick = { onValueChange(item) },
-                border = BorderStroke(1.dp, if (selected) SafeGreen else BorderWarm),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = if (selected) SafeGreen.copy(alpha = 0.12f) else Color.Transparent,
-                    contentColor = if (selected) SafeGreen else UrbanBrown
-                ),
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 0.dp, vertical = 12.dp)
+            val isSelected = item == value
+
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable {
+                        onValueChange(item)
+                    }
+                    .background(
+                        color = if (isSelected) SafeGreen.copy(alpha = 0.12f) else BackgroundLight,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .border(
+                        width = if (isSelected) 2.dp else 1.dp,
+                        color = if (isSelected) SafeGreen else BorderWarm.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .padding(vertical = 10.dp, horizontal = 0.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
-                Text(item.toString())
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(
+                            color = if (isSelected) SafeGreen else UrbanBrown.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = item.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected) Color.White else UrbanBrown
+                    )
+                }
             }
         }
     }

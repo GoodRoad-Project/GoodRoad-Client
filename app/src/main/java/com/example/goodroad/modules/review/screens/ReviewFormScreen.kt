@@ -6,7 +6,11 @@ import android.location.Geocoder
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -26,9 +31,8 @@ import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -46,7 +50,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,6 +65,7 @@ import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.ReviewObstacleTypes
 import com.example.goodroad.ui.ReviewPhotosStrip
 import com.example.goodroad.ui.SeveritySelector
+import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.fields.PlainField
 import com.example.goodroad.ui.obstacleLabel
@@ -192,6 +199,7 @@ fun ReviewFormScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
+            UserDecor()
 
             Text(
                 text = if (isEdit) {
@@ -203,14 +211,7 @@ fun ReviewFormScreen(
                 color = TextPrimary
             )
 
-            Spacer(Modifier.height(20.dp))
-
-            /*
-             * Адрес и координаты.
-             *
-             * Если отзыв создаётся из выполнения цели,
-             * isLocationLocked = true и менять эти поля нельзя.
-             */
+            Spacer(Modifier.height(12.dp))
 
             PlainField(
                 value = placeName,
@@ -224,7 +225,7 @@ fun ReviewFormScreen(
                 readOnly = isLocationLocked
             )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -287,14 +288,14 @@ fun ReviewFormScreen(
                                 "поскольку отзыв создаётся для конкретной " +
                                 "цели задания. Местоположение уже задано " +
                                 "этой целью и должно оставаться неизменным.",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = TextPrimary
                     )
                 }
             } else {
                 Text(
                     text = "Адрес будет определен автоматически по введенным координатам.",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = UrbanBrown
                 )
 
@@ -303,7 +304,7 @@ fun ReviewFormScreen(
                 Text(
                     text = "Координаты должны быть в числовом формате. " +
                             "Можно использовать точку или запятую.",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = UrbanBrown
                 )
             }
@@ -313,7 +314,11 @@ fun ReviewFormScreen(
             Text(
                 text = "Оценка",
                 style = MaterialTheme.typography.titleMedium,
-                color = UrbanBrown
+                color = UrbanBrown.copy(
+                    red = UrbanBrown.red * 0.7f,
+                    green = UrbanBrown.green * 0.5f,
+                    blue = UrbanBrown.blue * 0.5f
+                ),
             )
 
             Spacer(Modifier.height(8.dp))
@@ -329,16 +334,18 @@ fun ReviewFormScreen(
             Text(
                 text = "Препятствия и их тяжесть",
                 style = MaterialTheme.typography.titleMedium,
-                color = UrbanBrown
+                color = UrbanBrown.copy(
+                    red = UrbanBrown.red * 0.7f,
+                    green = UrbanBrown.green * 0.5f,
+                    blue = UrbanBrown.blue * 0.5f
+                ),
             )
 
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = "Если чекбокс не выбран — препятствия нет. " +
-                        "При выборе укажите тяжесть: 1 — слабая, " +
-                        "2 — средняя, 3 — сильная.",
-                style = MaterialTheme.typography.bodySmall,
+                text = "Если чекбокс не выбран — препятствия нет.",
+                style = MaterialTheme.typography.bodyMedium,
                 color = UrbanBrown
             )
 
@@ -346,7 +353,7 @@ fun ReviewFormScreen(
 
             Text(
                 text = "Хотя бы у одного препятствия должна быть выбрана тяжесть.",
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = UrbanBrown
             )
 
@@ -358,7 +365,7 @@ fun ReviewFormScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
+                        .padding(vertical = 2.dp)
                 ) {
 
                     Row(
@@ -388,98 +395,105 @@ fun ReviewFormScreen(
 
                         Text(
                             text = obstacleLabel(type),
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             color = UrbanBrown
                         )
                     }
 
                     if (selected) {
-
                         Column(
-                            modifier = Modifier.padding(start = 18.dp)
+                            modifier = Modifier.padding(start = 6.dp)
                         ) {
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                text = "Максимальная допустимая тяжесть",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = UrbanBrown
-                            )
-
-                            val severityDescription = when (type) {
-                                "STAIRS" ->
-                                    "1 — 1-3 ступеньки, 2 — 4-10 ступенек, " +
-                                            "3 — более 10 ступенек"
-
-                                "CURB" ->
-                                    "1 — маленький бордюр, 2 — обычный бордюр, " +
-                                            "3 — высокий бордюр"
-
-                                "ROAD_SLOPE" ->
-                                    "1 — незначительный подъём, " +
-                                            "2 — заметный подъём, 3 — крутой подъём"
-
-                                "POTHOLES" ->
-                                    "1 — маленькая яма, 2 — обычная яма, " +
-                                            "3 — большая яма"
-
-                                "SAND", "GRAVEL" ->
-                                    "1 — укатанный, 2 — немного рыхлый, " +
-                                            "3 — сильно рыхлый"
-
-                                else ->
-                                    "1 — слабая, 2 — средняя, 3 — сильная"
+                            val severityDescriptions = when (type) {
+                                "STAIRS" -> listOf(
+                                    "1-3 ступеньки",
+                                    "4-10 ступенек",
+                                    "Более 10 ступенек"
+                                )
+                                "CURB" -> listOf(
+                                    "Маленький бордюр",
+                                    "Обычный бордюр",
+                                    "Высокий бордюр"
+                                )
+                                "ROAD_SLOPE" -> listOf(
+                                    "Незначительный подъём",
+                                    "Заметный подъём",
+                                    "Крутой подъём"
+                                )
+                                "POTHOLES" -> listOf(
+                                    "Маленькая яма",
+                                    "Обычная яма",
+                                    "Большая яма"
+                                )
+                                "SAND", "GRAVEL" -> listOf(
+                                    "Укатанный песок",
+                                    "Немного рыхлый песок",
+                                    "Сильно рыхлый песок"
+                                )
+                                else -> listOf(
+                                    "слабая",
+                                    "средняя",
+                                    "сильная"
+                                )
                             }
 
-                            Text(
-                                text = severityDescription,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = UrbanBrown.copy(alpha = 0.7f),
-                                fontSize = 11.sp
-                            )
-
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            Column(
+                                modifier = Modifier.padding(start = 6.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
+                                (0..2).forEach { index ->
+                                    val value = index + 1
+                                    val description = severityDescriptions.getOrElse(index) { "$value" }
+                                    val isSelected = severity == value
 
-                                (1..3).forEach { value ->
-
-                                    FilterChip(
-                                        selected = severity == value,
-                                        onClick = {
-                                            obstacleSeverities[type] = value
-                                            formError = null
-                                        },
-                                        label = {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                obstacleSeverities[type] = value
+                                                formError = null
+                                            }
+                                            .background(
+                                                color = if (isSelected) SafeGreen.copy(alpha = 0.12f) else BackgroundLight,
+                                                shape = RoundedCornerShape(12.dp)
+                                            )
+                                            .border(
+                                                width = if (isSelected) 2.dp else 1.dp,
+                                                color = if (isSelected) SafeGreen else BorderWarm.copy(alpha = 0.5f),
+                                                shape = RoundedCornerShape(12.dp)
+                                            )
+                                            .padding(vertical = 10.dp, horizontal = 16.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .background(
+                                                    color = if (isSelected) SafeGreen else UrbanBrown.copy(alpha = 0.1f),
+                                                    shape = RoundedCornerShape(16.dp)
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
                                             Text(
                                                 text = value.toString(),
-                                                style = MaterialTheme.typography.bodyLarge
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isSelected) Color.White else UrbanBrown
                                             )
-                                        },
-                                        colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor =
-                                                SafeGreen.copy(alpha = 0.18f),
-                                            selectedLabelColor = SafeGreen,
-                                            containerColor = BackgroundLight,
-                                            labelColor = UrbanBrown
-                                        ),
-                                        border =
-                                            FilterChipDefaults.filterChipBorder(
-                                                enabled = true,
-                                                selected = severity == value,
-                                                borderColor =
-                                                    if (severity == value) {
-                                                        SafeGreen
-                                                    } else {
-                                                        BorderWarm
-                                                    },
-                                                selectedBorderColor = SafeGreen
-                                            )
-                                    )
+                                        }
+
+                                        Spacer(modifier = Modifier.width(12.dp))
+
+                                        Text(
+                                            text = description,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = if (isSelected) SafeGreen else UrbanBrown,
+                                            fontSize = 15.sp,
+                                            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -487,7 +501,7 @@ fun ReviewFormScreen(
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(12.dp))
 
             TextField(
                 value = comment,
@@ -505,7 +519,7 @@ fun ReviewFormScreen(
                         color = UrbanBrown
                     )
                 },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
                     color = TextPrimary
                 ),
                 singleLine = false,

@@ -1,6 +1,7 @@
 package com.example.goodroad.modules.review.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -50,143 +51,155 @@ fun UserReviewsScreen(
         color = BackgroundLight
     ) {
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp)
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
 
-            UserDecor()
-
-            Text(
-                text = "Мои отзывы",
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            OutlinedCard(
-                modifier = Modifier.fillMaxWidth(),
-
-                border = BorderStroke(
-                    1.dp,
-                    UrbanBrown.copy(alpha = 0.4f)
-                ),
-
-                colors = CardDefaults.outlinedCardColors(
-                    containerColor = UrbanBrown.copy(alpha = 0.06f)
-                )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp)
+                    .padding(bottom = 80.dp)
             ) {
 
-                Column(
-                    modifier = Modifier.padding(16.dp)
+                UserDecor()
+
+                Text(
+                    text = "Мои отзывы",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = TextPrimary
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+
+                    border = BorderStroke(
+                        1.dp,
+                        UrbanBrown.copy(alpha = 0.4f)
+                    ),
+
+                    colors = CardDefaults.outlinedCardColors(
+                        containerColor = UrbanBrown.copy(alpha = 0.06f)
+                    )
                 ) {
 
-                    Text(
-                        text = "Статистика по отзывам",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = UrbanBrown.copy(
-                            red = (UrbanBrown.red * 0.7f).coerceIn(0f, 1f),
-                            green = (UrbanBrown.green * 0.5f).coerceIn(0f, 1f),
-                            blue = (UrbanBrown.blue * 0.8f).coerceIn(0f, 1f)
-                        )
-                    )
-
-                    Spacer(Modifier.height(8.dp))
-
-                    Text(
-                        text = "Одобренных отзывов: $approvedCount",
-                        color = UrbanBrown
-                    )
-
-                    Text(
-                        text = "Отклоненных отзывов: $rejectedCount",
-                        color = UrbanBrown
-                    )
-
-                    Text(
-                        text = "На модерации: $pendingCount",
-                        color = UrbanBrown
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            AuthSuccessText(
-                text = successMessage,
-                onTimeout = reviewsViewModel::clearSuccessMessage
-            )
-
-            AuthStatusText(
-                text = errorMessage,
-                onTimeout = reviewsViewModel::clearErrorMessage
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            when {
-
-                isLoading -> {
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            color = UrbanBrown
-                        )
-                    }
-                }
-
-                reviews.isEmpty() -> {
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Пока нет ни одного отзыва",
-                            color = UrbanBrown
-                        )
-                    }
-                }
-
-                else -> {
-
                     Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        modifier = Modifier.padding(16.dp)
                     ) {
-                        reviews.forEach { review ->
-                            ReviewListItem(
-                                review = review,
-                                onOpenDetails = {
-                                    onOpenDetails(review)
-                                },
-                                onEdit = {
-                                    onEditReview(review)
-                                }
+
+                        Text(
+                            text = "Статистика по отзывам",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = UrbanBrown.copy(
+                                red = (UrbanBrown.red * 0.7f).coerceIn(0f, 1f),
+                                green = (UrbanBrown.green * 0.5f).coerceIn(0f, 1f),
+                                blue = (UrbanBrown.blue * 0.8f).coerceIn(0f, 1f)
                             )
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Text(
+                            text = "Одобренных отзывов: $approvedCount",
+                            color = UrbanBrown
+                        )
+
+                        Text(
+                            text = "Отклоненных отзывов: $rejectedCount",
+                            color = UrbanBrown
+                        )
+
+                        Text(
+                            text = "На модерации: $pendingCount",
+                            color = UrbanBrown
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                AuthSuccessText(
+                    text = successMessage,
+                    onTimeout = reviewsViewModel::clearSuccessMessage
+                )
+
+                AuthStatusText(
+                    text = errorMessage,
+                    onTimeout = reviewsViewModel::clearErrorMessage
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                when {
+
+                    isLoading -> {
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                color = UrbanBrown
+                            )
+                        }
+                    }
+
+                    reviews.isEmpty() -> {
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Пока нет ни одного отзыва",
+                                color = UrbanBrown
+                            )
+                        }
+                    }
+
+                    else -> {
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            reviews.forEach { review ->
+                                ReviewListItem(
+                                    review = review,
+                                    onOpenDetails = {
+                                        onOpenDetails(review)
+                                    },
+                                    onEdit = {
+                                        onEditReview(review)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
-
-            PrimaryButton(
-                text = "Добавить отзыв",
-                modifier = Modifier.fillMaxWidth()
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .background(BackgroundLight)
+                    .padding(24.dp)
             ) {
-                reviewsViewModel.clearMessages()
-                onAddReview()
+                PrimaryButton(
+                    text = "Добавить отзыв",
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    reviewsViewModel.clearMessages()
+                    onAddReview()
+                }
             }
         }
     }
