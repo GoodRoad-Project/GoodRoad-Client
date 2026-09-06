@@ -52,8 +52,6 @@ fun VolunteerManagementScreen(
 
             UserDecor()
 
-            Spacer(Modifier.height(16.dp))
-
             Text(
                 text = "Заявки волонтёров",
                 style = MaterialTheme.typography.headlineLarge,
@@ -109,7 +107,7 @@ fun VolunteerManagementScreen(
                                 Spacer(Modifier.height(16.dp))
 
                                 Text(
-                                    text = "Нет заявок на модерации",
+                                    text = "Нет заявок на модерацию",
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = UrbanBrown
                                 )
@@ -178,6 +176,14 @@ fun VolunteerManagementScreen(
 }
 
 @Composable
+private fun formatPhoneNumber(phone: String): String {
+    return if (phone.startsWith("7")) {
+        "+$phone"
+    } else {
+        phone
+    }
+}
+@Composable
 private fun VolunteerApplicationCard(
     app: VolunteerApplicationResp,
     onApprove: () -> Unit,
@@ -197,7 +203,7 @@ private fun VolunteerApplicationCard(
 
             Text(
                 text = app.applicantName,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                 color = TextPrimary
             )
 
@@ -206,7 +212,7 @@ private fun VolunteerApplicationCard(
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
 
                 Text(
-                    text = "Телефон: ${app.phone}",
+                    text = "Телефон: ${formatPhoneNumber(app.phone)}",
                     style = MaterialTheme.typography.bodyLarge
                 )
 

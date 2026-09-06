@@ -183,10 +183,9 @@ fun ReviewModerationScreen(
                 PrimaryButton(
                     text = "Назад в профиль",
                     backgroundColor = UrbanBrown,
+                    onClick = onBack,
                     modifier = Modifier.fillMaxWidth()
-                ) {
-                    onBack()
-                }
+                )
             }
         }
     }
@@ -440,80 +439,36 @@ private fun ReviewModerationCard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Surface(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(40.dp)
-                                    .clickable { onReject() },
-                                color = AlertRed.copy(alpha = 0.12f),
-                                shape = RoundedCornerShape(8.dp),
-                                border = BorderStroke(1.5.dp, AlertRed)
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "Отклонить",
-                                        color = AlertRed,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                            }
+                            PrimaryButton(
+                                text = "Отклонить",
+                                backgroundColor = AlertRed,
+                                onClick = onReject,
+                                modifier = Modifier.weight(1f)
+                            )
 
-                            Surface(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(40.dp)
-                                    .clickable { onApprove() },
-                                color = SafeGreen.copy(alpha = 0.12f),
-                                shape = RoundedCornerShape(8.dp),
-                                border = BorderStroke(1.5.dp, SafeGreen)
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "Одобрить",
-                                        color = SafeGreen,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                            }
+                            PrimaryButton(
+                                text = "Одобрить",
+                                backgroundColor = SafeGreen,
+                                onClick = onApprove,
+                                modifier = Modifier.weight(1f)
+                            )
                         }
 
-                        Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(40.dp)
-                                .clickable { onRelease() },
-                            color = UrbanBrown.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.5.dp, UrbanBrown.copy(alpha = 0.3f))
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Отказаться от модерации",
-                                    color = UrbanBrown,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
+                        PrimaryButton(
+                            text = "Отказаться от модерации",
+                            backgroundColor = UrbanBrown,
+                            onClick = onRelease,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
                 else -> {
                     PrimaryButton(
                         text = "Взять в работу",
                         backgroundColor = SafeGreen,
+                        onClick = onTakeInWork,
                         modifier = Modifier.fillMaxWidth()
-                    ) { onTakeInWork() }
+                    )
                 }
             }
         }
