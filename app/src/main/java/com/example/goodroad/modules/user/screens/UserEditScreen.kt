@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.*
@@ -93,11 +94,26 @@ fun UserEditScreen(
         ) {
             UserDecor()
 
-            Text(
-                text = "Редактирование профиля",
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Редактирование профиля",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = UrbanBrown
+                    )
+                }
+            }
 
             Spacer(Modifier.height(12.dp))
 

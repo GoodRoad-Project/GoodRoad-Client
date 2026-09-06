@@ -2,6 +2,8 @@ package com.example.goodroad.modules.review.screens
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -12,7 +14,6 @@ import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.ReviewCardSummary
 import com.example.goodroad.ui.ReviewInfoRow
 import com.example.goodroad.ui.ReviewPhotosStrip
-import com.example.goodroad.ui.ReviewSquareActionButton
 import com.example.goodroad.ui.moderationStatusColor
 import com.example.goodroad.ui.obstacleLabel
 import com.example.goodroad.ui.obstacleSeverityText
@@ -77,11 +78,26 @@ fun ReviewDetailsScreen(
         ) {
             UserDecor()
 
-            Text(
-                text = "Подробности отзыва",
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Подробности отзыва",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = UrbanBrown
+                    )
+                }
+            }
 
             Spacer(Modifier.height(20.dp))
 

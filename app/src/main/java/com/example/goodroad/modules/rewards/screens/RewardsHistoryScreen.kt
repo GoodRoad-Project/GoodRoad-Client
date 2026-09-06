@@ -139,7 +139,7 @@ private fun HistoryItem(transaction: PointTransaction) {
         transaction.type.equals("EARN", ignoreCase = true) -> true
         transaction.type.equals("EARNING", ignoreCase = true) -> true
         transaction.type.equals("CREDIT", ignoreCase = true) -> true
-        transaction.amount > 0 -> true  // положительная сумма = начисление
+        transaction.amount > 0 -> true
         else -> false
     }
 

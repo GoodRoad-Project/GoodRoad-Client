@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,9 +19,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -35,6 +40,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -103,16 +109,31 @@ fun VolunteerApplicationFormScreen(
                 ) {
                     UserDecor()
 
-                    Text(
-                        text = when (applicationStatus) {
-                            "PENDING" -> "Ваша заявка на рассмотрении"
-                            "APPROVED" -> "Вы уже волонтёр!"
-                            "REJECTED" -> "Заявка отклонена"
-                            else -> "Статус заявки"
-                        },
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = TextPrimary
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = when (applicationStatus) {
+                                "PENDING" -> "Ваша заявка на рассмотрении"
+                                "APPROVED" -> "Вы уже волонтёр!"
+                                "REJECTED" -> "Заявка отклонена"
+                                else -> "Статус заявки"
+                            },
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = TextPrimary,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Назад",
+                                tint = UrbanBrown
+                            )
+                        }
+                    }
 
                     Spacer(Modifier.height(12.dp))
 
@@ -159,10 +180,25 @@ fun VolunteerApplicationFormScreen(
         ) {
             UserDecor()
 
-            Text(
-                text = "Заявка на волонтёрство",
-                style = MaterialTheme.typography.headlineLarge
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Заявка на волонтёрство",
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier.weight(1f)
+                )
+
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = UrbanBrown
+                    )
+                }
+            }
 
             Spacer(Modifier.height(16.dp))
 

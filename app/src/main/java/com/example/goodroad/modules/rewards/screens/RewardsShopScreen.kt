@@ -80,7 +80,7 @@ fun RewardsShopScreen(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Top
                 ) {
                     Text(
                         text = "Награды и баллы",
@@ -89,27 +89,60 @@ fun RewardsShopScreen(
                         modifier = Modifier.weight(1f)
                     )
 
-                    Row {
-                        IconButton(onClick = onNavigateToHistory) {
-                            Icon(
-                                imageVector = Icons.Default.History,
-                                contentDescription = "История",
-                                tint = UrbanBrown.copy(alpha = 0.7f)
-                            )
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            IconButton(
+                                onClick = onBack,
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowBack,
+                                    contentDescription = "Назад",
+                                    tint = UrbanBrown
+                                )
+                            }
+
+                            IconButton(
+                                onClick = onNavigateToHistory,
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.History,
+                                    contentDescription = "История",
+                                    tint = UrbanBrown.copy(alpha = 0.7f)
+                                )
+                            }
                         }
-                        IconButton(onClick = onNavigateToLeaderboard) {
-                            Icon(
-                                imageVector = Icons.Default.Leaderboard,
-                                contentDescription = "Лидеры",
-                                tint = UrbanBrown.copy(alpha = 0.7f)
-                            )
-                        }
-                        IconButton(onClick = onNavigateToCoupons) {
-                            Icon(
-                                imageVector = Icons.Default.CardGiftcard,
-                                contentDescription = "Купоны",
-                                tint = UrbanBrown.copy(alpha = 0.7f)
-                            )
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            IconButton(
+                                onClick = onNavigateToLeaderboard,
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Leaderboard,
+                                    contentDescription = "Лидеры",
+                                    tint = UrbanBrown.copy(alpha = 0.7f)
+                                )
+                            }
+
+                            IconButton(
+                                onClick = onNavigateToCoupons,
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CardGiftcard,
+                                    contentDescription = "Купоны",
+                                    tint = UrbanBrown.copy(alpha = 0.7f)
+                                )
+                            }
                         }
                     }
                 }
@@ -326,7 +359,8 @@ private fun StatusPopup(
                 .wrapContentHeight()
                 .clip(RoundedCornerShape(16.dp)),
             colors = CardDefaults.cardColors(
-                containerColor = SafeRoute.copy(alpha = 0.92f)            ),
+                containerColor = SafeRoute.copy(alpha = 0.92f)
+            ),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = 12.dp
             )
@@ -444,4 +478,3 @@ private fun RewardCard(
         }
     }
 }
-

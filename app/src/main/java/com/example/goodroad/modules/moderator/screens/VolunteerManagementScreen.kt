@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -52,11 +53,26 @@ fun VolunteerManagementScreen(
 
             UserDecor()
 
-            Text(
-                text = "Заявки волонтёров",
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Заявки волонтёров",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = UrbanBrown
+                    )
+                }
+            }
 
             Spacer(Modifier.height(16.dp))
 
@@ -132,15 +148,6 @@ fun VolunteerManagementScreen(
                     }
                 }
             }
-
-            Spacer(Modifier.height(12.dp))
-
-            PrimaryButton(
-                text = "Назад в профиль",
-                backgroundColor = UrbanBrown,
-                contentColor = UrbanBrown,
-                onClick = onBack
-            )
         }
     }
 
@@ -183,6 +190,7 @@ private fun formatPhoneNumber(phone: String): String {
         phone
     }
 }
+
 @Composable
 private fun VolunteerApplicationCard(
     app: VolunteerApplicationResp,

@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -45,11 +47,26 @@ fun VolunteerWardsScreen(
 
             UserDecor()
 
-            Text(
-                text = "Мои подопечные",
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Мои подопечные",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = UrbanBrown
+                    )
+                }
+            }
 
             Spacer(Modifier.height(20.dp))
 

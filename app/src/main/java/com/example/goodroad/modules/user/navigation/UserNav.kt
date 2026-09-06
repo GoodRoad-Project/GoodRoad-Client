@@ -389,11 +389,13 @@ fun UserNav(
 
                 OverlayScreen.HELP_CREATE -> HelpRequestCreateScreen(
                     helpViewModel = helpViewModel,
-                    onCreated = { goBack() }
+                    onCreated = { goBack() },
+                    onBack = { goBack() }
                 )
 
                 OverlayScreen.HELP_MY_REQUESTS -> UserHelpRequestsScreen(
-                    viewModel = helpViewModel
+                    viewModel = helpViewModel,
+                    onBack = { goBack() }
                 )
 
                 OverlayScreen.VOLUNTEER_APPLICATION -> VolunteerApplicationFormScreen(

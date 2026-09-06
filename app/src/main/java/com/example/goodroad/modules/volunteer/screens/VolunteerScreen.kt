@@ -1,6 +1,8 @@
 package com.example.goodroad.modules.volunteer.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +36,7 @@ fun VolunteerScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
 
@@ -82,6 +85,8 @@ fun VolunteerScreen(
                     onClick = onMyWards
                 )
             }
+
+            Spacer(Modifier.height(24.dp))
         }
     }
 }

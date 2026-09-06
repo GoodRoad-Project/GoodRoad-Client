@@ -79,11 +79,26 @@ fun ReviewModerationScreen(
                     Column {
                         UserDecor()
 
-                        Text(
-                            text = "Модерация отзывов",
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = TextPrimary
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Модерация отзывов",
+                                style = MaterialTheme.typography.headlineLarge,
+                                color = TextPrimary,
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            IconButton(onClick = onBack) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowBack,
+                                    contentDescription = "Назад",
+                                    tint = UrbanBrown
+                                )
+                            }
+                        }
 
                         Spacer(Modifier.height(8.dp))
 
@@ -172,20 +187,6 @@ fun ReviewModerationScreen(
                         }
                     }
                 }
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .padding(24.dp)
-            ) {
-                PrimaryButton(
-                    text = "Назад в профиль",
-                    backgroundColor = UrbanBrown,
-                    onClick = onBack,
-                    modifier = Modifier.fillMaxWidth()
-                )
             }
         }
     }

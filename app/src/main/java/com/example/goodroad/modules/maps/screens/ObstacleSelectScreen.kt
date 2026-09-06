@@ -3,6 +3,8 @@ package com.example.goodroad.modules.maps.screens
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -82,11 +84,26 @@ fun ObstacleSelectScreen(
                     .padding(bottom = 140.dp)
                     .padding(24.dp)
             ) {
-                Text(
-                    text = "Выбор препятствий",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = TextPrimary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Выбор препятствий",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = TextPrimary,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    IconButton(onClick = onBackToProfile) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Назад",
+                            tint = UrbanBrown
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 

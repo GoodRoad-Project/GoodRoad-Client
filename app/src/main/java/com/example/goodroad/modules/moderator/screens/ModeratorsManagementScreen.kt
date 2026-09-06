@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -25,6 +26,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -124,11 +126,26 @@ fun ModeratorsManagementScreen(
         ) {
             UserDecor()
 
-            Text(
-                text = "Модераторы",
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Модераторы",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = UrbanBrown
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -201,20 +218,10 @@ fun ModeratorsManagementScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                PrimaryButton(
-                    text = "+ Добавить модератора",
-                    onClick = { showAddDialog = true }
-                )
-                PrimaryButton(
-                    text = "Назад в профиль",
-                    backgroundColor = UrbanBrown,
-                    contentColor = UrbanBrown,
-                    onClick = onBack
-                )
-            }
+            PrimaryButton(
+                text = "+ Добавить модератора",
+                onClick = { showAddDialog = true }
+            )
         }
     }
 

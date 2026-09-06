@@ -1,6 +1,8 @@
 package com.example.goodroad.modules.volunteer.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,6 +10,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -17,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.foundation.text.KeyboardOptions
@@ -33,12 +40,14 @@ import com.example.goodroad.ui.fields.PhoneValidation
 import com.example.goodroad.ui.fields.validatePhone
 import com.example.goodroad.ui.fields.toFormattedPhone
 import com.example.goodroad.ui.theme.BackgroundLight
+import com.example.goodroad.ui.theme.UrbanBrown
 import java.time.LocalDateTime
 
 @Composable
 fun HelpRequestCreateScreen(
     helpViewModel: VolunteerViewModel,
-    onCreated: () -> Unit
+    onCreated: () -> Unit,
+    onBack: () -> Unit
 ) {
     val isLoading by helpViewModel.isLoading
     val error by helpViewModel.errorMessage
@@ -146,10 +155,25 @@ fun HelpRequestCreateScreen(
         ) {
             UserDecor()
 
-            Text(
-                text = "Новая заявка",
-                style = MaterialTheme.typography.headlineLarge
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Новая заявка",
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier.weight(1f)
+                )
+
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = UrbanBrown
+                    )
+                }
+            }
 
             Spacer(Modifier.height(20.dp))
 
@@ -300,11 +324,10 @@ fun HelpRequestCreateScreen(
                         meetingTime
                     }
 
-                    // Получаем форматированный номер
                     val phoneValidation = validatePhone(contact)
                     val formattedPhone = when (phoneValidation) {
                         is PhoneValidation.Valid -> phoneValidation.toFormattedPhone()!!
-                        else -> contact // fallback
+                        else -> contact
                     }
 
                     helpViewModel.createRequest(
