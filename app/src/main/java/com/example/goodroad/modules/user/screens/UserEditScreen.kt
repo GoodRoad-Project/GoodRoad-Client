@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.goodroad.modules.user.presentation.UserViewModel
 import com.example.goodroad.ui.AuthStatusText
+import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.fields.PlainField
 import com.example.goodroad.ui.theme.*
@@ -90,6 +91,7 @@ fun UserEditScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
+            UserDecor()
 
             Text(
                 text = "Редактирование профиля",

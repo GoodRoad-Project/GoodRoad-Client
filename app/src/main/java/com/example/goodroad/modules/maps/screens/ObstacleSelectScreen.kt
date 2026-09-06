@@ -2,9 +2,12 @@ package com.example.goodroad.modules.maps.screens
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import com.example.goodroad.data.obstacle.model.PolicyItem
 import com.example.goodroad.ui.*
@@ -88,20 +91,13 @@ fun ObstacleSelectScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    text = "Выберите препятствия, которые хотите избегать:",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = UrbanBrown
+                    text = "Выберите препятствия, которые хотите избегать. Препятсвия с номером, большим выбранного, будут избегаться",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = UrbanBrown,
+                    fontWeight = FontWeight.Medium
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "1 — слабая тяжесть, 2 — средняя тяжесть, 3 — сильная тяжесть.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = UrbanBrown
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 if (isLoading && policies.isEmpty()) {
                     Box(
@@ -145,71 +141,117 @@ fun ObstacleSelectScreen(
 
                             Text(
                                 text = obstacle.title,
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 color = UrbanBrown
                             )
                         }
 
                         if (checked) {
                             Column(
-                                modifier = Modifier.padding(start = 18.dp)
+                                modifier = Modifier.padding(start = 6.dp)
                             ) {
-                                Spacer(modifier = Modifier.height(8.dp))
-
                                 Text(
-                                    text = "Максимальная допустимая тяжесть",
+                                    text = "Максимальная допустимая тяжесть для Вас:",
+                                    modifier = Modifier.padding(start = 8.dp),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = UrbanBrown
+                                    color = UrbanBrown.copy(
+                                        red = UrbanBrown.red * 0.7f,
+                                        green = UrbanBrown.green * 0.5f,
+                                        blue = UrbanBrown.blue * 0.5f
+                                    ),
+                                    fontSize = 16.sp
                                 )
 
-                                val severityDescription = when (obstacle.obstacleType) {
-                                    "STAIRS" -> "1 — 1-3 ступеньки, 2 — 4-10 ступенек, 3 — более 10 ступенек"
-                                    "CURB" -> "1 — маленький бордюр, 2 — обычный бордюр, 3 — высокий бордюр"
-                                    "ROAD_SLOPE" -> "1 — незначительный подъём, 2 — заметный подъём, 3 — крутой подъём"
-                                    "POTHOLES" -> "1 — маленькая яма, 2 — обычная яма, 3 — большая яма"
-                                    "SAND", "GRAVEL" -> "1 — укатанный, 2 — немного рыхлый, 3 — сильно рыхлый"
-                                    else -> "1 — слабая, 2 — средняя, 3 — сильная"
+                                val severityDescriptions = when (obstacle.obstacleType) {
+                                    "STAIRS" -> listOf(
+                                        "1-3 ступеньки",
+                                        "4-10 ступенек",
+                                        "Более 10 ступенек"
+                                    )
+                                    "CURB" -> listOf(
+                                        "Маленький бордюр",
+                                        "Обычный бордюр",
+                                        "Высокий бордюр"
+                                    )
+                                    "ROAD_SLOPE" -> listOf(
+                                        "Незначительный подъём",
+                                        "Заметный подъём",
+                                        "Крутой подъём"
+                                    )
+                                    "POTHOLES" -> listOf(
+                                        "Маленькая яма",
+                                        "Обычная яма",
+                                        "Большая яма"
+                                    )
+                                    "SAND", "GRAVEL" -> listOf(
+                                        "Укатанный песок",
+                                        "Немного рыхлый песок",
+                                        "Сильно рыхлый песок"
+                                    )
+                                    else -> listOf(
+                                        "1 — слабая",
+                                        "2 — средняя",
+                                        "3 — сильная"
+                                    )
                                 }
 
-                                Text(
-                                    text = severityDescription,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = UrbanBrown.copy(alpha = 0.7f),
-                                    fontSize = 11.sp
-                                )
-
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                Column(
+                                    modifier = Modifier.padding(start = 6.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    (1..3).forEach { value ->
-                                        FilterChip(
-                                            selected = severity == value,
-                                            onClick = {
-                                                severityMap[obstacle.obstacleType] = value
-                                                mapsViewModel.clearMessages()
-                                            },
-                                            label = {
+                                    (0..2).forEach { index ->
+                                        val value = index + 1
+                                        val description = severityDescriptions.getOrElse(index) { "$value" }
+                                        val isSelected = severity == value
+
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    severityMap[obstacle.obstacleType] = value
+                                                    mapsViewModel.clearMessages()
+                                                }
+                                                .background(
+                                                    color = if (isSelected) SafeGreen.copy(alpha = 0.12f) else BackgroundLight,
+                                                    shape = RoundedCornerShape(12.dp)
+                                                )
+                                                .border(
+                                                    width = if (isSelected) 2.dp else 1.dp,
+                                                    color = if (isSelected) SafeGreen else BorderWarm.copy(alpha = 0.5f),
+                                                    shape = RoundedCornerShape(12.dp)
+                                                )
+                                                .padding(vertical = 10.dp, horizontal = 16.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(32.dp)
+                                                    .background(
+                                                        color = if (isSelected) SafeGreen else UrbanBrown.copy(alpha = 0.1f),
+                                                        shape = RoundedCornerShape(16.dp)
+                                                    ),
+                                                contentAlignment = Alignment.Center
+                                            ) {
                                                 Text(
                                                     text = value.toString(),
-                                                    style = MaterialTheme.typography.bodyLarge
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = if (isSelected) Color.White else UrbanBrown
                                                 )
-                                            },
-                                            colors = FilterChipDefaults.filterChipColors(
-                                                selectedContainerColor = SafeGreen.copy(alpha = 0.18f),
-                                                selectedLabelColor = SafeGreen,
-                                                containerColor = BackgroundLight,
-                                                labelColor = UrbanBrown
-                                            ),
-                                            border = FilterChipDefaults.filterChipBorder(
-                                                enabled = true,
-                                                selected = severity == value,
-                                                borderColor = if (severity == value) SafeGreen else BorderWarm,
-                                                selectedBorderColor = SafeGreen
+                                            }
+
+                                            Spacer(modifier = Modifier.width(12.dp))
+
+                                            Text(
+                                                text = description,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = if (isSelected) SafeGreen else UrbanBrown,
+                                                fontSize = 15.sp,
+                                                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
                                             )
-                                        )
+                                        }
                                     }
                                 }
                             }
@@ -228,26 +270,8 @@ fun ObstacleSelectScreen(
                 )
 
                 Spacer(modifier = Modifier.height(30.dp))
-
-
             }
 
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(6.dp)
-                    .align(Alignment.CenterEnd)
-                    .background(UrbanBrown.copy(alpha = 0.25f))
-            )
-
-            Box(
-                modifier = Modifier
-                    .width(6.dp)
-                    .height(60.dp)
-                    .offset(y = (scrollState.value * 0.2f).dp)
-                    .align(Alignment.TopEnd)
-                    .background(UrbanBrown)
-            )
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -255,12 +279,10 @@ fun ObstacleSelectScreen(
                     .background(BackgroundLight)
                     .padding(16.dp)
             ) {
-
                 PrimaryButton(
                     text = if (isSaving) "Сохраняем..." else "Сохранить",
                     enabled = !isSaving && !isLoading
                 ) {
-
                     val items = ServerObstacleOptions.map { obstacle ->
                         val selected = selectedMap[obstacle.obstacleType] == true
 

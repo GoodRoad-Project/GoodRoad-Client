@@ -2,18 +2,16 @@ package com.example.goodroad.ui.user
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.theme.BackgroundLight
 import com.example.goodroad.ui.theme.SurfaceWarm
 import com.example.goodroad.ui.theme.TextPrimary
 import com.example.goodroad.ui.theme.TextSecondary
-import com.example.goodroad.ui.theme.UrbanBrown
 
 @Composable
 fun SecurityScreen(
@@ -31,6 +29,10 @@ fun SecurityScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             item {
+                UserDecor()
+            }
+
+            item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -41,16 +43,6 @@ fun SecurityScreen(
                         color = TextPrimary,
                         modifier = Modifier.weight(1f)
                     )
-
-                    IconButton(
-                        onClick = onBack
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Назад",
-                            tint = UrbanBrown.copy(alpha = 0.7f)
-                        )
-                    }
                 }
             }
 
