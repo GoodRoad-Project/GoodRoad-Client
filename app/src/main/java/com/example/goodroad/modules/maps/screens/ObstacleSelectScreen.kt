@@ -91,7 +91,7 @@ fun ObstacleSelectScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    text = "Выберите препятствия, которые хотите избегать. Препятсвия с номером, большим выбранного, будут избегаться",
+                    text = "Выберите препятствия, которые хотите избегать. Препятствия с уровнем сложности, большим выбранного, будут избегаться",
                     style = MaterialTheme.typography.titleMedium,
                     color = UrbanBrown,
                     fontWeight = FontWeight.Medium

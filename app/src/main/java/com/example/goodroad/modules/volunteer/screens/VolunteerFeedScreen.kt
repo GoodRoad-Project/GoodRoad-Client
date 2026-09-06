@@ -42,8 +42,6 @@ fun VolunteerFeedScreen(
         ) {
             UserDecor()
 
-            Spacer(Modifier.height(12.dp))
-
             Text(
                 text = "Лента волонтёра",
                 style = MaterialTheme.typography.headlineLarge,

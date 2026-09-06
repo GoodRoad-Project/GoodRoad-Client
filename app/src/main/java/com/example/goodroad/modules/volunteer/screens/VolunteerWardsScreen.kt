@@ -45,8 +45,6 @@ fun VolunteerWardsScreen(
 
             UserDecor()
 
-            Spacer(Modifier.height(12.dp))
-
             Text(
                 text = "Мои подопечные",
                 style = MaterialTheme.typography.headlineLarge,
