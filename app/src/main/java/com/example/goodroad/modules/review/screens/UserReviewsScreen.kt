@@ -2,8 +2,8 @@ package com.example.goodroad.modules.review.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -53,15 +53,19 @@ fun UserReviewsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
+
+            UserDecor()
+
             Text(
                 text = "Мои отзывы",
                 style = MaterialTheme.typography.headlineLarge,
                 color = TextPrimary
             )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(12.dp))
 
             OutlinedCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -83,7 +87,11 @@ fun UserReviewsScreen(
                     Text(
                         text = "Статистика по отзывам",
                         style = MaterialTheme.typography.titleMedium,
-                        color = UrbanBrown
+                        color = UrbanBrown.copy(
+                            red = (UrbanBrown.red * 0.7f).coerceIn(0f, 1f),
+                            green = (UrbanBrown.green * 0.5f).coerceIn(0f, 1f),
+                            blue = (UrbanBrown.blue * 0.8f).coerceIn(0f, 1f)
+                        )
                     )
 
                     Spacer(Modifier.height(8.dp))
@@ -105,7 +113,7 @@ fun UserReviewsScreen(
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(8.dp))
 
             AuthSuccessText(
                 text = successMessage,
@@ -119,72 +127,65 @@ fun UserReviewsScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
+            when {
 
-                contentAlignment = Alignment.Center
-            ) {
+                isLoading -> {
 
-                when {
-
-                    isLoading -> {
-
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
                         CircularProgressIndicator(
                             color = UrbanBrown
                         )
                     }
+                }
 
-                    reviews.isEmpty() -> {
+                reviews.isEmpty() -> {
 
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
                             text = "Пока нет ни одного отзыва",
                             color = UrbanBrown
                         )
                     }
+                }
 
-                    else -> {
+                else -> {
 
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-
-                            items(
-                                reviews,
-                                key = { it.id }
-                            ) { review ->
-
-                                ReviewListItem(
-                                    review = review,
-
-                                    onOpenDetails = {
-                                        onOpenDetails(review)
-                                    },
-
-                                    onEdit = {
-                                        onEditReview(review)
-                                    }
-                                )
-                            }
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        reviews.forEach { review ->
+                            ReviewListItem(
+                                review = review,
+                                onOpenDetails = {
+                                    onOpenDetails(review)
+                                },
+                                onEdit = {
+                                    onEditReview(review)
+                                }
+                            )
                         }
                     }
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(8.dp))
 
             PrimaryButton(
                 text = "Добавить отзыв",
-
-                modifier = Modifier
-                    .fillMaxWidth()
+                modifier = Modifier.fillMaxWidth()
             ) {
-
                 reviewsViewModel.clearMessages()
-
                 onAddReview()
             }
         }
@@ -200,12 +201,10 @@ private fun ReviewListItem(
 
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
-
         border = BorderStroke(
             2.dp,
             moderationStatusColor(review.status)
         ),
-
         colors = CardDefaults.outlinedCardColors(
             containerColor = BackgroundLight
         )
@@ -221,7 +220,6 @@ private fun ReviewListItem(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
 

@@ -116,9 +116,10 @@ fun ReviewInfoRow(label: String, value: String) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.titleMedium,
             color = UrbanBrown
         )
+        Spacer(Modifier.height(4.dp))
         Text(
             text = value,
             style = MaterialTheme.typography.bodyLarge,
@@ -180,15 +181,65 @@ fun ReviewStatusBadge(status: String) {
 @Composable
 fun ReviewCardSummary(review: ReviewCardResp) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        ReviewInfoRow("Адрес", buildAddressLine(review.address))
+        Text(
+            text = buildAddressLine(review.address),
+            style = MaterialTheme.typography.titleMedium,
+            color = TextPrimary,
+            maxLines = Int.MAX_VALUE
+        )
+
         Spacer(Modifier.height(8.dp))
-        ReviewInfoRow("Оценка", review.rating.toString())
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Оценка",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = UrbanBrown
+                )
+                Text(
+                    text = "${review.rating}/5",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextPrimary
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Баллы",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = UrbanBrown
+                )
+                Text(
+                    text = "${review.awardedPoints} ⭐",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextPrimary
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Дата",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = UrbanBrown
+                )
+                Text(
+                    text = formatReviewDate(review.createdAt),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextPrimary
+                )
+            }
+        }
+
         Spacer(Modifier.height(8.dp))
-        ReviewInfoRow("Баллы за отзыв", review.awardedPoints.toString())
-        Spacer(Modifier.height(8.dp))
-        ReviewInfoRow("Дата", formatReviewDate(review.createdAt))
-        Spacer(Modifier.height(12.dp))
-        ReviewStatusBadge(review.status)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start
+        ) {
+            ReviewStatusBadge(review.status)
+        }
     }
 }
 

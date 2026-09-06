@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.user.presentation.UserViewModel
 import com.example.goodroad.ui.AuthStatusText
+import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.fields.PasswordField
 import com.example.goodroad.ui.theme.BackgroundLight
@@ -44,6 +45,7 @@ fun ChangePasswordScreen(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
+            UserDecor()
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

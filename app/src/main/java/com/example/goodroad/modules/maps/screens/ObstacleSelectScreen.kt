@@ -84,6 +84,9 @@ fun ObstacleSelectScreen(
                     .padding(bottom = 140.dp)
                     .padding(24.dp)
             ) {
+
+                UserDecor()
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,

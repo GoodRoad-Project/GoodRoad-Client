@@ -39,7 +39,6 @@ fun VolunteerScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
-
             UserDecor()
 
             Text(

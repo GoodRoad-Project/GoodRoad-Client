@@ -10,10 +10,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.unit.*
 import com.example.goodroad.modules.review.data.ReviewCardResp
 import com.example.goodroad.modules.review.presentation.ReviewsViewModel
-import com.example.goodroad.ui.AuthStatusText
-import com.example.goodroad.ui.ReviewCardSummary
-import com.example.goodroad.ui.ReviewInfoRow
-import com.example.goodroad.ui.ReviewPhotosStrip
+import com.example.goodroad.ui.*
 import com.example.goodroad.ui.moderationStatusColor
 import com.example.goodroad.ui.obstacleLabel
 import com.example.goodroad.ui.obstacleSeverityText
@@ -107,45 +104,134 @@ fun ReviewDetailsScreen(
                 colors = CardDefaults.outlinedCardColors(containerColor = BackgroundLight)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    ReviewCardSummary(review)
-
-                    Spacer(Modifier.height(16.dp))
-                    ReviewInfoRow("Координаты", "${review.latitude}, ${review.longitude}")
-                    Spacer(Modifier.height(12.dp))
-                    ReviewInfoRow("Комментарий", review.comment?.ifBlank { "—" } ?: "—")
-                    Spacer(Modifier.height(12.dp))
-                    ReviewInfoRow(
-                        "Комментарий модератора",
-                        review.moderatorComment?.ifBlank { "—" } ?: "—"
+                    Text(
+                        text = buildAddressLine(review.address),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TextPrimary
                     )
+                    Spacer(Modifier.height(12.dp))
 
-                    Spacer(Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Оценка",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = UrbanBrown
+                            )
+                            Text(
+                                text = "${review.rating}/5",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = TextPrimary
+                            )
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Баллы",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = UrbanBrown
+                            )
+                            Text(
+                                text = "${review.awardedPoints} ⭐",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = TextPrimary
+                            )
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Дата",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = UrbanBrown
+                            )
+                            Text(
+                                text = formatReviewDate(review.createdAt),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = TextPrimary
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+
+                    Text(
+                        text = "Комментарий",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = UrbanBrown
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = review.comment?.ifBlank { "—" } ?: "—",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TextPrimary
+                    )
+                    Spacer(Modifier.height(12.dp))
+
+                    Text(
+                        text = "Комментарий модератора",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = UrbanBrown
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = review.moderatorComment?.ifBlank { "—" } ?: "—",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TextPrimary
+                    )
+                    Spacer(Modifier.height(12.dp))
+
                     Text(
                         text = "Фотографии",
                         style = MaterialTheme.typography.titleMedium,
                         color = UrbanBrown
                     )
-                    Spacer(Modifier.height(8.dp))
-                    ReviewPhotosStrip(review.photoUrls)
+                    Spacer(Modifier.height(4.dp))
+                    if (review.photoUrls.isEmpty()) {
+                        Text(
+                            text = "—",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = TextPrimary
+                        )
+                    } else {
+                        ReviewPhotosStrip(review.photoUrls)
+                    }
+                    Spacer(Modifier.height(12.dp))
 
-                    Spacer(Modifier.height(16.dp))
                     Text(
                         text = "Препятствия",
                         style = MaterialTheme.typography.titleMedium,
                         color = UrbanBrown
                     )
-                    Spacer(Modifier.height(8.dp))
-                    review.obstacles.forEach { obstacle ->
+                    Spacer(Modifier.height(4.dp))
+                    if (review.obstacles.isEmpty()) {
                         Text(
-                            text = "${obstacleLabel(obstacle.obstacleType)}: ${
-                                obstacleSeverityText(
-                                    obstacle.severity.toInt()
-                                )
-                            }",
+                            text = "—",
                             style = MaterialTheme.typography.bodyLarge,
                             color = TextPrimary
                         )
-                        Spacer(Modifier.height(4.dp))
+                    } else {
+                        review.obstacles.forEach { obstacle ->
+                            Text(
+                                text = "${obstacleLabel(obstacle.obstacleType)}: ${
+                                    obstacleSeverityText(
+                                        obstacle.severity.toInt()
+                                    )
+                                }",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = TextPrimary
+                            )
+                            Spacer(Modifier.height(2.dp))
+                        }
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        ReviewStatusBadge(review.status)
                     }
                 }
             }
