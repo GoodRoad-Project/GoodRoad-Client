@@ -1,5 +1,6 @@
 package com.example.goodroad.modules.volunteer.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,15 +21,31 @@ import com.example.goodroad.ui.theme.*
 @Composable
 fun VolunteerFeedScreen(
     viewModel: VolunteerViewModel = viewModel(),
+    requestId: String? = null,
     onBack: () -> Unit
 ) {
     val feed = viewModel.feed
+    val selectedRequest = viewModel.selectedRequest.value
     val isLoading = viewModel.isLoading.value
     val error = viewModel.errorMessage.value
     val success = viewModel.successMessage.value
 
-    LaunchedEffect(Unit) {
-        viewModel.loadFeed()
+    BackHandler(onBack = onBack)
+
+    LaunchedEffect(requestId) {
+        if (requestId == null) {
+            viewModel.loadFeed()
+        } else {
+            viewModel.loadRequest(requestId)
+        }
+    }
+
+    DisposableEffect(requestId) {
+        onDispose {
+            if (requestId != null) {
+                viewModel.clearSelectedRequest()
+            }
+        }
     }
 
     Surface(
@@ -45,7 +62,11 @@ fun VolunteerFeedScreen(
             Spacer(Modifier.height(12.dp))
 
             Text(
-                text = "Лента волонтёра",
+                text = if (requestId == null) {
+                    "Лента волонтёра"
+                } else {
+                    "Заявка на сопровождение"
+                },
                 style = MaterialTheme.typography.headlineLarge,
                 color = TextPrimary
             )
@@ -78,7 +99,30 @@ fun VolunteerFeedScreen(
                     Spacer(Modifier.height(8.dp))
                 }
 
-                if (feed.isEmpty()) {
+                if (requestId != null) {
+                    if (selectedRequest == null) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Заявка недоступна",
+                                color = UrbanBrown
+                            )
+                        }
+                    } else {
+                        VolunteerRequestCard(
+                            item = selectedRequest,
+                            onTake = {
+                                when (selectedRequest.status) {
+                                    VolunteerViewModel.RequestStatus.OPEN -> viewModel.acceptRequest(selectedRequest.id)
+                                    VolunteerViewModel.RequestStatus.ACCEPTED -> viewModel.withdrawRequest(selectedRequest.id)
+                                    else -> Unit
+                                }
+                            }
+                        )
+                    }
+                } else if (feed.isEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center

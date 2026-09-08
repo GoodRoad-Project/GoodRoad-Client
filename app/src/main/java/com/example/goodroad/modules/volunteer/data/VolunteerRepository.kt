@@ -35,6 +35,9 @@ class VolunteerRepository(
     ): List<HelpRequestItem> =
         api.listAvailableRequests(latitude, longitude).map { it.toUi() }
 
+    suspend fun loadRequest(id: String): HelpRequestItem =
+        api.getHelpRequest(id).toUi()
+
     suspend fun createHelpRequest(
         fromAddress: String,
         toAddress: String,

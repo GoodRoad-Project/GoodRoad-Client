@@ -234,6 +234,7 @@ fun UserNav(
                             overlayScreen = OverlayScreen.HELP_MY_REQUESTS
                         },
                         onVolunteerFeed = {
+                            selectedTaskTarget = null
                             overlayScreen = OverlayScreen.VOLUNTEER_FEED
                         },
                         onMyWards = {
@@ -360,7 +361,18 @@ fun UserNav(
                 )
 
                 OverlayScreen.VOLUNTEER_FEED -> VolunteerFeedScreen(
-                    onBack = { overlayScreen = OverlayScreen.NONE }
+                    viewModel = helpViewModel,
+                    requestId = selectedTaskTarget
+                        ?.takeIf { it.targetType == "HELP_REQUEST" }
+                        ?.targetId,
+                    onBack = {
+                        if (selectedTaskTarget?.targetType == "HELP_REQUEST") {
+                            selectedTaskTarget = null
+                            overlayScreen = OverlayScreen.TASK_DETAIL
+                        } else {
+                            overlayScreen = OverlayScreen.NONE
+                        }
+                    }
                 )
 
                 OverlayScreen.VOLUNTEER_WARDS -> VolunteerWardsScreen(
@@ -420,7 +432,8 @@ fun UserNav(
                             onSaved = {
                                 selectedTaskTarget = null
                                 overlayScreen = OverlayScreen.TASK_DETAIL
-                            }
+                            },
+                            taskTargetId = target.id
                         )
                     } else {
                         overlayScreen = OverlayScreen.TASK_DETAIL
@@ -460,8 +473,17 @@ fun UserNav(
                             task = task,
 
                             onTargetClick = { target ->
-                                selectedTaskTarget = target
-                                overlayScreen = OverlayScreen.REVIEW_FORM_FROM_TASK
+                                when (target.targetType) {
+                                    "OBSTACLE_FEATURE" -> {
+                                        selectedTaskTarget = target
+                                        overlayScreen = OverlayScreen.REVIEW_FORM_FROM_TASK
+                                    }
+
+                                    "HELP_REQUEST" -> {
+                                        selectedTaskTarget = target
+                                        overlayScreen = OverlayScreen.VOLUNTEER_FEED
+                                    }
+                                }
                             },
 
                             onBack = {

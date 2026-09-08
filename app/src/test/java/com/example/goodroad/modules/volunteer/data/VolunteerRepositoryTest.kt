@@ -104,6 +104,16 @@ class VolunteerRepositoryTest {
     }
 
     @Test
+    fun loadRequestReturnsMappedItem() = runBlocking {
+        val api = FakeVolunteerApi()
+        val repository = VolunteerRepository(api)
+
+        val result = repository.loadRequest("52")
+
+        assertEquals("52", result.id)
+    }
+
+    @Test
     fun createHelpRequestReturnsMappedItem() = runBlocking {
         val resp = helpResp("99")
         val api = FakeVolunteerApi(createHelpResp = resp)

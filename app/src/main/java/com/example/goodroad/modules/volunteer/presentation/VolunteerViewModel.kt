@@ -60,6 +60,9 @@ class VolunteerViewModel(
     var successMessage = mutableStateOf<String?>(null)
         private set
 
+    var selectedRequest = mutableStateOf<HelpRequest?>(null)
+        private set
+
     val requests = mutableStateListOf<HelpRequest>()
     val feed = mutableStateListOf<HelpRequest>()
 
@@ -139,6 +142,28 @@ class VolunteerViewModel(
         }
     }
 
+    fun loadRequest(id: String) {
+        viewModelScope.launch {
+            isLoading.value = true
+            errorMessage.value = null
+            successMessage.value = null
+            selectedRequest.value = null
+
+            try {
+                ApiClient.refreshTokens()
+                selectedRequest.value = repository.loadRequest(id).toUiModel()
+            } catch (e: Exception) {
+                errorMessage.value = e.message ?: "Ошибка загрузки заявки"
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
+    fun clearSelectedRequest() {
+        selectedRequest.value = null
+    }
+
     fun refreshFeed() = loadFeed()
 
     fun acceptRequest(id: String) {
@@ -152,7 +177,10 @@ class VolunteerViewModel(
             try {
                 feed.removeAll { it.id == id }
 
-                repository.acceptRequest(id)
+                val updated = repository.acceptRequest(id).toUiModel()
+                if (selectedRequest.value?.id == id) {
+                    selectedRequest.value = updated
+                }
 
                 successMessage.value = "Вы стали сопровождающим"
             } catch (e: Exception) {
@@ -177,7 +205,10 @@ class VolunteerViewModel(
             try {
                 wards.removeAll { it.id == id }
 
-                repository.withdrawResponse(id)
+                val updated = repository.withdrawResponse(id).toUiModel()
+                if (selectedRequest.value?.id == id) {
+                    selectedRequest.value = updated
+                }
 
                 successMessage.value = "Вы отказались от заявки"
 
