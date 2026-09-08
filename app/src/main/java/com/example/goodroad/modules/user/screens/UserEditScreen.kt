@@ -245,7 +245,7 @@ fun UserEditScreen(
                 Spacer(Modifier.width(12.dp))
                 Text(
                     text = "Выбрать фото профиля",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                     color = UrbanBrown
                 )
             }

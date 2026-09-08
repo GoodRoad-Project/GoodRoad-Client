@@ -189,7 +189,16 @@ private fun WardRequestCard(
             Spacer(Modifier.height(10.dp))
 
             Text("Телефон:", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
-            Text(item.contact.ifBlank { "Не указан" }, color = TextPrimary)
+            Text(
+                when {
+                    item.contact.startsWith("7") && item.contact.length == 11 -> "+" + item.contact
+                    item.contact.startsWith("8") && item.contact.length == 11 -> item.contact
+                    item.contact.startsWith("+7") -> item.contact
+                    item.contact.isBlank() -> "Не указан"
+                    else -> item.contact
+                },
+                color = TextPrimary
+            )
 
             if (item.socialNickname.isNotBlank()) {
                 Spacer(Modifier.height(10.dp))
@@ -200,12 +209,6 @@ private fun WardRequestCard(
             Spacer(Modifier.height(10.dp))
 
             Column {
-                Text(
-                    text = "Статус",
-                    color = UrbanBrown,
-                    fontWeight = FontWeight.SemiBold
-                )
-
                 Spacer(Modifier.height(4.dp))
 
                 StatusBadgeWards(status = item.status)

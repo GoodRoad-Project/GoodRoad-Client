@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -48,26 +46,11 @@ fun UserHelpRequestsScreen(
 
             UserDecor()
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Мои заявки",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = TextPrimary,
-                    modifier = Modifier.weight(1f)
-                )
-
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Назад",
-                        tint = UrbanBrown
-                    )
-                }
-            }
+            Text(
+                text = "Мои заявки",
+                style = MaterialTheme.typography.headlineLarge,
+                color = TextPrimary
+            )
 
             Spacer(Modifier.height(16.dp))
 
@@ -176,7 +159,14 @@ fun UserHelpRequestsScreen(
                                 Spacer(Modifier.height(8.dp))
 
                                 Text("Контакт", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
-                                Text(req.contact)
+                                Text(
+                                    when {
+                                        req.contact.startsWith("7") && req.contact.length == 11 -> "+" + req.contact
+                                        req.contact.startsWith("8") && req.contact.length == 11 -> req.contact
+                                        req.contact.startsWith("+7") -> req.contact
+                                        else -> req.contact
+                                    }
+                                )
 
                                 Spacer(Modifier.height(8.dp))
 
@@ -191,12 +181,6 @@ fun UserHelpRequestsScreen(
                                 Spacer(Modifier.height(10.dp))
 
                                 Column {
-                                    Text(
-                                        text = "Статус",
-                                        color = UrbanBrown,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-
                                     Spacer(Modifier.height(4.dp))
 
                                     StatusBadge(status = req.status)

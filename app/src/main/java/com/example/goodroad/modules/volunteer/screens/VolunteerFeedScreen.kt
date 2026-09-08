@@ -237,7 +237,7 @@ private fun VolunteerRequestCard(
                 )
 
                 Text(
-                    text = item.socialNickname,
+                    text = item.socialNickname.ifBlank { "-" },
                     style = MaterialTheme.typography.bodyLarge,
                     color = TextPrimary
                 )

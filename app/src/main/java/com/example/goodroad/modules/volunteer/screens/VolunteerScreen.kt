@@ -60,7 +60,7 @@ fun VolunteerScreen(
 
             ServiceCard(
                 title = "Мои заявки",
-                description = "Посмотреть статус и историю заявок",
+                description = "Посмотреть историю заявок и их статус",
                 onClick = onMyRequests
             )
 
@@ -72,7 +72,7 @@ fun VolunteerScreen(
 
                 ServiceCard(
                     title = "Лента волонтёра",
-                    description = "Доступные заявки для помощи",
+                    description = "Актуальные заявки для помощи",
                     onClick = onVolunteerFeed
                 )
 
@@ -80,7 +80,7 @@ fun VolunteerScreen(
 
                 ServiceCard(
                     title = "Мои подопечные",
-                    description = "Люди, которым вы помогаете",
+                    description = "Люди, которым вы помогаете в сопровождении",
                     onClick = onMyWards
                 )
             }
