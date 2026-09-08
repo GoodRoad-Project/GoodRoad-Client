@@ -202,7 +202,7 @@ private fun WardRequestCard(
 
             if (item.socialNickname.isNotBlank()) {
                 Spacer(Modifier.height(10.dp))
-                Text("Telegram / ВК:", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
+                Text("Telegram / ВК / доп.контакт:", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
                 Text(item.socialNickname, color = TextPrimary)
             }
 

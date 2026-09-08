@@ -274,7 +274,7 @@ fun HelpRequestCreateScreen(
                     socialNickname = it
                     socialNicknameError = null
                 },
-                label = "Telegram / ВК / доп. контакт",
+                label = "Telegram / ВК / доп.контакт с указанием, к чему относится",
                 icon = {
                     Icon(
                         imageVector = Icons.Default.Person,

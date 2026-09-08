@@ -158,7 +158,7 @@ fun UserHelpRequestsScreen(
 
                                 Spacer(Modifier.height(8.dp))
 
-                                Text("Контакт", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
+                                Text("Номер телефона", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
                                 Text(
                                     when {
                                         req.contact.startsWith("7") && req.contact.length == 11 -> "+" + req.contact

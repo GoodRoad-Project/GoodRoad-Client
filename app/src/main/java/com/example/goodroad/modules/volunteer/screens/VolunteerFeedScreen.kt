@@ -230,7 +230,7 @@ private fun VolunteerRequestCard(
                 Spacer(Modifier.height(10.dp))
 
                 Text(
-                    text = "Telegram / ВК:",
+                    text = "Telegram / ВК / доп.контакт:",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = UrbanBrown
