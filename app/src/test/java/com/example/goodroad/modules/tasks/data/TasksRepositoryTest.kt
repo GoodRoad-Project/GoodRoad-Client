@@ -39,7 +39,8 @@ class TasksRepositoryTest {
         )
 
         assertEquals(listOf(task), result)
-
+        assertEquals(59.0, api.generationRequest?.latitude)
+        assertEquals(30.0, api.generationRequest?.longitude)
         assertEquals("WALK", api.activityType)
         assertEquals(59.0, api.latitude)
         assertEquals(30.0, api.longitude)
@@ -64,17 +65,6 @@ class TasksRepositoryTest {
         assertEquals("c1", result[0].id)
     }
 
-    @Test
-    fun completeTargetCallsApi() = runBlocking {
-        val api = FakeTasksApi()
-        val repository = TasksRepository(api)
-
-        repository.completeTarget("task1", "target1")
-
-        assertEquals("task1", api.taskId)
-        assertEquals("target1", api.targetId)
-    }
-
     private class FakeTasksApi(
         private val tasks: List<TaskViewDto> = emptyList(),
         private val completedTasks: List<CompletedTaskDto> = emptyList()
@@ -83,9 +73,7 @@ class TasksRepositoryTest {
         var activityType: String? = null
         var latitude: Double? = null
         var longitude: Double? = null
-
-        var taskId: String? = null
-        var targetId: String? = null
+        var generationRequest: TaskGenerationReq? = null
 
         override suspend fun getTasks(
             activityType: String?,
@@ -102,12 +90,8 @@ class TasksRepositoryTest {
             return completedTasks
         }
 
-        override suspend fun completeTarget(
-            taskId: String,
-            targetId: String
-        ) {
-            this.taskId = taskId
-            this.targetId = targetId
+        override suspend fun generateTasks(request: TaskGenerationReq) {
+            generationRequest = request
         }
     }
 }

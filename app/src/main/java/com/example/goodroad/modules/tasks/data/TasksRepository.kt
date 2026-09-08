@@ -9,6 +9,15 @@ class TasksRepository(
         latitude: Double? = null,
         longitude: Double? = null
     ): List<TaskViewDto> {
+        if (latitude != null && longitude != null) {
+            api.generateTasks(
+                TaskGenerationReq(
+                    latitude = latitude,
+                    longitude = longitude
+                )
+            )
+        }
+
         return api.getTasks(
             activityType = activityType,
             latitude = latitude,
@@ -18,9 +27,5 @@ class TasksRepository(
 
     suspend fun loadCompletedTasks(): List<CompletedTaskDto> {
         return api.getCompletedTasks()
-    }
-
-    suspend fun completeTarget(taskId: String, targetId: String) {
-        return api.completeTarget(taskId, targetId)
     }
 }

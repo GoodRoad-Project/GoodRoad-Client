@@ -3,7 +3,6 @@ package com.example.goodroad.modules.tasks.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.goodroad.modules.tasks.data.CompletedTaskDto
-import com.example.goodroad.modules.tasks.data.TaskCreateReq
 import com.example.goodroad.modules.tasks.data.TaskViewDto
 import com.example.goodroad.modules.tasks.data.TasksRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -64,34 +63,6 @@ class TasksViewModel(
                 _error.value = e.message
             } finally {
                 _loading.value = false
-            }
-        }
-    }
-
-    fun completeTarget(taskId: String, targetId: String, onSuccess: () -> Unit = {}) {
-        viewModelScope.launch {
-            try {
-                repository.completeTarget(taskId, targetId)
-
-                val currentTasks = _tasks.value.toMutableList()
-                val taskIndex = currentTasks.indexOfFirst { it.id == taskId }
-                if (taskIndex != -1) {
-                    val task = currentTasks[taskIndex]
-                    val updatedTargets = task.targets.map { target ->
-                        if (target.id == targetId) target.copy(done = true) else target
-                    }
-                    val newCompletedCount = updatedTargets.count { it.done }
-                    val updatedTask = task.copy(
-                        targets = updatedTargets,
-                        completedCount = newCompletedCount
-                    )
-                    currentTasks[taskIndex] = updatedTask
-                    _tasks.value = currentTasks
-                }
-
-                onSuccess()
-            } catch (e: Exception) {
-                _error.value = e.message
             }
         }
     }
