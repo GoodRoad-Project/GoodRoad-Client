@@ -317,31 +317,33 @@ class UserViewModel(
         successMessage.value = null
     }
 
-    fun clearSuccessMessage() {
-        successMessage.value = null
-    }
-
     private fun mapUserError(e: Exception): String {
         return when (e) {
+            is HttpException -> {
+                val errorBody = e.response()?.errorBody()?.string()
+                val errorCode = extractErrorCode(errorBody)
 
-            is IllegalArgumentException ->
-                e.message ?: "Некорректные данные"
-
-            is HttpException -> when (e.code()) {
-                400 -> "Некорректные данные"
-                401 -> "Не авторизован"
-                403 -> "Нет доступа"
-                404 -> "Пользователь не найден"
-                409 -> "Телефон уже используется"
-                500 -> "Ошибка сервера"
-                else -> "Ошибка"
+                when {
+                    errorCode == "USER_FIRST_NAME_INVALID" -> "Имя должно содержать только кириллицу"
+                    errorCode == "USER_LAST_NAME_INVALID" -> "Фамилия должна содержать только кириллицу"
+                    errorCode == "AVATAR_TOO_LARGE" -> "Файл слишком большой (макс. 10MB)"
+                    errorCode == "AVATAR_TYPE_INVALID" -> "Поддерживаются только JPEG, PNG, WEBP"
+                    errorCode == "PHONE_INVALID" -> "Некорректный номер телефона"
+                    errorCode == "PHONE_ALREADY_USED" -> "Этот номер уже используется"
+                    errorCode == "USER_UPDATE_EMPTY" -> "Нет изменений для сохранения"
+                    else -> when (e.code()) {
+                        400 -> "Некорректные данные"
+                        401 -> "Не авторизован"
+                        403 -> "Нет доступа"
+                        404 -> "Пользователь не найден"
+                        409 -> "Телефон уже используется"
+                        500 -> "Ошибка сервера"
+                        else -> "Ошибка"
+                    }
+                }
             }
-
-            is IOException ->
-                "Проверьте интернет"
-
-            else ->
-                e.message ?: "Неизвестная ошибка"
+            is IOException -> "Проверьте интернет"
+            else -> e.message ?: "Неизвестная ошибка"
         }
     }
 
@@ -411,5 +413,16 @@ private fun mapPasswordChangeError(e: Exception): String {
 
         else ->
             e.message ?: "Неизвестная ошибка"
+    }
+}
+
+private fun extractErrorCode(errorBody: String?): String? {
+    if (errorBody.isNullOrBlank()) return null
+
+    return try {
+        val json = org.json.JSONObject(errorBody)
+        json.optString("code", null) ?: json.optString("error", null)
+    } catch (_: Exception) {
+        null
     }
 }

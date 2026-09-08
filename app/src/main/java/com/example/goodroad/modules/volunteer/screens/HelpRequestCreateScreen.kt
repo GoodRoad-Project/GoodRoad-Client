@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Comment
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -274,7 +273,7 @@ fun HelpRequestCreateScreen(
                     socialNickname = it
                     socialNicknameError = null
                 },
-                label = "Telegram / ВК / доп.контакт с указанием, к чему относится",
+                label = "Telegram / ВК / доп.контакт",
                 icon = {
                     Icon(
                         imageVector = Icons.Default.Person,
@@ -308,7 +307,7 @@ fun HelpRequestCreateScreen(
             if (error != null) {
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    text = mapErrorToUserMessage(error),
+                    text = error,
                     color = MaterialTheme.colorScheme.error
                 )
             }
@@ -538,22 +537,5 @@ private fun isDateTimeInPast(dateStr: String, timeStr: String): String? {
         }
     } catch (_: Exception) {
         null
-    }
-}
-
-private fun mapErrorToUserMessage(error: String?): String {
-    val msg = error?.lowercase() ?: return "Произошла неизвестная ошибка"
-
-    return when {
-        msg.contains("timeout") -> "Сервер не отвечает. Попробуйте позже"
-        msg.contains("unable to resolve host") -> "Нет соединения с интернетом"
-        msg.contains("400") -> "Проверьте заполнение обязательных полей"
-        msg.contains("401") -> "Необходима повторная авторизация"
-        msg.contains("403") -> "У вас нет доступа к этой операции"
-        msg.contains("404") -> "Сервис временно недоступен"
-        msg.contains("500") -> "Ошибка сервера. Попробуйте позже"
-        msg.contains("validation") -> "Некоторые поля заполнены неверно"
-        msg.contains("illegal") -> "Проверьте введённые данные"
-        else -> "Не удалось отправить заявку. Попробуйте ещё раз"
     }
 }

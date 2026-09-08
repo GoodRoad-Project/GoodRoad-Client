@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
+import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.theme.*
 
@@ -28,6 +29,7 @@ fun VolunteerScreen(
 
     val menuState = helpViewModel.volunteerMenu.value
     val isVolunteer = menuState?.isVolunteer == true
+    val error = helpViewModel.errorMessage.value
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -44,6 +46,13 @@ fun VolunteerScreen(
             Text(
                 text = "Помощь волонтёров",
                 style = MaterialTheme.typography.headlineLarge
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            AuthStatusText(
+                text = error,
+                onTimeout = helpViewModel::clearMessages
             )
 
             Spacer(Modifier.height(16.dp))

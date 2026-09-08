@@ -48,6 +48,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
+import com.example.goodroad.ui.AuthStatusText
+import com.example.goodroad.ui.AuthSuccessText
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.BackgroundLight
@@ -202,24 +204,15 @@ fun VolunteerApplicationFormScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            if (error != null) {
-                ErrorBlock(mapErrorToUserMessage(error))
-            }
+            AuthStatusText(
+                text = error,
+                onTimeout = viewModel::clearMessages
+            )
 
-            if (success != null) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Text(
-                        text = success!!,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(12.dp)
-                    )
-                }
-                Spacer(Modifier.height(8.dp))
-            }
+            AuthSuccessText(
+                text = success,
+                onTimeout = viewModel::clearMessages
+            )
 
             OutlinedTextField(
                 value = dobroUrl,
@@ -229,12 +222,7 @@ fun VolunteerApplicationFormScreen(
                 },
                 label = { Text("Dobro.ru URL *") },
                 modifier = Modifier.fillMaxWidth(),
-                isError = error?.contains("dobro", ignoreCase = true) == true,
-                supportingText = {
-                    if (error?.contains("dobro", ignoreCase = true) == true) {
-                        Text("Проверьте ссылку")
-                    }
-                }
+                isError = error?.contains("Dobro.ru", ignoreCase = true) == true
             )
 
             Spacer(Modifier.height(12.dp))
@@ -247,12 +235,7 @@ fun VolunteerApplicationFormScreen(
                 },
                 label = { Text("Телефон *") },
                 modifier = Modifier.fillMaxWidth(),
-                isError = error?.contains("phone", ignoreCase = true) == true,
-                supportingText = {
-                    if (error?.contains("phone", ignoreCase = true) == true) {
-                        Text("11 цифр, например: 79123456789")
-                    }
-                }
+                isError = error?.contains("телефон", ignoreCase = true) == true
             )
 
             Spacer(Modifier.height(12.dp))
@@ -352,47 +335,5 @@ fun VolunteerApplicationFormScreen(
                 }
             )
         }
-    }
-}
-
-@Composable
-private fun ErrorBlock(error: String?) {
-    if (error.isNullOrBlank()) return
-
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        )
-    ) {
-        Text(
-            text = error,
-            color = MaterialTheme.colorScheme.onErrorContainer,
-            modifier = Modifier.padding(12.dp)
-        )
-    }
-
-    Spacer(Modifier.height(8.dp))
-}
-
-private fun mapErrorToUserMessage(error: String?): String {
-    val msg = error?.lowercase() ?: return "Произошла неизвестная ошибка"
-
-    return when {
-        msg.contains("timeout") || msg.contains("timed out") -> "Сервер не отвечает. Проверьте интернет и попробуйте позже"
-        msg.contains("unable to resolve host") -> "Нет соединения с сервером. Проверьте интернет"
-        msg.contains("403") || msg.contains("forbidden") -> "Доступ запрещён. Выйдите из приложения и войдите заново"
-        msg.contains("400") -> "Проверьте правильность заполнения всех полей"
-        msg.contains("401") || msg.contains("unauthorized") -> "Сессия истекла. Войдите в приложение заново"
-        msg.contains("404") -> "Сервис временно недоступен. Попробуйте позже"
-        msg.contains("409") -> "Заявка уже существует или произошёл конфликт"
-        msg.contains("422") -> "Проверьте правильность введённых данных"
-        msg.contains("500") || msg.contains("502") || msg.contains("503") -> "Ошибка на сервере. Попробуйте позже"
-        msg.contains("validation") -> "Некоторые поля заполнены неверно"
-        msg.contains("url") || msg.contains("dobro") -> "Проверьте правильность ссылки на Dobro.ru"
-        msg.contains("phone") -> "Проверьте правильность номера телефона"
-        msg.contains("nickname") -> "Проверьте правильность Telegram/VK ника"
-        msg.contains("already") && msg.contains("volunteer") -> "Вы уже являетесь волонтёром"
-        msg.contains("already") && msg.contains("pending") -> "У вас уже есть заявка на рассмотрении"
-        else -> error
     }
 }

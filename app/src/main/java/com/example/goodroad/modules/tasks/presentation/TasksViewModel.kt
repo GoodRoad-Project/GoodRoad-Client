@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.io.IOException
+import org.json.JSONObject
 
 class TasksViewModel(
     private val repository: TasksRepository
@@ -26,6 +29,45 @@ class TasksViewModel(
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    private fun extractErrorCode(errorBody: String?): String? {
+        if (errorBody.isNullOrBlank()) return null
+        return try {
+            JSONObject(errorBody).optString("code", null)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun mapTaskError(e: Exception): String {
+        return when (e) {
+            is HttpException -> {
+                val errorBody = e.response()?.errorBody()?.string()
+                val errorCode = extractErrorCode(errorBody)
+
+                when {
+                    errorCode == "TASK_LOCATION_INCOMPLETE" -> "Укажите и широту, и долготу"
+                    errorCode == "TASK_LOCATION_INVALID" -> "Некорректные координаты"
+                    errorCode == "TASK_ACTIVITY_INVALID" -> "Некорректный тип активности"
+                    errorCode == "TASK_GENERATION_BODY_EMPTY" -> "Укажите текущее местоположение"
+                    errorCode == "TASK_TARGET_NOT_FOUND" -> "Цель задания не найдена"
+                    errorCode == "TASK_TARGET_ID_INVALID" -> "Неверный ID цели"
+                    errorCode == "USER_PHONE_NOT_FOUND" -> "Пользователь не найден"
+                    else -> when (e.code()) {
+                        400 -> "Некорректный запрос"
+                        401 -> "Необходима авторизация"
+                        403 -> "Доступ запрещен"
+                        404 -> "Задание или цель не найдены"
+                        409 -> "Конфликт при выполнении"
+                        500 -> "Ошибка сервера"
+                        else -> "Ошибка при выполнении операции"
+                    }
+                }
+            }
+            is IOException -> "Проверьте подключение к интернету"
+            else -> e.message ?: "Неизвестная ошибка"
+        }
+    }
 
     fun loadTasks(
         activityType: String? = null,
@@ -44,7 +86,7 @@ class TasksViewModel(
                 )
 
             } catch (e: Exception) {
-                _error.value = e.message
+                _error.value = mapTaskError(e)
             } finally {
                 _loading.value = false
             }
@@ -61,7 +103,7 @@ class TasksViewModel(
                     repository.loadCompletedTasks()
 
             } catch (e: Exception) {
-                _error.value = e.message
+                _error.value = mapTaskError(e)
             } finally {
                 _loading.value = false
             }
@@ -91,7 +133,7 @@ class TasksViewModel(
 
                 onSuccess()
             } catch (e: Exception) {
-                _error.value = e.message
+                _error.value = mapTaskError(e)
             }
         }
     }

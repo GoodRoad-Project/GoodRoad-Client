@@ -16,6 +16,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.HttpException
 import java.io.File
 import java.io.IOException
+import org.json.JSONObject
 
 class ReviewsViewModel(private val repository: ReviewRepository) : ViewModel() {
 
@@ -39,6 +40,52 @@ class ReviewsViewModel(private val repository: ReviewRepository) : ViewModel() {
 
     var successMessage = mutableStateOf<String?>(null)
         private set
+
+    private fun extractErrorCode(errorBody: String?): String? {
+        if (errorBody.isNullOrBlank()) return null
+        return try {
+            JSONObject(errorBody).optString("code", null)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun mapReviewError(e: Exception): String {
+        return when (e) {
+            is IllegalArgumentException -> e.message ?: "Некорректные данные отзыва"
+            is HttpException -> {
+                val errorBody = e.response()?.errorBody()?.string()
+                val errorCode = extractErrorCode(errorBody)
+
+                when {
+                    errorCode == "REVIEW_ALREADY_EXISTS" -> "Вы уже оставили отзыв для этого места"
+                    errorCode == "REVIEW_ID_NOT_FOUND" -> "Отзыв не найден"
+                    errorCode == "PHOTO_EMPTY" -> "Файл не выбран"
+                    errorCode == "PHOTO_TOO_LARGE" -> "Файл слишком большой (макс. 10MB)"
+                    errorCode == "LOCATION_INVALID" -> "Некорректные координаты"
+                    errorCode == "ADDRESS_INVALID" -> "Некорректный адрес"
+                    errorCode == "OBSTACLES_INVALID" -> "Некорректные препятствия"
+                    errorCode == "RATING_INVALID" -> "Некорректная оценка"
+                    errorCode == "USER_PHONE_NOT_FOUND" -> "Пользователь не найден"
+                    errorCode == "ID_INVALID" -> "Неверный ID отзыва"
+                    errorCode == "TASK_NOT_FOUND" -> "Задание не найдено"
+                    errorCode == "TASK_ALREADY_HAS_REVIEW" -> "Для этого задания уже есть отзыв"
+                    else -> when (e.code()) {
+                        400 -> "Проверьте поля отзыва"
+                        401 -> "Вы не авторизованы"
+                        403 -> "Нет доступа к этому отзыву"
+                        404 -> "Отзыв или препятствие не найдены"
+                        409 -> "Такой отзыв уже существует"
+                        413 -> "Файл слишком большой"
+                        500 -> "Сервер временно недоступен"
+                        else -> "Не удалось выполнить операцию с отзывом"
+                    }
+                }
+            }
+            is IOException -> "Проверьте подключение к интернету"
+            else -> e.message ?: "Неизвестная ошибка"
+        }
+    }
 
     fun loadReviews() {
         viewModelScope.launch {
@@ -187,23 +234,6 @@ class ReviewsViewModel(private val repository: ReviewRepository) : ViewModel() {
 
     fun clearErrorMessage() {
         errorMessage.value = null
-    }
-
-    private fun mapReviewError(e: Exception): String {
-        return when (e) {
-            is IllegalArgumentException -> e.message ?: "Некорректные данные отзыва"
-            is HttpException -> when (e.code()) {
-                400 -> "Проверьте поля отзыва"
-                401 -> "Вы не авторизованы"
-                404 -> "Отзыв или препятствие не найдены"
-                409 -> "Такой отзыв уже существует"
-                413 -> "Файл слишком большой"
-                500 -> "Сервер временно недоступен"
-                else -> "Не удалось выполнить операцию с отзывом"
-            }
-            is IOException -> "Проверьте подключение к интернету"
-            else -> e.message ?: "Неизвестная ошибка"
-        }
     }
 
     private object MimeTypeMap {
