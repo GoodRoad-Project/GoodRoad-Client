@@ -344,7 +344,7 @@ fun ReviewFormScreen(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = "Если чекбокс не выбран — препятствия нет.",
+                text = "Если чекбокс не выбран, то такого препятствия в этом месте нет.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = UrbanBrown
             )

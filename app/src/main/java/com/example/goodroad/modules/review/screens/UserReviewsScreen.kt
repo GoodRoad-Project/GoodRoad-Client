@@ -113,7 +113,7 @@ fun UserReviewsScreen(
                         )
 
                         Text(
-                            text = "На модерации: $pendingCount",
+                            text = "Отзывов на модерации: $pendingCount",
                             color = UrbanBrown
                         )
                     }
