@@ -152,7 +152,12 @@ fun CouponsScreen(
                             items = coupons,
                             key = { it.id ?: "${it.offerId}-${it.code}" }
                         ) { coupon ->
-                            CouponCard(coupon = coupon)
+                            CouponCard(
+                                coupon = coupon,
+                                onDelete = {
+                                    coupon.id?.let(viewModel::deleteCoupon)
+                                }
+                            )
                         }
                     }
                 }
@@ -199,7 +204,8 @@ private fun EmptyCoupons() {
 
 @Composable
 private fun CouponCard(
-    coupon: UserRewardView
+    coupon: UserRewardView,
+    onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -306,6 +312,17 @@ private fun CouponCard(
             StatusBadge(
                 status = coupon.status
             )
+
+            if (coupon.id != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = onDelete,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Удалить купон")
+                }
+            }
         }
     }
 }

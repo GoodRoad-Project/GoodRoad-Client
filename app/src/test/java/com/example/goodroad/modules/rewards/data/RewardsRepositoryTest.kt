@@ -113,6 +113,16 @@ class RewardsRepositoryTest {
         assertEquals("u1", result[0].userId)
     }
 
+    @Test
+    fun deleteUserRewardCallsApi() = runBlocking {
+        val api = FakeRewardsApi()
+        val repository = RewardsRepository(api)
+
+        repository.deleteUserReward("42")
+
+        assertEquals("42", api.deletedPurchaseId)
+    }
+
     private class FakeRewardsApi(
         private val rewards: List<RewardOffer> = emptyList(),
         private val purchaseResponse: PurchaseResponse = PurchaseResponse(
@@ -122,11 +132,13 @@ class RewardsRepositoryTest {
         ),
         private val account: RewardsAccount = RewardsAccount(0, 0, 0, ""),
         private val history: List<PointTransaction> = emptyList(),
-        private val leaderboard: List<LeaderboardItem> = emptyList()
+        private val leaderboard: List<LeaderboardItem> = emptyList(),
+        private val userRewards: UserRewardsResp = UserRewardsResp(emptyList(), emptyList())
     ) : RewardsApi {
 
         var purchaseRewardId: String? = null
         var purchaseRequest: PurchaseRequest? = null
+        var deletedPurchaseId: String? = null
 
         override suspend fun getRewards(
             minPrice: Int?,
@@ -150,5 +162,11 @@ class RewardsRepositoryTest {
         override suspend fun getHistory() = history
 
         override suspend fun getLeaderboard() = leaderboard
+
+        override suspend fun getCurrentUserRewards() = userRewards
+
+        override suspend fun deleteUserReward(purchaseId: String) {
+            deletedPurchaseId = purchaseId
+        }
     }
 }

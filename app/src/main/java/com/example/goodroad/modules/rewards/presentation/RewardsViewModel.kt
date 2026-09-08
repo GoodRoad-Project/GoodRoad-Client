@@ -157,6 +157,20 @@ class RewardsViewModel(
         }
     }
 
+    fun deleteCoupon(purchaseId: String) {
+        viewModelScope.launch {
+            runCatching {
+                repository.deleteUserReward(purchaseId)
+            }.onSuccess {
+                loadCurrentUserRewards()
+            }.onFailure { throwable ->
+                _state.value = _state.value.copy(
+                    error = throwable.message
+                )
+            }
+        }
+    }
+
     fun clearPurchaseResult() {
         _state.value = _state.value.copy(purchaseResult = null)
     }
