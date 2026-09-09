@@ -21,7 +21,10 @@ data class SettingsView(
     val firstName: String?,
     val lastName: String?,
     val photoUrl: String?,
-    val active: Boolean
+    val active: Boolean,
+    val accessToken: String? = null,
+    val refreshToken: String? = null,
+    val tokenType: String? = null
 )
 
 data class DeleteAccountReq(
