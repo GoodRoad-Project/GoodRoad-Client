@@ -1,5 +1,6 @@
 package com.example.goodroad.modules.user.data
 
+import com.example.goodroad.data.network.ApiClient
 import okhttp3.MultipartBody
 import retrofit2.HttpException
 
@@ -41,7 +42,23 @@ class UserRepository(
         )
 
         if (response.isSuccessful) {
-            return response.body()
+            val body = response.body() ?: return null
+
+            val accessToken = body.accessToken
+            val refreshToken = body.refreshToken
+
+            if (!accessToken.isNullOrBlank() && !refreshToken.isNullOrBlank()) {
+                ApiClient.saveTokens(
+                    accessToken = accessToken,
+                    refreshToken = refreshToken
+                )
+            }
+
+            return body.copy(
+                accessToken = null,
+                refreshToken = null,
+                tokenType = null
+            )
         }
 
         throw HttpException(response)

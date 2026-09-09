@@ -160,6 +160,10 @@ object ApiClient {
         tokenManager.clearTokens()
     }
 
+    fun saveTokens(accessToken: String, refreshToken: String) {
+        tokenManager.saveTokens(accessToken, refreshToken)
+    }
+
     fun getCurrentToken(): String? = tokenManager.getAccessToken()
 
     suspend fun refreshTokens(): AuthRefreshResponse? {
