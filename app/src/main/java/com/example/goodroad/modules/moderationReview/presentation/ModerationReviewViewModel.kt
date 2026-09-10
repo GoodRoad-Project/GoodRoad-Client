@@ -8,6 +8,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.io.IOException
+import org.json.JSONObject
 
 class ReviewModerationViewModel(
     private val repository: ModerationReviewRepository
@@ -32,6 +35,46 @@ class ReviewModerationViewModel(
     private var totalItems = 0L
     private val pageSize = 20
 
+    private fun extractErrorCode(errorBody: String?): String? {
+        if (errorBody.isNullOrBlank()) return null
+        return try {
+            JSONObject(errorBody).optString("code", null)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun mapModerationError(e: Exception): String {
+        return when (e) {
+            is HttpException -> {
+                val errorBody = e.response()?.errorBody()?.string()
+                val errorCode = extractErrorCode(errorBody)
+
+                when {
+                    errorCode == "REVIEW_ALREADY_TAKEN_BY_MODERATOR" -> "Этот отзыв уже взял другой модератор"
+                    errorCode == "REVIEW_NOT_TAKEN_BY_YOU" -> "Вы не можете освободить этот отзыв"
+                    errorCode == "REVIEW_NOT_TAKEN_BY_MODERATOR" -> "Отзыв не взят в работу"
+                    errorCode == "REVIEW_ID_NOT_FOUND" -> "Отзыв не найден"
+                    errorCode == "REVIEW_REASON_EMPTY" -> "Укажите причину отклонения"
+                    errorCode == "USER_ROLE_FORBIDDEN" -> "Недостаточно прав для модерации"
+                    errorCode == "ID_INVALID" -> "Неверный ID отзыва"
+                    errorCode == "RENIEW_NOT_PENDING" -> "Отзыв уже обработан"
+                    else -> when (e.code()) {
+                        400 -> "Некорректный запрос"
+                        401 -> "Необходима авторизация"
+                        403 -> "Доступ запрещен"
+                        404 -> "Отзыв не найден"
+                        409 -> "Конфликт: отзыв уже обрабатывается"
+                        500 -> "Ошибка сервера"
+                        else -> "Ошибка при выполнении операции"
+                    }
+                }
+            }
+            is IOException -> "Проверьте подключение к интернету"
+            else -> e.message ?: "Неизвестная ошибка"
+        }
+    }
+
     fun loadReviews(reset: Boolean = true) {
         if (reset) {
             currentPage = 0
@@ -53,7 +96,7 @@ class ReviewModerationViewModel(
                 currentPage++
                 _uiState.value = _uiState.value.copy(hasMore = _reviews.value.size < totalItems)
             } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "Ошибка загрузки отзывов"
+                _errorMessage.value = mapModerationError(e)
             } finally {
                 _isLoading.value = false
             }
@@ -71,7 +114,7 @@ class ReviewModerationViewModel(
                 _successMessage.value = "Отзыв взят в работу"
                 onSuccess(updatedReview)
             } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "Ошибка при взятии отзыва"
+                _errorMessage.value = mapModerationError(e)
             } finally {
                 _isLoading.value = false
             }
@@ -89,7 +132,7 @@ class ReviewModerationViewModel(
                 _successMessage.value = "Отзыв одобрен"
                 onSuccess()
             } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "Ошибка при одобрении отзыва"
+                _errorMessage.value = mapModerationError(e)
             } finally {
                 _isLoading.value = false
             }
@@ -107,7 +150,7 @@ class ReviewModerationViewModel(
                 _successMessage.value = "Отзыв отклонен"
                 onSuccess()
             } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "Ошибка при отклонении отзыва"
+                _errorMessage.value = mapModerationError(e)
             } finally {
                 _isLoading.value = false
             }
@@ -136,7 +179,7 @@ class ReviewModerationViewModel(
                 _successMessage.value = "Отзыв освобожден"
                 onSuccess()
             } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "Ошибка при освобождении отзыва"
+                _errorMessage.value = mapModerationError(e)
             } finally {
                 _isLoading.value = false
             }

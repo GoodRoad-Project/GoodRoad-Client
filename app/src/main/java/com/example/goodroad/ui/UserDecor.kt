@@ -16,13 +16,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.*
 import com.example.goodroad.ui.theme.*
+
 @Composable
 fun UserDecor() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(230.dp)
-            .statusBarsPadding()
+            .height(120.dp)
             .clip(RoundedCornerShape(32.dp))
             .background(SurfaceWarm)
     ) {
@@ -51,21 +51,22 @@ fun UserDecor() {
             )
 
             val road = Path().apply {
-                moveTo(size.width * 0.88f, -8f)
+                // Начинаем в правом верхнем углу
+                moveTo(size.width, 0f)
                 cubicTo(
-                    size.width * 0.8f, size.height * 0.06f,
-                    size.width * 0.7f, size.height * 0.14f,
-                    size.width * 0.62f, size.height * 0.28f
+                    size.width * 0.9f, size.height * 0.1f,
+                    size.width * 0.75f, size.height * 0.2f,
+                    size.width * 0.62f, size.height * 0.35f
                 )
                 cubicTo(
-                    size.width * 0.55f, size.height * 0.4f,
-                    size.width * 0.42f, size.height * 0.52f,
-                    size.width * 0.26f, size.height * 0.58f
+                    size.width * 0.5f, size.height * 0.5f,
+                    size.width * 0.35f, size.height * 0.6f,
+                    size.width * 0.15f, size.height * 0.7f
                 )
                 cubicTo(
-                    size.width * 0.15f, size.height * 0.62f,
-                    size.width * 0.07f, size.height * 0.68f,
-                    -8f, size.height * 0.8f
+                    size.width * 0.05f, size.height * 0.75f,
+                    0f, size.height * 0.82f,
+                    0f, size.height * 0.9f
                 )
             }
 
@@ -74,7 +75,7 @@ fun UserDecor() {
                 brush = SolidColor(UrbanBrown),
                 style = Stroke(
                     width = size.width * 0.09f,
-                    cap = StrokeCap.Square,
+                    cap = StrokeCap.Round,
                     join = StrokeJoin.Round
                 )
             )
@@ -84,7 +85,7 @@ fun UserDecor() {
                 color = BackgroundLight.copy(alpha = 0.95f),
                 style = Stroke(
                     width = size.width * 0.014f,
-                    cap = StrokeCap.Butt,
+                    cap = StrokeCap.Round,
                     join = StrokeJoin.Round,
                     pathEffect = PathEffect.dashPathEffect(
                         floatArrayOf(size.width * 0.06f, size.width * 0.04f)
@@ -96,13 +97,13 @@ fun UserDecor() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 16.dp),
+                .padding(horizontal = 18.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.Top
         ) {
             Box(
                 modifier = Modifier
-                    .size(42.dp)
+                    .size(36.dp)
                     .clip(CircleShape)
                     .background(BackgroundLight.copy(alpha = 0.92f)),
                 contentAlignment = Alignment.Center

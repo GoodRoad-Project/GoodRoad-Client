@@ -1,6 +1,5 @@
 package com.example.goodroad.modules.auth.screens
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -8,7 +7,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.goodroad.ui.theme.UrbanBrown
 import com.example.goodroad.modules.auth.presentation.AuthViewModel
 import com.example.goodroad.modules.auth.data.AuthResp
@@ -17,11 +15,6 @@ import com.example.goodroad.ui.AuthFooter
 import com.example.goodroad.ui.AuthScreenFrame
 import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.fields.*
-import com.example.goodroad.validation.PHONE_FORMAT_WARNING
-import com.example.goodroad.validation.formatPhoneForRequest
-import com.example.goodroad.validation.isAllowedDigitsInput
-import com.example.goodroad.validation.isValidRussianPhoneDigits
-import com.example.goodroad.validation.normalizeRequiredRussianPhone
 
 @Composable
 fun LoginScreen(
@@ -32,20 +25,13 @@ fun LoginScreen(
 ) {
     var phone by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
-    var phoneWarning by rememberSaveable { mutableStateOf<String?>(null) }
-    var errorText by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val loginResult by viewModel.loginResult.observeAsState()
     val error by viewModel.error.observeAsState()
     val loading by viewModel.isLoading.observeAsState(initial = false)
+    val loginResult by viewModel.loginResult.observeAsState()
 
     LaunchedEffect(loginResult) {
-        Log.d("LOGIN_DEBUG", "RAW RESPONSE = $loginResult")
-        Log.d("LOGIN_DEBUG", "ROLE = ${loginResult?.user?.role}")
-
-        loginResult?.let { resp ->
-            onLoginSuccess(resp)
-        }
+        loginResult?.let { onLoginSuccess(it) }
     }
 
     AuthScreenFrame(
@@ -55,20 +41,31 @@ fun LoginScreen(
                 text = if (loading) "Входим..." else "Войти",
                 enabled = !loading
             ) {
-                val phoneDigits = normalizeRequiredRussianPhone(phone)
-
-                if (phoneDigits == null || password.isBlank()) {
-                    phoneWarning =
-                        if (phone.isNotBlank() && !isValidRussianPhoneDigits(phone.trim())) {
-                            PHONE_FORMAT_WARNING
-                        } else null
-
-                    errorText = "Заполните телефон и пароль"
-                    return@PrimaryButton
+                val phoneValidation = validatePhone(phone)
+                when (phoneValidation) {
+                    is PhoneValidation.Empty -> {
+                        viewModel.setError("Введите номер телефона")
+                        return@PrimaryButton
+                    }
+                    is PhoneValidation.InvalidChars -> {
+                        viewModel.setError("Телефон должен содержать только цифры")
+                        return@PrimaryButton
+                    }
+                    is PhoneValidation.InvalidFormat -> {
+                        viewModel.setError("Введите корректный номер телефона")
+                        return@PrimaryButton
+                    }
+                    is PhoneValidation.Valid -> {
+                        if (password.isBlank()) {
+                            viewModel.setError("Введите пароль")
+                            return@PrimaryButton
+                        }
+                        viewModel.login(
+                            phoneValidation.toFormattedPhone()!!,
+                            password
+                        )
+                    }
                 }
-
-                errorText = null
-                viewModel.login(formatPhoneForRequest(phoneDigits), password)
             }
         },
         footer = {
@@ -79,31 +76,23 @@ fun LoginScreen(
             )
         }
     ) {
-
         PhoneField(
             value = phone,
-            onValueChange = { value ->
-                when {
-                    !isAllowedDigitsInput(value) -> phoneWarning = PHONE_FORMAT_WARNING
-                    value.length > 11 -> phoneWarning = PHONE_FORMAT_WARNING
-                    value.isNotEmpty() && value.first() !in listOf('7', '8') ->
-                        phoneWarning = PHONE_FORMAT_WARNING
-
-                    else -> {
-                        phone = value
-                        phoneWarning = null
-                    }
-                }
+            onValueChange = {
+                phone = it
+                viewModel.clearError()
             },
-            label = "Телефон",
-            warning = phoneWarning
+            label = "Телефон"
         )
 
         Spacer(Modifier.height(12.dp))
 
         PasswordField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = {
+                password = it
+                viewModel.clearError()
+            },
             label = "Пароль"
         )
 
@@ -119,11 +108,8 @@ fun LoginScreen(
         }
 
         AuthStatusText(
-            text = error ?: errorText,
-            onTimeout = {
-                errorText = null
-                viewModel.clearError()
-            }
+            text = error,
+            onTimeout = viewModel::clearError
         )
     }
 }

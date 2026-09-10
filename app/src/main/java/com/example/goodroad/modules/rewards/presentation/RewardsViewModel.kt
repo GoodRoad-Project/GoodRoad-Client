@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.example.goodroad.modules.rewards.data.UserRewardView
 
 class RewardsViewModel(
     private val repository: RewardsRepository
@@ -24,7 +25,9 @@ class RewardsViewModel(
         val history: List<PointTransaction> = emptyList(),
         val leaderboard: List<LeaderboardItem> = emptyList(),
         val purchaseResult: PurchaseResponse? = null,
-        val error: String? = null
+        val error: String? = null,
+        val activeCoupons: List<UserRewardView> = emptyList(),
+        val inactiveCoupons: List<UserRewardView> = emptyList(),
     )
 
     private val _state = MutableStateFlow(UiState())
@@ -95,13 +98,60 @@ class RewardsViewModel(
                 repository.purchaseReward(rewardId)
             }.onSuccess {
                 _state.value = _state.value.copy(
-                    purchaseResult = it
+                    purchaseResult = it,
+                    error = null
                 )
+
                 loadAccount()
                 loadHistory()
-            }.onFailure {
+                loadCurrentUserRewards()
+            }.onFailure { throwable ->
+
+                val errorCode = if (throwable is retrofit2.HttpException) {
+                    runCatching {
+                        val errorBody = throwable
+                            .response()
+                            ?.errorBody()
+                            ?.string()
+
+                        if (!errorBody.isNullOrBlank()) {
+                            org.json.JSONObject(errorBody)
+                                .optString("code")
+                                .takeIf { it.isNotBlank() }
+                        } else {
+                            null
+                        }
+                    }.getOrNull()
+                } else {
+                    null
+                }
+
                 _state.value = _state.value.copy(
-                    error = it.message
+                    error = errorCode ?: throwable.message
+                )
+            }
+        }
+    }
+
+    fun loadCurrentUserRewards() {
+        viewModelScope.launch {
+            runCatching {
+                _state.value = _state.value.copy(
+                    loading = true,
+                    error = null
+                )
+
+                repository.getCurrentUserRewards()
+            }.onSuccess {
+                _state.value = _state.value.copy(
+                    loading = false,
+                    activeCoupons = it.active,
+                    inactiveCoupons = it.inactive
+                )
+            }.onFailure { throwable ->
+                _state.value = _state.value.copy(
+                    loading = false,
+                    error = throwable.message
                 )
             }
         }

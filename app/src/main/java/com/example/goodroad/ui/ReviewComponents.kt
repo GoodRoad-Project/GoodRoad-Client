@@ -116,9 +116,10 @@ fun ReviewInfoRow(label: String, value: String) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.titleMedium,
             color = UrbanBrown
         )
+        Spacer(Modifier.height(4.dp))
         Text(
             text = value,
             style = MaterialTheme.typography.bodyLarge,
@@ -138,19 +139,43 @@ fun SeveritySelector(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         range.forEach { item ->
-            val selected = item == value
-            OutlinedButton(
-                onClick = { onValueChange(item) },
-                border = BorderStroke(1.dp, if (selected) SafeGreen else BorderWarm),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = if (selected) SafeGreen.copy(alpha = 0.12f) else Color.Transparent,
-                    contentColor = if (selected) SafeGreen else UrbanBrown
-                ),
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 0.dp, vertical = 12.dp)
+            val isSelected = item == value
+
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable {
+                        onValueChange(item)
+                    }
+                    .background(
+                        color = if (isSelected) SafeGreen.copy(alpha = 0.12f) else BackgroundLight,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .border(
+                        width = if (isSelected) 2.dp else 1.dp,
+                        color = if (isSelected) SafeGreen else BorderWarm.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .padding(vertical = 10.dp, horizontal = 0.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
-                Text(item.toString())
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(
+                            color = if (isSelected) SafeGreen else UrbanBrown.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = item.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected) Color.White else UrbanBrown
+                    )
+                }
             }
         }
     }
@@ -180,15 +205,65 @@ fun ReviewStatusBadge(status: String) {
 @Composable
 fun ReviewCardSummary(review: ReviewCardResp) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        ReviewInfoRow("Адрес", buildAddressLine(review.address))
+        Text(
+            text = buildAddressLine(review.address),
+            style = MaterialTheme.typography.titleMedium,
+            color = TextPrimary,
+            maxLines = Int.MAX_VALUE
+        )
+
         Spacer(Modifier.height(8.dp))
-        ReviewInfoRow("Оценка", review.rating.toString())
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Оценка",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = UrbanBrown
+                )
+                Text(
+                    text = "${review.rating}/5",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextPrimary
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Баллы",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = UrbanBrown
+                )
+                Text(
+                    text = "${review.awardedPoints} ⭐",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextPrimary
+                )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Дата",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = UrbanBrown
+                )
+                Text(
+                    text = formatReviewDate(review.createdAt),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextPrimary
+                )
+            }
+        }
+
         Spacer(Modifier.height(8.dp))
-        ReviewInfoRow("Баллы за отзыв", review.awardedPoints.toString())
-        Spacer(Modifier.height(8.dp))
-        ReviewInfoRow("Дата", formatReviewDate(review.createdAt))
-        Spacer(Modifier.height(12.dp))
-        ReviewStatusBadge(review.status)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start
+        ) {
+            ReviewStatusBadge(review.status)
+        }
     }
 }
 
@@ -229,11 +304,6 @@ fun ReviewPhotosStrip(
     onRemove: ((String) -> Unit)? = null
 ) {
     if (photoUrls.isEmpty()) {
-        Text(
-            text = "Фото не добавлены",
-            style = MaterialTheme.typography.bodyMedium,
-            color = UrbanBrown
-        )
         return
     }
 

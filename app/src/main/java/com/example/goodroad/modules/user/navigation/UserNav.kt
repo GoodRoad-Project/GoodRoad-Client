@@ -1,5 +1,6 @@
 package com.example.goodroad.modules.user.navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Map
@@ -8,8 +9,8 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -47,6 +48,12 @@ import com.example.goodroad.modules.tasks.screens.TasksScreen
 import com.example.goodroad.modules.tasks.data.TaskViewDto
 import com.example.goodroad.modules.tasks.screens.CompletedTasksHistoryScreen
 import com.example.goodroad.modules.tasks.screens.TaskExecutionScreen
+import com.example.goodroad.modules.rewards.screens.CouponsScreen
+import com.example.goodroad.modules.tasks.data.TargetViewDto
+import com.example.goodroad.ui.theme.*
+import com.example.goodroad.ui.user.SecurityScreen
+import com.example.goodroad.ui.user.ChangePasswordScreen
+import com.example.goodroad.ui.user.ChangePhoneScreen
 
 enum class BottomTab {
     MAP,
@@ -56,9 +63,11 @@ enum class BottomTab {
 }
 
 enum class OverlayScreen {
-    NONE,
     EDIT_PROFILE,
     DELETE_PROFILE,
+    SECURITY,
+    CHANGE_PASSWORD,
+    CHANGE_PHONE,
     REVIEW_FORM,
     REVIEW_DETAILS,
     OBSTACLES,
@@ -73,7 +82,9 @@ enum class OverlayScreen {
     LEADERBOARD,
     TASKS_SHOP,
     TASK_DETAIL,
-    TASKS_HISTORY
+    TASKS_HISTORY,
+    COUPONS,
+    REVIEW_FORM_FROM_TASK,
 }
 
 @Composable
@@ -82,7 +93,6 @@ fun UserNav(
     onLogout: () -> Unit,
     onNavigateToReview: (String, Double, Double) -> Unit = { _, _, _ -> }
 ) {
-
     val userApi = ApiClient.userApi
     val reviewApi = ApiClient.reviewApi
     val obstacleApi = ApiClient.obstacleApi
@@ -132,69 +142,112 @@ fun UserNav(
     val mapsViewModel: MapsViewModel = viewModel(factory = mapsFactory)
     val helpViewModel: VolunteerViewModel = viewModel(factory = helpFactory)
 
-    var currentTab by rememberSaveable { mutableStateOf(BottomTab.MAP) }
-    var overlayScreen by remember { mutableStateOf(OverlayScreen.NONE) }
+    var currentTab by remember { mutableStateOf(BottomTab.MAP) }
+    val overlayStack = remember { mutableStateListOf<OverlayScreen>() }
+
     var selectedReview by remember { mutableStateOf<ReviewCardResp?>(null) }
     var selectedReward by remember { mutableStateOf<RewardOffer?>(null) }
     var selectedTask by remember { mutableStateOf<TaskViewDto?>(null) }
+    var selectedTaskTarget by remember { mutableStateOf<TargetViewDto?>(null) }
+
+    val overlayScreen = overlayStack.lastOrNull()
+
+    fun navigateTo(screen: OverlayScreen) {
+        overlayStack.add(screen)
+    }
+
+    fun clearStack() {
+        overlayStack.clear()
+        selectedReview = null
+        selectedReward = null
+        selectedTask = null
+        selectedTaskTarget = null
+    }
+
+    fun goBack() {
+        if (overlayStack.isNotEmpty()) {
+            overlayStack.removeAt(overlayStack.lastIndex)
+
+            if (overlayStack.isEmpty()) {
+                selectedReview = null
+                selectedReward = null
+                selectedTask = null
+                selectedTaskTarget = null
+            }
+        }
+    }
+
+    BackHandler(
+        enabled = overlayStack.isNotEmpty()
+    ) {
+        goBack()
+    }
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-
-                NavigationBarItem(
-                    selected = currentTab == BottomTab.MAP,
-                    onClick = {
-                        currentTab = BottomTab.MAP
-                        overlayScreen = OverlayScreen.NONE
-                    },
-                    icon = { Icon(Icons.Default.Map, null) },
-                    label = { Text("Карта") }
+            Column {
+                Divider(
+                    color = BorderWarm,
+                    thickness = 0.5.dp,
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                NavigationBarItem(
-                    selected = currentTab == BottomTab.REVIEWS,
-                    onClick = {
-                        currentTab = BottomTab.REVIEWS
-                        overlayScreen = OverlayScreen.NONE
-                    },
-                    icon = { Icon(Icons.Default.Star, null) },
-                    label = { Text("Отзывы") }
-                )
+                NavigationBar(
+                    containerColor = BackgroundLight,
+                    contentColor = UrbanBrown,
+                    tonalElevation = 0.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    NavigationBarItem(
+                        selected = currentTab == BottomTab.MAP,
+                        onClick = {
+                            currentTab = BottomTab.MAP
+                            clearStack()
+                        },
+                        icon = { Icon(Icons.Default.Map, null) },
+                        label = { Text("Карта") }
+                    )
 
-                NavigationBarItem(
-                    selected = currentTab == BottomTab.HELP,
-                    onClick = {
-                        currentTab = BottomTab.HELP
-                        overlayScreen = OverlayScreen.NONE
-                    },
-                    icon = { Icon(Icons.Default.VolunteerActivism, null) },
-                    label = { Text("Помощь") }
-                )
+                    NavigationBarItem(
+                        selected = currentTab == BottomTab.REVIEWS,
+                        onClick = {
+                            currentTab = BottomTab.REVIEWS
+                            clearStack()
+                        },
+                        icon = { Icon(Icons.Default.Star, null) },
+                        label = { Text("Отзывы") }
+                    )
 
-                NavigationBarItem(
-                    selected = currentTab == BottomTab.PROFILE,
-                    onClick = {
-                        currentTab = BottomTab.PROFILE
-                        overlayScreen = OverlayScreen.NONE
-                    },
-                    icon = { Icon(Icons.Default.Person, null) },
-                    label = { Text("Профиль") }
-                )
+                    NavigationBarItem(
+                        selected = currentTab == BottomTab.HELP,
+                        onClick = {
+                            currentTab = BottomTab.HELP
+                            clearStack()
+                        },
+                        icon = { Icon(Icons.Default.VolunteerActivism, null) },
+                        label = { Text("Помощь") }
+                    )
+
+                    NavigationBarItem(
+                        selected = currentTab == BottomTab.PROFILE,
+                        onClick = {
+                            currentTab = BottomTab.PROFILE
+                            clearStack()
+                        },
+                        icon = { Icon(Icons.Default.Person, null) },
+                        label = { Text("Профиль") }
+                    )
+                }
             }
         }
     ) { padding ->
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-
-            if (overlayScreen == OverlayScreen.NONE) {
-
+            if (overlayScreen == null) {
                 when (currentTab) {
-
                     BottomTab.MAP -> MapRouteScreen(
                         onNavigateToReview = onNavigateToReview
                     )
@@ -203,209 +256,277 @@ fun UserNav(
                         reviewsViewModel = reviewsViewModel,
                         onAddReview = {
                             selectedReview = null
-                            overlayScreen = OverlayScreen.REVIEW_FORM
+                            navigateTo(OverlayScreen.REVIEW_FORM)
                         },
                         onOpenDetails = { review ->
                             selectedReview = review
-                            overlayScreen = OverlayScreen.REVIEW_DETAILS
+                            navigateTo(OverlayScreen.REVIEW_DETAILS)
                         },
                         onEditReview = { review ->
                             selectedReview = review
-                            overlayScreen = OverlayScreen.REVIEW_FORM
+                            navigateTo(OverlayScreen.REVIEW_FORM)
                         }
                     )
 
                     BottomTab.HELP -> VolunteerScreen(
                         helpViewModel = helpViewModel,
                         onCreateRequest = {
-                            overlayScreen = OverlayScreen.HELP_CREATE
+                            navigateTo(OverlayScreen.HELP_CREATE)
                         },
                         onMyRequests = {
-                            overlayScreen = OverlayScreen.HELP_MY_REQUESTS
+                            navigateTo(OverlayScreen.HELP_MY_REQUESTS)
                         },
                         onVolunteerFeed = {
-                            overlayScreen = OverlayScreen.VOLUNTEER_FEED
+                            navigateTo(OverlayScreen.VOLUNTEER_FEED)
                         },
                         onMyWards = {
-                            overlayScreen = OverlayScreen.VOLUNTEER_WARDS
+                            navigateTo(OverlayScreen.VOLUNTEER_WARDS)
                         }
                     )
 
                     BottomTab.PROFILE -> UserProfileScreen(
                         userViewModel = userViewModel,
-                        onEdit = { overlayScreen = OverlayScreen.EDIT_PROFILE },
-                        onDelete = { overlayScreen = OverlayScreen.DELETE_PROFILE },
+                        onEdit = {
+                            navigateTo(OverlayScreen.EDIT_PROFILE)
+                        },
+                        onDelete = {
+                            navigateTo(OverlayScreen.DELETE_PROFILE)
+                        },
                         onLogout = onLogout,
                         onSelectObstacles = {
-                            overlayScreen = OverlayScreen.OBSTACLES
+                            navigateTo(OverlayScreen.OBSTACLES)
+                        },
+                        onSecurity = {
+                            navigateTo(OverlayScreen.SECURITY)
                         },
                         onBecomeVolunteer = {
-                            overlayScreen = OverlayScreen.VOLUNTEER_APPLICATION
+                            navigateTo(OverlayScreen.VOLUNTEER_APPLICATION)
                         },
                         onNavigateToRewards = {
-                            overlayScreen = OverlayScreen.REWARDS_SHOP
+                            navigateTo(OverlayScreen.REWARDS_SHOP)
                         },
                         onNavigateToTasks = {
-                            overlayScreen = OverlayScreen.TASKS_SHOP
+                            navigateTo(OverlayScreen.TASKS_SHOP)
                         }
                     )
                 }
             }
 
             when (overlayScreen) {
-
                 OverlayScreen.EDIT_PROFILE -> UserEditScreen(
                     userViewModel = userViewModel,
-                    onBack = { overlayScreen = OverlayScreen.NONE },
+                    onBack = { goBack() },
                     onLogout = onLogout
                 )
 
                 OverlayScreen.DELETE_PROFILE -> UserDeleteAccountScreen(
                     viewModel = userViewModel,
-                    onBack = { overlayScreen = OverlayScreen.NONE },
+                    onBack = { goBack() },
                     onExit = onLogout
+                )
+
+                OverlayScreen.SECURITY -> SecurityScreen(
+                    onBack = { goBack() },
+                    onChangePassword = {
+                        navigateTo(OverlayScreen.CHANGE_PASSWORD)
+                    },
+                    onChangePhone = {
+                        navigateTo(OverlayScreen.CHANGE_PHONE)
+                    }
+                )
+
+                OverlayScreen.CHANGE_PASSWORD -> ChangePasswordScreen(
+                    userViewModel = userViewModel,
+                    onBack = { goBack() }
+                )
+
+                OverlayScreen.CHANGE_PHONE -> ChangePhoneScreen(
+                    userViewModel = userViewModel,
+                    onBack = { goBack() }
                 )
 
                 OverlayScreen.REVIEW_FORM -> ReviewFormScreen(
                     reviewsViewModel = reviewsViewModel,
                     initialReview = selectedReview,
-                    onBack = { overlayScreen = OverlayScreen.NONE },
+                    onBack = { goBack() },
                     onSaved = {
                         selectedReview = null
-                        overlayScreen = OverlayScreen.NONE
+                        clearStack()
                     }
                 )
 
                 OverlayScreen.REVIEW_DETAILS -> {
                     val review = selectedReview
+
                     if (review != null) {
                         ReviewDetailsScreen(
                             review = review,
                             reviewsViewModel = reviewsViewModel,
-                            onBack = { overlayScreen = OverlayScreen.NONE },
-                            onEdit = { overlayScreen = OverlayScreen.REVIEW_FORM },
+                            onBack = { goBack() },
+                            onEdit = {
+                                navigateTo(OverlayScreen.REVIEW_FORM)
+                            },
                             onDeleted = {
                                 selectedReview = null
-                                overlayScreen = OverlayScreen.NONE
+                                clearStack()
                             }
                         )
                     } else {
-                        overlayScreen = OverlayScreen.NONE
+                        clearStack()
                     }
                 }
 
+                OverlayScreen.COUPONS -> CouponsScreen(
+                    viewModel = rewardsViewModel,
+                    onBack = { goBack() }
+                )
+
                 OverlayScreen.OBSTACLES -> ObstacleSelectScreen(
                     mapsViewModel = mapsViewModel,
-                    onBackToProfile = { overlayScreen = OverlayScreen.NONE },
-                    onSaved = { overlayScreen = OverlayScreen.NONE }
+                    onBackToProfile = { goBack() },
+                    onSaved = { goBack() }
                 )
 
                 OverlayScreen.HELP_CREATE -> HelpRequestCreateScreen(
                     helpViewModel = helpViewModel,
-                    onCreated = { overlayScreen = OverlayScreen.NONE }
+                    onCreated = { goBack() },
+                    onBack = { goBack() }
                 )
 
                 OverlayScreen.HELP_MY_REQUESTS -> UserHelpRequestsScreen(
-                    viewModel = helpViewModel
+                    viewModel = helpViewModel,
+                    onBack = { goBack() }
                 )
 
                 OverlayScreen.VOLUNTEER_APPLICATION -> VolunteerApplicationFormScreen(
                     viewModel = helpViewModel,
-                    onBack = { overlayScreen = OverlayScreen.NONE },
-                    onSubmitted = { overlayScreen = OverlayScreen.NONE }
+                    onBack = { goBack() },
+                    onSubmitted = { goBack() }
                 )
 
                 OverlayScreen.VOLUNTEER_FEED -> VolunteerFeedScreen(
-                    onBack = { overlayScreen = OverlayScreen.NONE }
+                    onBack = { goBack() }
                 )
 
                 OverlayScreen.VOLUNTEER_WARDS -> VolunteerWardsScreen(
                     viewModel = helpViewModel,
-                    onBack = {
-                        overlayScreen = OverlayScreen.NONE
-                    }
+                    onBack = { goBack() }
                 )
 
                 OverlayScreen.REWARDS_SHOP -> RewardsShopScreen(
                     viewModel = rewardsViewModel,
-                    onRewardClick = { reward: RewardOffer ->
+                    onRewardClick = { reward ->
                         selectedReward = reward
-                        overlayScreen = OverlayScreen.REWARD_DETAIL
+                        navigateTo(OverlayScreen.REWARD_DETAIL)
                     },
-                    onNavigateToHistory = { overlayScreen = OverlayScreen.REWARDS_HISTORY },
-                    onNavigateToLeaderboard = { overlayScreen = OverlayScreen.LEADERBOARD },
-                    onBack = { overlayScreen = OverlayScreen.NONE }
+                    onNavigateToHistory = {
+                        navigateTo(OverlayScreen.REWARDS_HISTORY)
+                    },
+                    onNavigateToLeaderboard = {
+                        navigateTo(OverlayScreen.LEADERBOARD)
+                    },
+                    onNavigateToCoupons = {
+                        navigateTo(OverlayScreen.COUPONS)
+                    },
+                    onBack = { goBack() }
                 )
 
                 OverlayScreen.REWARD_DETAIL -> {
                     val reward = selectedReward
+
                     if (reward != null) {
                         RewardDetailScreen(
                             viewModel = rewardsViewModel,
                             reward = reward,
                             onPurchaseComplete = {
                                 selectedReward = null
-                                overlayScreen = OverlayScreen.REWARDS_SHOP
+                                goBack()
                             },
                             onBack = {
                                 selectedReward = null
-                                overlayScreen = OverlayScreen.REWARDS_SHOP
+                                goBack()
                             }
                         )
                     } else {
-                        overlayScreen = OverlayScreen.NONE
+                        goBack()
+                    }
+                }
+
+                OverlayScreen.REVIEW_FORM_FROM_TASK -> {
+                    val target = selectedTaskTarget
+
+                    if (target != null) {
+                        ReviewFormScreen(
+                            reviewsViewModel = reviewsViewModel,
+                            initialReview = null,
+                            initialPlaceName = target.title,
+                            initialLatitude = target.latitude?.toString() ?: "",
+                            initialLongitude = target.longitude?.toString() ?: "",
+                            isLocationLocked = true,
+                            featureId = target.targetId.toLong(),
+                            onBack = {
+                                selectedTaskTarget = null
+                                goBack()
+                            },
+                            onSaved = {
+                                selectedTaskTarget = null
+                                goBack()
+                            }
+                        )
+                    } else {
+                        goBack()
                     }
                 }
 
                 OverlayScreen.REWARDS_HISTORY -> RewardsHistoryScreen(
                     viewModel = rewardsViewModel,
-                    onBack = { overlayScreen = OverlayScreen.REWARDS_SHOP }
+                    onBack = { goBack() }
                 )
 
                 OverlayScreen.LEADERBOARD -> LeaderboardScreen(
                     viewModel = rewardsViewModel,
-                    onBack = { overlayScreen = OverlayScreen.REWARDS_SHOP }
+                    onBack = { goBack() }
                 )
 
                 OverlayScreen.TASKS_SHOP -> TasksScreen(
                     viewModel = tasksViewModel,
-                    onTaskClick = { task: TaskViewDto ->
+                    onTaskClick = { task ->
                         selectedTask = task
-                        overlayScreen = OverlayScreen.TASK_DETAIL
+                        navigateTo(OverlayScreen.TASK_DETAIL)
                     },
-                    onBack = { overlayScreen = OverlayScreen.NONE },
-                    onHistoryClick = { overlayScreen = OverlayScreen.TASKS_HISTORY}
+                    onBack = { goBack() },
+                    onHistoryClick = {
+                        navigateTo(OverlayScreen.TASKS_HISTORY)
+                    }
                 )
 
                 OverlayScreen.TASKS_HISTORY -> CompletedTasksHistoryScreen(
                     viewModel = tasksViewModel,
-                    onBack = { overlayScreen = OverlayScreen.TASKS_SHOP }
+                    onBack = { goBack() }
                 )
 
                 OverlayScreen.TASK_DETAIL -> {
                     val task = selectedTask
+
                     if (task != null) {
                         TaskExecutionScreen(
                             task = task,
-                            onTargetComplete = { target ->
-                                tasksViewModel.completeTarget(task.id, target.id)
-                            },
-                            onComplete = {
-                                selectedTask = null
-                                overlayScreen = OverlayScreen.TASKS_SHOP
-                                tasksViewModel.loadTasks()
+                            onTargetClick = { target ->
+                                selectedTaskTarget = target
+                                navigateTo(OverlayScreen.REVIEW_FORM_FROM_TASK)
                             },
                             onBack = {
                                 selectedTask = null
-                                overlayScreen = OverlayScreen.TASKS_SHOP
+                                selectedTaskTarget = null
+                                goBack()
                             }
                         )
                     } else {
-                        overlayScreen = OverlayScreen.NONE
+                        goBack()
                     }
                 }
 
-                OverlayScreen.NONE -> Unit
+                null -> Unit
             }
         }
     }

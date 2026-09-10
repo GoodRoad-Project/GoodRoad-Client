@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.*
@@ -23,21 +24,14 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.goodroad.modules.user.presentation.UserViewModel
 import com.example.goodroad.ui.AuthStatusText
-import com.example.goodroad.ui.AuthSuccessText
+import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
-import com.example.goodroad.ui.fields.PasswordField
-import com.example.goodroad.ui.fields.PhoneField
 import com.example.goodroad.ui.fields.PlainField
 import com.example.goodroad.ui.theme.*
 import com.example.goodroad.validation.CYRILLIC_WARNING
 import com.example.goodroad.validation.NAME_MAX_LENGTH
-import com.example.goodroad.validation.PHONE_CHARS_WARNING
-import com.example.goodroad.validation.PHONE_FORMAT_WARNING
-import com.example.goodroad.validation.formatPhoneForRequest
 import com.example.goodroad.validation.isAllowedCyrillicInput
-import com.example.goodroad.validation.isAllowedDigitsInput
 import com.example.goodroad.validation.normalizeRequiredCyrillic
-import com.example.goodroad.validation.normalizeRequiredRussianPhone
 
 @Composable
 fun UserEditScreen(
@@ -47,6 +41,13 @@ fun UserEditScreen(
 ) {
     val context = LocalContext.current
     val user = userViewModel.user.value
+
+    LaunchedEffect(userViewModel.successMessage.value) {
+        if (userViewModel.successMessage.value != null) {
+            userViewModel.clearMessages()
+            onBack()
+        }
+    }
 
     if (user == null) {
         Box(
@@ -59,48 +60,27 @@ fun UserEditScreen(
         var firstName by remember { mutableStateOf(user.firstName ?: "") }
         var lastName by remember { mutableStateOf(user.lastName ?: "") }
         var selectedPhotoUri by remember { mutableStateOf<Uri?>(null) }
-        var phone by remember { mutableStateOf("") }
-        var oldPassword by remember { mutableStateOf("") }
-        var newPassword by remember { mutableStateOf("") }
-        var confirmNewPassword by remember { mutableStateOf("") }
 
         var firstNameWarning by remember { mutableStateOf<String?>(null) }
         var lastNameWarning by remember { mutableStateOf<String?>(null) }
-        var phoneWarning by remember { mutableStateOf<String?>(null) }
         var errorText by remember { mutableStateOf<String?>(null) }
 
-        val errorMessage by remember { derivedStateOf { userViewModel.errorMessage.value } }
-        val successMessage by remember { derivedStateOf { userViewModel.successMessage.value } }
-        val isLoading by remember { derivedStateOf { userViewModel.isLoading.value } }
+        val errorMessage by userViewModel.errorMessage
+        val isLoading by userViewModel.isLoading
+
         val finalError = errorMessage ?: errorText
 
-        val hasProfileChanges by remember(firstName, lastName, phone, selectedPhotoUri, user) {
-            derivedStateOf {
-                firstName != (user.firstName ?: "") ||
-                        lastName != (user.lastName ?: "") ||
-                        phone.isNotBlank() ||
-                        selectedPhotoUri != null
-            }
-        }
+        val hasProfileChanges = firstName != (user.firstName ?: "") ||
+                lastName != (user.lastName ?: "")
 
-        val hasPasswordChanges by remember(oldPassword, newPassword, confirmNewPassword) {
-            derivedStateOf {
-                oldPassword.isNotBlank() || newPassword.isNotBlank() || confirmNewPassword.isNotBlank()
-            }
-        }
-
-        val canSave by remember(hasProfileChanges, hasPasswordChanges, isLoading) {
-            derivedStateOf {
-                (hasProfileChanges || hasPasswordChanges) && !isLoading
-            }
-        }
+        val canSave = (hasProfileChanges || selectedPhotoUri != null) && !isLoading
 
         val photoPickerLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.GetContent()
         ) { uri ->
             if (uri != null) {
                 selectedPhotoUri = uri
-                userViewModel.uploadAvatar(context, uri) { _ ->
+                userViewModel.uploadAvatar(context, uri) {
                     selectedPhotoUri = null
                 }
             }
@@ -112,12 +92,28 @@ fun UserEditScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
+            UserDecor()
 
-            Text(
-                text = "Редактирование профиля",
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Редактирование профиля",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = UrbanBrown
+                    )
+                }
+            }
 
             Spacer(Modifier.height(12.dp))
 
@@ -128,10 +124,10 @@ fun UserEditScreen(
                         !isAllowedCyrillicInput(value) -> {
                             firstNameWarning = CYRILLIC_WARNING
                         }
-
-                        value != firstName -> {
+                        else -> {
                             firstName = value
                             firstNameWarning = null
+                            errorText = null
                         }
                     }
                 },
@@ -156,10 +152,10 @@ fun UserEditScreen(
                         !isAllowedCyrillicInput(value) -> {
                             lastNameWarning = CYRILLIC_WARNING
                         }
-
-                        value != lastName -> {
+                        else -> {
                             lastName = value
                             lastNameWarning = null
+                            errorText = null
                         }
                     }
                 },
@@ -175,8 +171,7 @@ fun UserEditScreen(
                 maxLength = NAME_MAX_LENGTH
             )
 
-            Spacer(Modifier.height(12.dp))
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(20.dp))
 
             Box(
                 modifier = Modifier.fillMaxWidth(),
@@ -193,7 +188,6 @@ fun UserEditScreen(
                             contentScale = ContentScale.Crop
                         )
                     }
-
                     user.photoUrl?.isNotBlank() == true -> {
                         AsyncImage(
                             model = user.photoUrl,
@@ -204,7 +198,6 @@ fun UserEditScreen(
                             contentScale = ContentScale.Crop
                         )
                     }
-
                     else -> {
                         Surface(
                             modifier = Modifier.size(120.dp),
@@ -212,7 +205,9 @@ fun UserEditScreen(
                             color = WhiteSoft,
                             tonalElevation = 2.dp
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
+                            Box(
+                                contentAlignment = Alignment.Center
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.Photo,
                                     contentDescription = null,
@@ -228,7 +223,9 @@ fun UserEditScreen(
             Spacer(Modifier.height(16.dp))
 
             OutlinedButton(
-                onClick = { photoPickerLauncher.launch("image/*") },
+                onClick = {
+                    photoPickerLauncher.launch("image/*")
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -248,73 +245,11 @@ fun UserEditScreen(
                 Spacer(Modifier.width(12.dp))
                 Text(
                     text = "Выбрать фото профиля",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                     color = UrbanBrown
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
-
-            PhoneField(
-                value = phone,
-                onValueChange = { value ->
-                    phone = value
-                    phoneWarning = when {
-                        !isAllowedDigitsInput(value) -> PHONE_CHARS_WARNING
-                        value.length > 11 -> PHONE_FORMAT_WARNING
-                        value.isNotEmpty() && value.first() !in listOf('7', '8') -> PHONE_FORMAT_WARNING
-                        else -> null
-                    }
-                },
-                label = "Телефон",
-                warning = phoneWarning
-            )
-
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = "Оставьте поле пустым, если номер менять не нужно.",
-                style = MaterialTheme.typography.bodySmall,
-                color = UrbanBrown
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            PasswordField(
-                value = oldPassword,
-                onValueChange = { oldPassword = it },
-                label = "Старый пароль"
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            PasswordField(
-                value = newPassword,
-                onValueChange = { newPassword = it },
-                label = "Новый пароль"
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            PasswordField(
-                value = confirmNewPassword,
-                onValueChange = { confirmNewPassword = it },
-                label = "Подтвердите новый пароль"
-            )
-
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = "Чтобы сменить пароль, заполните старый пароль и дважды введите новый.",
-                style = MaterialTheme.typography.bodySmall,
-                color = UrbanBrown
-            )
-
-            AuthSuccessText(
-                text = successMessage,
-                onTimeout = {
-                    errorText = null
-                    userViewModel.clearMessages()
-                }
-            )
             AuthStatusText(
                 text = finalError,
                 onTimeout = {
@@ -343,41 +278,13 @@ fun UserEditScreen(
                     return@PrimaryButton
                 }
 
-                val phoneDigits =
-                    phone.takeIf { it.isNotBlank() }?.let { normalizeRequiredRussianPhone(it) }
-
-                if (phone.isNotBlank() && phoneDigits == null) {
-                    phoneWarning = PHONE_FORMAT_WARNING
-                    errorText = "Некорректный телефон"
-                    return@PrimaryButton
+                if (hasProfileChanges) {
+                    userViewModel.updateUser(
+                        firstName = firstNameNormalized,
+                        lastName = lastNameNormalized
+                    )
                 }
 
-                val oldPass = oldPassword.takeIf { it.isNotBlank() }
-                val newPass = newPassword.takeIf { it.isNotBlank() }
-                val confirmPass = confirmNewPassword.takeIf { it.isNotBlank() }
-
-                if (!newPass.isNullOrBlank() || !confirmPass.isNullOrBlank() || !oldPass.isNullOrBlank()) {
-                    if (oldPass.isNullOrBlank() || newPass.isNullOrBlank() || confirmPass.isNullOrBlank()) {
-                        errorText = "Для смены пароля заполните все три поля"
-                        return@PrimaryButton
-                    }
-                    if (newPass != confirmPass) {
-                        errorText = "Новые пароли не совпадают"
-                        return@PrimaryButton
-                    }
-                }
-
-                userViewModel.updateUser(
-                    firstName = firstNameNormalized,
-                    lastName = lastNameNormalized,
-                    phone = phoneDigits?.let { formatPhoneForRequest(it) },
-                    oldPassword = oldPass,
-                    newPassword = newPass
-                )
-
-                oldPassword = ""
-                newPassword = ""
-                confirmNewPassword = ""
                 errorText = null
             }
         }

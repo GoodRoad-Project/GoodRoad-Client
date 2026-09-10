@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -45,13 +47,26 @@ fun VolunteerWardsScreen(
 
             UserDecor()
 
-            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Мои подопечные",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
 
-            Text(
-                text = "Мои подопечные",
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary
-            )
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = UrbanBrown
+                    )
+                }
+            }
 
             Spacer(Modifier.height(20.dp))
 
@@ -174,23 +189,26 @@ private fun WardRequestCard(
             Spacer(Modifier.height(10.dp))
 
             Text("Телефон:", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
-            Text(item.contact.ifBlank { "Не указан" }, color = TextPrimary)
+            Text(
+                when {
+                    item.contact.startsWith("7") && item.contact.length == 11 -> "+" + item.contact
+                    item.contact.startsWith("8") && item.contact.length == 11 -> item.contact
+                    item.contact.startsWith("+7") -> item.contact
+                    item.contact.isBlank() -> "Не указан"
+                    else -> item.contact
+                },
+                color = TextPrimary
+            )
 
             if (item.socialNickname.isNotBlank()) {
                 Spacer(Modifier.height(10.dp))
-                Text("Telegram / ВК:", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
+                Text("Telegram / ВК / доп.контакт:", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
                 Text(item.socialNickname, color = TextPrimary)
             }
 
             Spacer(Modifier.height(10.dp))
 
             Column {
-                Text(
-                    text = "Статус",
-                    color = UrbanBrown,
-                    fontWeight = FontWeight.SemiBold
-                )
-
                 Spacer(Modifier.height(4.dp))
 
                 StatusBadgeWards(status = item.status)

@@ -4,6 +4,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,13 +44,26 @@ fun VolunteerFeedScreen(
         ) {
             UserDecor()
 
-            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Лента волонтёра",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
 
-            Text(
-                text = "Лента волонтёра",
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary
-            )
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = UrbanBrown
+                    )
+                }
+            }
 
             Spacer(Modifier.height(20.dp))
 
@@ -215,14 +230,14 @@ private fun VolunteerRequestCard(
                 Spacer(Modifier.height(10.dp))
 
                 Text(
-                    text = "Telegram / ВК:",
+                    text = "Telegram / ВК / доп.контакт:",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = UrbanBrown
                 )
 
                 Text(
-                    text = item.socialNickname,
+                    text = item.socialNickname.ifBlank { "-" },
                     style = MaterialTheme.typography.bodyLarge,
                     color = TextPrimary
                 )

@@ -1,6 +1,8 @@
 package com.example.goodroad.modules.volunteer.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -8,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
+import com.example.goodroad.ui.AuthStatusText
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.theme.*
 
@@ -26,6 +29,7 @@ fun VolunteerScreen(
 
     val menuState = helpViewModel.volunteerMenu.value
     val isVolunteer = menuState?.isVolunteer == true
+    val error = helpViewModel.errorMessage.value
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -34,14 +38,21 @@ fun VolunteerScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
-
             UserDecor()
 
             Text(
                 text = "Помощь волонтёров",
                 style = MaterialTheme.typography.headlineLarge
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            AuthStatusText(
+                text = error,
+                onTimeout = helpViewModel::clearMessages
             )
 
             Spacer(Modifier.height(16.dp))
@@ -58,7 +69,7 @@ fun VolunteerScreen(
 
             ServiceCard(
                 title = "Мои заявки",
-                description = "Посмотреть статус и историю заявок",
+                description = "Посмотреть историю заявок и их статус",
                 onClick = onMyRequests
             )
 
@@ -70,7 +81,7 @@ fun VolunteerScreen(
 
                 ServiceCard(
                     title = "Лента волонтёра",
-                    description = "Доступные заявки для помощи",
+                    description = "Актуальные заявки для помощи",
                     onClick = onVolunteerFeed
                 )
 
@@ -78,10 +89,12 @@ fun VolunteerScreen(
 
                 ServiceCard(
                     title = "Мои подопечные",
-                    description = "Люди, которым вы помогаете",
+                    description = "Люди, которым вы помогаете в сопровождении",
                     onClick = onMyWards
                 )
             }
+
+            Spacer(Modifier.height(24.dp))
         }
     }
 }

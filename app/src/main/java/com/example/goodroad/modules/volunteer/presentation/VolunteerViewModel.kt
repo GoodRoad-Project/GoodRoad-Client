@@ -14,7 +14,10 @@ import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import retrofit2.HttpException
 import java.io.File
+import java.io.IOException
+import org.json.JSONObject
 
 class VolunteerViewModel(
     private val repository: VolunteerRepository
@@ -70,6 +73,73 @@ class VolunteerViewModel(
         loadVolunteerMenu()
     }
 
+    private fun extractErrorCode(errorBody: String?): String? {
+        if (errorBody.isNullOrBlank()) return null
+        return try {
+            JSONObject(errorBody).optString("code", null)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun mapVolunteerError(e: Exception): String {
+        return when (e) {
+            is IllegalArgumentException -> e.message ?: "Некорректные данные"
+            is HttpException -> {
+                val errorBody = e.response()?.errorBody()?.string()
+                val errorCode = extractErrorCode(errorBody)
+
+                when {
+                    errorCode == "VOLUNTEER_APPLICATION_EMPTY" -> "Заявка не заполнена"
+                    errorCode == "ALREADY_VOLUNTEER" -> "Вы уже являетесь волонтёром"
+                    errorCode == "APPLICATION_ALREADY_PENDING" -> "У вас уже есть заявка на рассмотрении"
+                    errorCode == "DOBRO_URL_INVALID" -> "Проверьте правильность ссылки на Dobro.ru"
+                    errorCode == "PHONE_INVALID" -> "Некорректный номер телефона"
+                    errorCode == "CERTIFICATE_URL_INVALID" -> "Некорректная ссылка на сертификат"
+                    errorCode == "APPLICATION_NOT_FOUND" -> "Заявка не найдена"
+                    errorCode == "APPLICATION_ALREADY_PROCESSED" -> "Заявка уже обработана"
+                    errorCode == "REJECT_REASON_EMPTY" -> "Укажите причину отказа"
+
+                    errorCode == "HELP_REQUEST_EMPTY" -> "Заявка на помощь не заполнена"
+                    errorCode == "FROM_ADDRESS_EMPTY" -> "Укажите начало маршрута"
+                    errorCode == "TO_ADDRESS_EMPTY" -> "Укажите конец маршрута"
+                    errorCode == "COMMENT_EMPTY" -> "Добавьте комментарий"
+                    errorCode == "DATE_INVALID" -> "Некорректная дата"
+                    errorCode == "TIME_INVALID" -> "Некорректное время"
+                    errorCode == "LOCATION_INVALID" -> "Некорректные координаты"
+
+                    errorCode == "REQUEST_NOT_OPEN" -> "Заявка уже неактивна"
+                    errorCode == "OWN_REQUEST_ACCEPT" -> "Нельзя взять свою заявку"
+                    errorCode == "REQUEST_COMPLETED" -> "Заявка уже выполнена"
+                    errorCode == "REQUEST_CANNOT_WITHDRAW" -> "Нельзя отказаться от этой заявки"
+                    errorCode == "REQUEST_OWNER_REQUIRED" -> "Только автор может отменить заявку"
+                    errorCode == "REQUEST_VOLUNTEER_REQUIRED" -> "Только волонтёр может выполнить это действие"
+                    errorCode == "REQUEST_PARTICIPANT_REQUIRED" -> "Только участник может выполнить это действие"
+                    errorCode == "REQUEST_NOT_ACCEPTED" -> "Заявка не принята"
+
+                    errorCode == "HELP_REQUEST_NOT_FOUND" -> "Заявка не найдена"
+                    errorCode == "HELP_REQUEST_ID_INVALID" -> "Неверный ID заявки"
+                    errorCode == "VOLUNTEER_REQUIRED" -> "Необходимы права волонтёра"
+                    errorCode == "MODERATOR_REQUIRED" -> "Необходимы права модератора"
+                    errorCode == "USER_PHONE_NOT_FOUND" -> "Пользователь не найден"
+                    errorCode == "APPLICATION_ID_INVALID" -> "Неверный ID заявки"
+
+                    else -> when (e.code()) {
+                        400 -> "Некорректный запрос"
+                        401 -> "Необходима авторизация"
+                        403 -> "Доступ запрещен"
+                        404 -> "Заявка не найдена"
+                        409 -> "Конфликт при выполнении операции"
+                        500 -> "Ошибка сервера"
+                        else -> "Ошибка при выполнении операции"
+                    }
+                }
+            }
+            is IOException -> "Проверьте подключение к интернету"
+            else -> e.message ?: "Неизвестная ошибка"
+        }
+    }
+
     fun loadVolunteerMenu(refreshBeforeLoad: Boolean = true) {
         viewModelScope.launch {
             try {
@@ -83,7 +153,7 @@ class VolunteerViewModel(
                     rejectReason = resp.rejectReason
                 )
             } catch (e: Exception) {
-                errorMessage.value = e.message ?: "Ошибка загрузки статуса заявки"
+                errorMessage.value = mapVolunteerError(e)
             }
         }
     }
@@ -106,7 +176,7 @@ class VolunteerViewModel(
                 requests.clear()
                 requests.addAll(loaded.map { it.toUiModel() })
             } catch (e: Exception) {
-                errorMessage.value = e.message ?: "Ошибка загрузки заявок"
+                errorMessage.value = mapVolunteerError(e)
             } finally {
                 isLoading.value = false
             }
@@ -124,15 +194,11 @@ class VolunteerViewModel(
                 ApiClient.refreshTokens()
                 val loaded = repository.loadFeed()
 
-                println("FEED RAW SIZE = ${loaded.size}")
-                println("FEED RAW = $loaded")
-
                 feed.clear()
                 feed.addAll(loaded.map { it.toUiModel() })
 
-                println("FEED UI SIZE = ${feed.size}")
             } catch (e: Exception) {
-                errorMessage.value = e.message ?: "Ошибка загрузки ленты"
+                errorMessage.value = mapVolunteerError(e)
             } finally {
                 isLoading.value = false
             }
@@ -159,7 +225,7 @@ class VolunteerViewModel(
                 if (removedItem != null) {
                     feed.add(removedItem)
                 }
-                errorMessage.value = e.message ?: "Ошибка принятия заявки"
+                errorMessage.value = mapVolunteerError(e)
             } finally {
                 isLoading.value = false
             }
@@ -186,7 +252,7 @@ class VolunteerViewModel(
                     wards.add(removedItem)
                 }
 
-                errorMessage.value = e.message ?: "Ошибка отказа от заявки"
+                errorMessage.value = mapVolunteerError(e)
 
             } finally {
                 isLoading.value = false
@@ -224,7 +290,7 @@ class VolunteerViewModel(
                 successMessage.value = "Заявка отправлена"
                 onSuccess()
             } catch (e: Exception) {
-                errorMessage.value = e.message ?: "Ошибка"
+                errorMessage.value = mapVolunteerError(e)
             } finally {
                 isLoading.value = false
             }
@@ -285,7 +351,7 @@ class VolunteerViewModel(
                 successMessage.value = "Заявка на волонтёрство отправлена"
                 onSuccess()
             } catch (e: Exception) {
-                errorMessage.value = e.message ?: "Ошибка"
+                errorMessage.value = mapVolunteerError(e)
             } finally {
                 tempFiles.forEach { it.delete() }
                 isLoading.value = false
@@ -311,7 +377,7 @@ class VolunteerViewModel(
                 requests.removeAll { it.id == id }
 
             } catch (e: Exception) {
-                errorMessage.value = e.message ?: "Ошибка операции"
+                errorMessage.value = mapVolunteerError(e)
             } finally {
                 isLoading.value = false
             }
@@ -334,7 +400,7 @@ class VolunteerViewModel(
                 successMessage.value = "Прогулка отмечена как выполненная"
 
             } catch (e: Exception) {
-                errorMessage.value = e.message ?: "Ошибка завершения прогулки"
+                errorMessage.value = mapVolunteerError(e)
             } finally {
                 isLoading.value = false
             }
@@ -370,7 +436,7 @@ class VolunteerViewModel(
                 )
 
             } catch (e: Exception) {
-                errorMessage.value = e.message ?: "Ошибка загрузки подопечных"
+                errorMessage.value = mapVolunteerError(e)
             } finally {
                 isLoading.value = false
             }

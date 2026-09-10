@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,9 +19,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -35,6 +40,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -42,9 +48,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.goodroad.modules.volunteer.presentation.VolunteerViewModel
+import com.example.goodroad.ui.AuthStatusText
+import com.example.goodroad.ui.AuthSuccessText
 import com.example.goodroad.ui.UserDecor
 import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.BackgroundLight
+import com.example.goodroad.ui.theme.TextPrimary
 import com.example.goodroad.ui.theme.UrbanBrown
 
 @Composable
@@ -102,27 +111,42 @@ fun VolunteerApplicationFormScreen(
                 ) {
                     UserDecor()
 
-                    Text(
-                        text = when (applicationStatus) {
-                            "PENDING" -> "Ваша заявка на рассмотрении"
-                            "APPROVED" -> "Вы уже волонтёр!"
-                            "REJECTED" -> "Заявка отклонена"
-                            else -> "Статус заявки"
-                        },
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = UrbanBrown
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = when (applicationStatus) {
+                                "PENDING" -> "Ваша заявка на рассмотрении"
+                                "APPROVED" -> "Вы уже волонтёр!"
+                                "REJECTED" -> "Заявка отклонена"
+                                else -> "Статус заявки"
+                            },
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = TextPrimary,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Назад",
+                                tint = UrbanBrown
+                            )
+                        }
+                    }
 
                     Spacer(Modifier.height(12.dp))
 
                     Text(
                         text = when (applicationStatus) {
                             "PENDING" -> "Мы рассмотрим её и свяжемся с вами в течение недели!"
-                            "APPROVED" -> "У вас уже есть доступ к списку заявок на помощь"
+                            "APPROVED" -> "У вас уже есть доступ к списку заявок на помощь. Переходите на вкладку 'Помощь' на панели в нижней части экрана, а затем в раздел 'Волонтёрство'"
                             "REJECTED" -> "Причина отказа: ${rejectReason ?: "не указана"}"
                             else -> "Текущий статус: $applicationStatus"
                         },
-                        style = MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleMedium
                     )
 
                     Spacer(Modifier.weight(1f))
@@ -158,31 +182,37 @@ fun VolunteerApplicationFormScreen(
         ) {
             UserDecor()
 
-            Text(
-                text = "Заявка на волонтёрство",
-                style = MaterialTheme.typography.headlineLarge
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Заявка на волонтёрство",
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier.weight(1f)
+                )
+
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = UrbanBrown
+                    )
+                }
+            }
 
             Spacer(Modifier.height(16.dp))
 
-            if (error != null) {
-                ErrorBlock(mapErrorToUserMessage(error))
-            }
+            AuthStatusText(
+                text = error,
+                onTimeout = viewModel::clearMessages
+            )
 
-            if (success != null) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Text(
-                        text = success!!,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(12.dp)
-                    )
-                }
-                Spacer(Modifier.height(8.dp))
-            }
+            AuthSuccessText(
+                text = success,
+                onTimeout = viewModel::clearMessages
+            )
 
             OutlinedTextField(
                 value = dobroUrl,
@@ -192,12 +222,7 @@ fun VolunteerApplicationFormScreen(
                 },
                 label = { Text("Dobro.ru URL *") },
                 modifier = Modifier.fillMaxWidth(),
-                isError = error?.contains("dobro", ignoreCase = true) == true,
-                supportingText = {
-                    if (error?.contains("dobro", ignoreCase = true) == true) {
-                        Text("Проверьте ссылку")
-                    }
-                }
+                isError = error?.contains("Dobro.ru", ignoreCase = true) == true
             )
 
             Spacer(Modifier.height(12.dp))
@@ -210,12 +235,7 @@ fun VolunteerApplicationFormScreen(
                 },
                 label = { Text("Телефон *") },
                 modifier = Modifier.fillMaxWidth(),
-                isError = error?.contains("phone", ignoreCase = true) == true,
-                supportingText = {
-                    if (error?.contains("phone", ignoreCase = true) == true) {
-                        Text("11 цифр, например: 79123456789")
-                    }
-                }
+                isError = error?.contains("телефон", ignoreCase = true) == true
             )
 
             Spacer(Modifier.height(12.dp))
@@ -315,47 +335,5 @@ fun VolunteerApplicationFormScreen(
                 }
             )
         }
-    }
-}
-
-@Composable
-private fun ErrorBlock(error: String?) {
-    if (error.isNullOrBlank()) return
-
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        )
-    ) {
-        Text(
-            text = error,
-            color = MaterialTheme.colorScheme.onErrorContainer,
-            modifier = Modifier.padding(12.dp)
-        )
-    }
-
-    Spacer(Modifier.height(8.dp))
-}
-
-private fun mapErrorToUserMessage(error: String?): String {
-    val msg = error?.lowercase() ?: return "Произошла неизвестная ошибка"
-
-    return when {
-        msg.contains("timeout") || msg.contains("timed out") -> "Сервер не отвечает. Проверьте интернет и попробуйте позже"
-        msg.contains("unable to resolve host") -> "Нет соединения с сервером. Проверьте интернет"
-        msg.contains("403") || msg.contains("forbidden") -> "Доступ запрещён. Выйдите из приложения и войдите заново"
-        msg.contains("400") -> "Проверьте правильность заполнения всех полей"
-        msg.contains("401") || msg.contains("unauthorized") -> "Сессия истекла. Войдите в приложение заново"
-        msg.contains("404") -> "Сервис временно недоступен. Попробуйте позже"
-        msg.contains("409") -> "Заявка уже существует или произошёл конфликт"
-        msg.contains("422") -> "Проверьте правильность введённых данных"
-        msg.contains("500") || msg.contains("502") || msg.contains("503") -> "Ошибка на сервере. Попробуйте позже"
-        msg.contains("validation") -> "Некоторые поля заполнены неверно"
-        msg.contains("url") || msg.contains("dobro") -> "Проверьте правильность ссылки на Dobro.ru"
-        msg.contains("phone") -> "Проверьте правильность номера телефона"
-        msg.contains("nickname") -> "Проверьте правильность Telegram/VK ника"
-        msg.contains("already") && msg.contains("volunteer") -> "Вы уже являетесь волонтёром"
-        msg.contains("already") && msg.contains("pending") -> "У вас уже есть заявка на рассмотрении"
-        else -> error
     }
 }

@@ -24,13 +24,8 @@ import com.example.goodroad.ui.theme.UrbanBrown
 import com.example.goodroad.modules.auth.presentation.AuthViewModel
 import com.example.goodroad.validation.CYRILLIC_WARNING
 import com.example.goodroad.validation.NAME_MAX_LENGTH
-import com.example.goodroad.validation.PHONE_CHARS_WARNING
-import com.example.goodroad.validation.PHONE_FORMAT_WARNING
-import com.example.goodroad.validation.formatPhoneForRequest
 import com.example.goodroad.validation.isAllowedCyrillicInput
-import com.example.goodroad.validation.isAllowedDigitsInput
 import com.example.goodroad.validation.normalizeRequiredCyrillic
-import com.example.goodroad.validation.normalizeRequiredRussianPhone
 
 @Composable
 fun RecoverPasswordScreen(
@@ -44,7 +39,6 @@ fun RecoverPasswordScreen(
     var confirmPassword by rememberSaveable { mutableStateOf("") }
     var firstNameWarning by rememberSaveable { mutableStateOf<String?>(null) }
     var lastNameWarning by rememberSaveable { mutableStateOf<String?>(null) }
-    var phoneWarning by rememberSaveable { mutableStateOf<String?>(null) }
     var errorText by rememberSaveable { mutableStateOf<String?>(null) }
 
     val viewModel: AuthViewModel = viewModel()
@@ -70,14 +64,22 @@ fun RecoverPasswordScreen(
                 val lastNameNormalized = normalizeRequiredCyrillic(lastName)
                 if (lastNameNormalized == null) {
                     lastNameWarning = CYRILLIC_WARNING
-                    errorText =
-                        "Фамилия обязательна и должна содержать только кириллицу, пробел и -"
+                    errorText = "Фамилия обязательна и должна содержать только кириллицу, пробел и -"
                     return@PrimaryButton
                 }
 
-                val phoneDigits = normalizeRequiredRussianPhone(phone)
-                if (phoneDigits == null || newPassword.isBlank() || confirmPassword.isBlank()) {
-                    phoneWarning = PHONE_FORMAT_WARNING
+                val phoneValidation = validatePhone(phone)
+                if (phoneValidation !is PhoneValidation.Valid) {
+                    errorText = when (phoneValidation) {
+                        is PhoneValidation.Empty -> "Введите номер телефона"
+                        is PhoneValidation.InvalidChars -> "Телефон должен содержать только цифры"
+                        is PhoneValidation.InvalidFormat -> "Введите корректный номер телефона"
+                        else -> "Заполните все поля"
+                    }
+                    return@PrimaryButton
+                }
+
+                if (newPassword.isBlank() || confirmPassword.isBlank()) {
                     errorText = "Заполните все поля"
                     return@PrimaryButton
                 }
@@ -89,7 +91,7 @@ fun RecoverPasswordScreen(
 
                 errorText = null
                 viewModel.recoverPassword(
-                    phone = formatPhoneForRequest(phoneDigits),
+                    phone = phoneValidation.toFormattedPhone()!!,
                     firstName = firstNameNormalized,
                     lastName = lastNameNormalized,
                     newPassword = newPassword
@@ -156,20 +158,10 @@ fun RecoverPasswordScreen(
 
         PhoneField(
             value = phone,
-            onValueChange = { value ->
-                when {
-                    !isAllowedDigitsInput(value) -> phoneWarning = PHONE_CHARS_WARNING
-                    value.length > 11 || value.isNotEmpty() && value.first() !in listOf('7', '8') ->
-                        phoneWarning = PHONE_FORMAT_WARNING
-
-                    else -> {
-                        phone = value
-                        phoneWarning = null
-                    }
-                }
+            onValueChange = {
+                phone = it
             },
-            label = "Телефон",
-            warning = phoneWarning
+            label = "Телефон"
         )
 
         Spacer(Modifier.height(12.dp))

@@ -20,7 +20,8 @@ import com.example.goodroad.ui.theme.*
 
 @Composable
 fun UserHelpRequestsScreen(
-    viewModel: VolunteerViewModel
+    viewModel: VolunteerViewModel,
+    onBack: () -> Unit
 ) {
     val requests = viewModel.requests
     val isLoading by viewModel.isLoading
@@ -157,8 +158,15 @@ fun UserHelpRequestsScreen(
 
                                 Spacer(Modifier.height(8.dp))
 
-                                Text("Контакт", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
-                                Text(req.contact)
+                                Text("Номер телефона", color = UrbanBrown, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    when {
+                                        req.contact.startsWith("7") && req.contact.length == 11 -> "+" + req.contact
+                                        req.contact.startsWith("8") && req.contact.length == 11 -> req.contact
+                                        req.contact.startsWith("+7") -> req.contact
+                                        else -> req.contact
+                                    }
+                                )
 
                                 Spacer(Modifier.height(8.dp))
 
@@ -173,12 +181,6 @@ fun UserHelpRequestsScreen(
                                 Spacer(Modifier.height(10.dp))
 
                                 Column {
-                                    Text(
-                                        text = "Статус",
-                                        color = UrbanBrown,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-
                                     Spacer(Modifier.height(4.dp))
 
                                     StatusBadge(status = req.status)

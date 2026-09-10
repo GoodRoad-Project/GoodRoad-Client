@@ -116,6 +116,10 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         }
     }
 
+    fun setError(message: String) {
+        _error.value = message
+    }
+
     private enum class AuthAction {
         LOGIN,
         REGISTER,

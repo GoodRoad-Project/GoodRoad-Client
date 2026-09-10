@@ -7,9 +7,12 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -23,18 +26,18 @@ import com.example.goodroad.ui.theme.TextPrimary
 import com.example.goodroad.ui.theme.UrbanBrown
 import com.example.goodroad.ui.theme.SurfaceWarm
 import com.example.goodroad.ui.theme.SafeGreen
-import com.example.goodroad.ui.theme.AlertRed
 
 @Composable
 fun TaskExecutionScreen(
     task: TaskViewDto,
-    onTargetComplete: (TargetViewDto) -> Unit,
-    onComplete: () -> Unit,
+    onTargetClick: (TargetViewDto) -> Unit,
     onBack: () -> Unit
 ) {
-    var targetsState by remember { mutableStateOf(task.targets.toList()) }
+    var targetsState by remember(task.targets) {
+        mutableStateOf(task.targets.toList())
+    }
+
     val completedTargets = targetsState.count { it.done }
-    val allCompleted = completedTargets >= task.targetCount
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -45,6 +48,7 @@ fun TaskExecutionScreen(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -85,42 +89,24 @@ fun TaskExecutionScreen(
                         fontWeight = FontWeight.Bold,
                         color = UrbanBrown
                     )
+
                     Text(
                         text = "⭐",
                         fontSize = 16.sp
                     )
-                }
-
-                if (allCompleted) {
-                    Surface(
-                        shape = MaterialTheme.shapes.small,
-                        color = SafeGreen.copy(alpha = 0.2f)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = SafeGreen,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = "Готово к завершению",
-                                fontSize = 12.sp,
-                                color = SafeGreen
-                            )
-                        }
-                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             LinearProgressIndicator(
-                progress = completedTargets.toFloat() / task.targetCount,
+                progress = {
+                    if (task.targetCount > 0) {
+                        completedTargets.toFloat() / task.targetCount
+                    } else {
+                        0f
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp),
@@ -148,35 +134,23 @@ fun TaskExecutionScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 itemsIndexed(targetsState) { idx, target ->
+
                     TargetItem(
                         target = target,
                         index = idx,
                         isCompleted = target.done,
                         onComplete = {
                             if (!target.done) {
-                                val updatedTarget = target.copy(done = true)
-                                targetsState = targetsState.mapIndexed { index, t ->
-                                    if (index == idx) updatedTarget else t
-                                }
-                                onTargetComplete(updatedTarget)
+                                onTargetClick(target)
                             }
                         }
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            PrimaryButton(
-                text = "Завершить задание",
-                backgroundColor = if (allCompleted) SafeGreen else UrbanBrown.copy(alpha = 0.5f),
-                modifier = Modifier.fillMaxWidth(),
-                enabled = allCompleted,
-                onClick = onComplete
-            )
         }
     }
 }
@@ -191,7 +165,11 @@ private fun TargetItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = !isCompleted) { if (!isCompleted) onComplete() },
+            .clickable(enabled = !isCompleted) {
+                if (!isCompleted) {
+                    onComplete()
+                }
+            },
         colors = CardDefaults.cardColors(
             containerColor = SurfaceWarm
         )
@@ -203,11 +181,13 @@ private fun TargetItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+
             Row(
                 modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
                 if (isCompleted) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
@@ -231,29 +211,13 @@ private fun TargetItem(
                         text = target.title,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium,
-                        color = if (isCompleted) UrbanBrown.copy(alpha = 0.6f) else TextPrimary,
+                        color = if (isCompleted) {
+                            UrbanBrown.copy(alpha = 0.6f)
+                        } else {
+                            TextPrimary
+                        },
                         lineHeight = 26.sp
                     )
-
-                    if (target.latitude != null && target.longitude != null) {
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = null,
-                                tint = AlertRed,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = "Отметить на карте",
-                                fontSize = 14.sp,
-                                color = AlertRed
-                            )
-                        }
-                    }
                 }
             }
 
@@ -263,7 +227,7 @@ private fun TargetItem(
                     backgroundColor = SafeGreen,
                     modifier = Modifier.width(100.dp),
                     onClick = {
-                        if (!isCompleted) onComplete()
+                        onComplete()
                     }
                 )
             }

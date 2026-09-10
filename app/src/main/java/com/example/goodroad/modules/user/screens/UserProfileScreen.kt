@@ -2,7 +2,6 @@ package com.example.goodroad.ui.user
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,7 +16,6 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.goodroad.modules.user.presentation.UserViewModel
 import com.example.goodroad.ui.UserDecor
-import com.example.goodroad.ui.buttons.PrimaryButton
 import com.example.goodroad.ui.theme.*
 
 @Composable
@@ -27,6 +25,7 @@ fun UserProfileScreen(
     onDelete: () -> Unit,
     onLogout: () -> Unit,
     onSelectObstacles: () -> Unit,
+    onSecurity: () -> Unit,
     onBecomeVolunteer: () -> Unit = {},
     onNavigateToRewards: () -> Unit = {},
     onNavigateToTasks: () -> Unit = {}
@@ -43,21 +42,36 @@ fun UserProfileScreen(
 
     when {
         isLoading && user == null -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
                 CircularProgressIndicator()
             }
         }
 
         userViewModel.isDeleted -> {
-            LaunchedEffect(Unit) { onLogout() }
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            LaunchedEffect(Unit) {
+                onLogout()
+            }
+
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
                 CircularProgressIndicator()
             }
         }
 
         errorMessage != null && user == null -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Ошибка: $errorMessage", color = Color.Red)
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Ошибка: $errorMessage",
+                    color = Color.Red
+                )
             }
         }
 
@@ -68,12 +82,12 @@ fun UserProfileScreen(
                 modifier = Modifier.fillMaxSize(),
                 color = BackgroundLight
             ) {
-
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(24.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
+
 
                     item {
                         UserDecor()
@@ -99,7 +113,9 @@ fun UserProfileScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
 
-                                Column(modifier = Modifier.weight(1f)) {
+                                Column(
+                                    modifier = Modifier.weight(1f)
+                                ) {
                                     Text(
                                         text = "${u.firstName ?: ""} ${u.lastName ?: ""}".trim(),
                                         fontSize = 22.sp,
@@ -123,7 +139,9 @@ fun UserProfileScreen(
                                         shape = CircleShape,
                                         color = WhiteSoft
                                     ) {
-                                        Box(contentAlignment = Alignment.Center) {
+                                        Box(
+                                            contentAlignment = Alignment.Center
+                                        ) {
                                             Text(
                                                 text = "👤",
                                                 fontSize = 32.sp
@@ -136,7 +154,7 @@ fun UserProfileScreen(
                     }
 
                     item {
-                        SectionTitle("Настройки достуности")
+                        SectionTitle("Настройки доступности")
                     }
 
                     item {
@@ -146,6 +164,7 @@ fun UserProfileScreen(
                             onClick = onSelectObstacles
                         )
                     }
+
 
                     item {
                         SectionTitle("Мой вклад")
@@ -187,6 +206,15 @@ fun UserProfileScreen(
                         )
                     }
 
+
+                    item {
+                        ServiceCard(
+                            title = "Безопасность",
+                            description = "Смена пароля, телефона",
+                            onClick = onSecurity
+                        )
+                    }
+
                     item {
                         ServiceCard(
                             title = "Удалить аккаунт",
@@ -199,7 +227,11 @@ fun UserProfileScreen(
                         ServiceCard(
                             title = "Выйти из аккаунта",
                             description = "Завершить текущую сессию",
-                            onClick = { userViewModel.logout { onLogout() } }
+                            onClick = {
+                                userViewModel.logout {
+                                    onLogout()
+                                }
+                            }
                         )
                     }
                 }
@@ -207,7 +239,10 @@ fun UserProfileScreen(
         }
 
         else -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
                 CircularProgressIndicator()
             }
         }
@@ -215,7 +250,9 @@ fun UserProfileScreen(
 }
 
 @Composable
-private fun SectionTitle(text: String) {
+private fun SectionTitle(
+    text: String
+) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleMedium,
@@ -232,6 +269,7 @@ private fun ServiceCard(
 ) {
     Card(
         onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = SurfaceWarm
         ),
@@ -251,7 +289,9 @@ private fun ServiceCard(
                 color = TextPrimary
             )
 
-            Spacer(Modifier.height(4.dp))
+            Spacer(
+                modifier = Modifier.height(4.dp)
+            )
 
             Text(
                 text = description,
