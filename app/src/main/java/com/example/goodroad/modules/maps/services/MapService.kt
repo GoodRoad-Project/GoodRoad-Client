@@ -1,72 +1,305 @@
 package com.example.goodroad.modules.maps.services
 
+import android.util.Log
 import com.example.goodroad.data.network.route.ObstacleResponse
-import com.example.goodroad.data.network.route.PathResponse
-import com.example.goodroad.data.network.utils.decodePoints
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.style.layers.CircleLayer
 import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.android.style.sources.GeoJsonSource
+import org.maplibre.android.style.expressions.Expression
 
 class MapService {
 
-    fun drawRouteWithSegments(
+    private data class RouteData(
+        val points: List<LatLng>,
+        val obstacles: List<ObstacleResponse>,
+        val routeType: String
+    )
+
+    private val routes = mutableMapOf<String, RouteData>()
+
+    private var currentDetailLevel = -1
+
+    private val detailTolerances = listOf(
+        100.0,
+        60.0,
+        30.0,
+        15.0,
+        5.0,
+        0.0
+    )
+
+    fun setRoute(
         map: MapLibreMap,
-        allPoints: List<LatLng>,
+        points: List<LatLng>,
         obstacles: List<ObstacleResponse>,
         routeType: String
     ) {
+        if (points.size < 2) {
+            Log.w(
+                "RouteSimplification",
+                "route=$routeType: недостаточно точек (${points.size})"
+            )
+            return
+        }
+
+        routes[routeType] = RouteData(
+            points = points,
+            obstacles = obstacles,
+            routeType = routeType
+        )
+
+        Log.d(
+            "RouteSimplification",
+            "route=$routeType: маршрут сохранён, " +
+                    "originalPoints=${points.size}, obstacles=${obstacles.size}"
+        )
+
+        drawRoutes(map)
+    }
+
+    private fun drawRoutes(map: MapLibreMap) {
         map.getStyle { style ->
-            val layerPrefix = "segmented-layer-$routeType"
-            val sourcePrefix = "segmented-source-$routeType"
 
-            for (i in 0 until 100) {
-                style.removeLayer("$layerPrefix-$i")
-                style.removeSource("$sourcePrefix-$i")
+            routes.forEach { (routeType, route) ->
+
+                val detailLevel = currentDetailLevel.coerceAtLeast(0)
+                val tolerance = detailTolerances[detailLevel]
+
+                val simplifiedPoints = simplifyRoute(
+                    points = route.points,
+                    obstacles = route.obstacles,
+                    toleranceMeters = tolerance
+                )
+
+                Log.d(
+                    "RouteSimplification",
+                    "route=$routeType, " +
+                            "detailLevel=$detailLevel, " +
+                            "tolerance=${tolerance}m, " +
+                            "original=${route.points.size}, " +
+                            "simplified=${simplifiedPoints.size}"
+                )
+
+                drawRoute(
+                    style = style,
+                    route = route,
+                    points = simplifiedPoints
+                )
+            }
+        }
+    }
+
+    private fun drawRoute(
+        style: org.maplibre.android.maps.Style,
+        route: RouteData,
+        points: List<LatLng>
+    ) {
+        val routeType = route.routeType
+
+        val sourceId = "route-source-$routeType"
+        val layerId = "route-layer-$routeType"
+
+        style.removeLayer(layerId)
+        style.removeSource(sourceId)
+
+        val features = points.zipWithNext().map { (start, end) ->
+
+            val color = getSegmentColor(
+                segment = listOf(start, end),
+                obstacles = route.obstacles,
+                routeType = routeType,
+                defaultColor = getDefaultColor(routeType)
+            )
+
+            """
+            {
+                "type": "Feature",
+                "properties": {
+                    "color": "$color"
+                },
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [${start.longitude}, ${start.latitude}],
+                        [${end.longitude}, ${end.latitude}]
+                    ]
+                }
+            }
+            """.trimIndent()
+        }
+
+        val geoJson = """
+            {
+                "type": "FeatureCollection",
+                "features": [
+                    ${features.joinToString(",")}
+                ]
+            }
+        """.trimIndent()
+
+        val source = GeoJsonSource(sourceId, geoJson)
+        style.addSource(source)
+
+        val lineLayer = LineLayer(layerId, sourceId).apply {
+            setProperties(
+                PropertyFactory.lineColor(
+                    Expression.get("color")
+                ),
+                PropertyFactory.lineWidth(6f),
+                PropertyFactory.lineOpacity(0.9f),
+                PropertyFactory.lineJoin("round"),
+                PropertyFactory.lineCap("round")
+            )
+        }
+
+        style.addLayer(lineLayer)
+    }
+
+    fun updateDetailLevel(
+        map: MapLibreMap,
+        zoom: Double
+    ) {
+        val newDetailLevel = when {
+            zoom < 10.0 -> 0
+            zoom < 11.0 -> 1
+            zoom < 12.0 -> 2
+            zoom < 13.0 -> 3
+            zoom < 14.0 -> 4
+            else -> 5
+        }
+
+        if (newDetailLevel == currentDetailLevel) {
+            return
+        }
+
+        Log.d(
+            "RouteSimplification",
+            "zoom=$zoom, " +
+                    "detailLevel=$newDetailLevel, " +
+                    "tolerance=${detailTolerances[newDetailLevel]}m"
+        )
+
+        currentDetailLevel = newDetailLevel
+
+        if (routes.isNotEmpty()) {
+            drawRoutes(map)
+        }
+    }
+
+    private fun simplifyRoute(
+        points: List<LatLng>,
+        obstacles: List<ObstacleResponse>,
+        toleranceMeters: Double
+    ): List<LatLng> {
+
+        if (points.size <= 2 || toleranceMeters <= 0.0) {
+            return points
+        }
+
+        val importantPoints = mutableSetOf<Int>()
+
+        points.forEachIndexed { index, point ->
+
+            val nearObstacle = obstacles.any { obstacle ->
+                haversineDistance(
+                    point.latitude,
+                    point.longitude,
+                    obstacle.latitude,
+                    obstacle.longitude
+                ) <= 3.0
             }
 
-            val defaultColor = when (routeType) {
-                "fast" -> "#244975"      // Синий
-                "balanced" -> "#8B7AC6"  // Фиолетовый
-                "safe" -> "#6FAE8A"      // Зеленый
-                else -> "#887058"        // Коричневый (дефолт)
-            }
+            if (nearObstacle) {
+                importantPoints.add(index)
 
-            for (i in 0 until allPoints.size - 1) {
-                val segment = listOf(allPoints[i], allPoints[i + 1])
-                val segmentCoordinates = segment.joinToString(", ") {
-                    "[${it.longitude}, ${it.latitude}]"
+                if (index > 0) {
+                    importantPoints.add(index - 1)
                 }
 
-                val segmentColor = getSegmentColor(segment, obstacles, routeType, defaultColor)
-
-                val segmentGeojson = """
-                    {
-                        "type": "Feature",
-                        "geometry": {
-                            "type": "LineString",
-                            "coordinates": [$segmentCoordinates]
-                        }
-                    }
-                """.trimIndent()
-
-                val segmentSourceId = "$sourcePrefix-$i"
-                val segmentLayerId = "$layerPrefix-$i"
-
-                val source = GeoJsonSource(segmentSourceId, segmentGeojson)
-                style.addSource(source)
-
-                val lineLayer = LineLayer(segmentLayerId, segmentSourceId).apply {
-                    setProperties(
-                        PropertyFactory.lineColor(segmentColor),
-                        PropertyFactory.lineWidth(6f),
-                        PropertyFactory.lineOpacity(0.9f)
-                    )
+                if (index < points.lastIndex) {
+                    importantPoints.add(index + 1)
                 }
-                style.addLayer(lineLayer)
             }
+        }
+
+        val result = douglasPeucker(
+            points = points,
+            toleranceMeters = toleranceMeters
+        ).toMutableList()
+
+        importantPoints.forEach { index ->
+            val point = points[index]
+
+            if (!result.contains(point)) {
+                result.add(point)
+            }
+        }
+
+        return restoreOriginalOrder(
+            original = points,
+            selected = result
+        )
+    }
+
+    private fun douglasPeucker(
+        points: List<LatLng>,
+        toleranceMeters: Double
+    ): List<LatLng> {
+
+        if (points.size <= 2) {
+            return points
+        }
+
+        val first = points.first()
+        val last = points.last()
+
+        var maxDistance = 0.0
+        var maxIndex = 0
+
+        for (i in 1 until points.lastIndex) {
+
+            val distance = distanceToSegment(
+                point = points[i],
+                start = first,
+                end = last
+            )
+
+            if (distance > maxDistance) {
+                maxDistance = distance
+                maxIndex = i
+            }
+        }
+
+        if (maxDistance > toleranceMeters) {
+
+            val left = douglasPeucker(
+                points.subList(0, maxIndex + 1),
+                toleranceMeters
+            )
+
+            val right = douglasPeucker(
+                points.subList(maxIndex, points.size),
+                toleranceMeters
+            )
+
+            return left.dropLast(1) + right
+        }
+
+        return listOf(first, last)
+    }
+
+    private fun restoreOriginalOrder(
+        original: List<LatLng>,
+        selected: List<LatLng>
+    ): List<LatLng> {
+
+        val selectedSet = selected.toSet()
+
+        return original.filter {
+            selectedSet.contains(it)
         }
     }
 
@@ -76,46 +309,115 @@ class MapService {
         routeType: String,
         defaultColor: String
     ): String {
-        val segmentCenterLat = (segment[0].latitude + segment[1].latitude) / 2
-        val segmentCenterLon = (segment[0].longitude + segment[1].longitude) / 2
+
+        val start = segment[0]
+        val end = segment[1]
 
         val nearbyObstacle = obstacles.firstOrNull { obstacle ->
-            val distance = haversineDistance(
-                segmentCenterLat, segmentCenterLon,
-                obstacle.latitude, obstacle.longitude
+
+            val distance = distanceToSegment(
+                point = LatLng(
+                    obstacle.latitude,
+                    obstacle.longitude
+                ),
+                start = start,
+                end = end
             )
-            distance < 10.0 // Радиус поиска 10 метров
+
+            distance <= 10.0
         }
 
         return when (routeType) {
+
             "fast" -> {
                 when (nearbyObstacle?.severity) {
-                    1.toShort() -> "#FFC107"     // LITE — жёлтый
-                    2.toShort() -> "#FF9800"     // MEDIUM — оранжевый
-                    3.toShort() -> "#F44336"     // IMPOSSIBLE — красный
+                    1.toShort() -> "#FFC107"
+                    2.toShort() -> "#FF9800"
+                    3.toShort() -> "#F44336"
                     else -> defaultColor
                 }
             }
+
             "balanced" -> {
                 when (nearbyObstacle?.severity) {
-                    1.toShort() -> "#FFC107"     // LITE — жёлтый
-                    2.toShort() -> "#FF9800"     // MEDIUM — оранжевый
+                    1.toShort() -> "#FFC107"
+                    2.toShort() -> "#FF9800"
                     else -> defaultColor
                 }
             }
+
             else -> defaultColor
         }
     }
 
-    private fun haversineDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-        val R = 6371000.0 // радиус Земли в метрах
+    private fun getDefaultColor(routeType: String): String {
+        return when (routeType) {
+            "fast" -> "#244975"
+            "balanced" -> "#8B7AC6"
+            "safe" -> "#6FAE8A"
+            else -> "#887058"
+        }
+    }
+
+    private fun distanceToSegment(
+        point: LatLng,
+        start: LatLng,
+        end: LatLng
+    ): Double {
+
+        val lat = Math.toRadians(point.latitude)
+
+        val metersPerLat = 111320.0
+        val metersPerLon = 111320.0 * Math.cos(lat)
+
+        val px = point.longitude * metersPerLon
+        val py = point.latitude * metersPerLat
+
+        val sx = start.longitude * metersPerLon
+        val sy = start.latitude * metersPerLat
+
+        val ex = end.longitude * metersPerLon
+        val ey = end.latitude * metersPerLat
+
+        val dx = ex - sx
+        val dy = ey - sy
+
+        if (dx == 0.0 && dy == 0.0) {
+            return Math.sqrt((px - sx) * (px - sx) + (py - sy) * (py - sy))
+        }
+
+        val t = ((px - sx) * dx + (py - sy) * dy) / (dx * dx + dy * dy)
+
+        val clampedT = t.coerceIn(0.0, 1.0)
+
+        val closestX = sx + clampedT * dx
+        val closestY = sy + clampedT * dy
+
+        return Math.sqrt((px - closestX) * (px - closestX) + (py - closestY) * (py - closestY))
+    }
+
+    private fun haversineDistance(
+        lat1: Double,
+        lon1: Double,
+        lat2: Double,
+        lon2: Double
+    ): Double {
+
+        val radius = 6371000.0
+
         val dLat = Math.toRadians(lat2 - lat1)
         val dLon = Math.toRadians(lon2 - lon1)
-        val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2)
+
+        val a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(Math.toRadians(lat1)) *
+                    Math.cos(Math.toRadians(lat2)) *
+                    Math.sin(dLon / 2) *
+                    Math.sin(dLon / 2)
+
         val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-        return R * c
+
+        return radius * c
     }
 
     fun addMarker(
@@ -126,6 +428,7 @@ class MapService {
         radius: Float = 12f
     ) {
         map.getStyle { style ->
+
             val layerId = "$markerId-layer"
             val sourceId = "$markerId-source"
 
@@ -139,16 +442,26 @@ class MapService {
                         "type": "Feature",
                         "geometry": {
                             "type": "Point",
-                            "coordinates": [${point.longitude}, ${point.latitude}]
+                            "coordinates": [
+                                ${point.longitude},
+                                ${point.latitude}
+                            ]
                         }
                     }]
                 }
             """.trimIndent()
 
-            val source = GeoJsonSource(sourceId, geojson)
+            val source = GeoJsonSource(
+                sourceId,
+                geojson
+            )
+
             style.addSource(source)
 
-            val circleLayer = CircleLayer(layerId, sourceId).apply {
+            val circleLayer = CircleLayer(
+                layerId,
+                sourceId
+            ).apply {
                 setProperties(
                     PropertyFactory.circleColor(color),
                     PropertyFactory.circleRadius(radius),
@@ -157,22 +470,31 @@ class MapService {
                     PropertyFactory.circleStrokeWidth(2f)
                 )
             }
+
             style.addLayer(circleLayer)
         }
     }
 
     fun clearRouteLayers(map: MapLibreMap) {
         map.getStyle { style ->
-            // Удаляем все слои маршрутов
-            val routeTypes = listOf("fast", "balanced", "safe")
-            routeTypes.forEach { routeType ->
-                val layerPrefix = "segmented-layer-$routeType"
-                val sourcePrefix = "segmented-source-$routeType"
-                for (i in 0 until 100) {
-                    style.removeLayer("$layerPrefix-$i")
-                    style.removeSource("$sourcePrefix-$i")
-                }
+
+            routes.keys.forEach { routeType ->
+
+                style.removeLayer(
+                    "route-layer-$routeType"
+                )
+
+                style.removeSource(
+                    "route-source-$routeType"
+                )
             }
+
+            routes.clear()
+
+            Log.d(
+                "RouteSimplification",
+                "Все маршруты очищены"
+            )
         }
     }
 }

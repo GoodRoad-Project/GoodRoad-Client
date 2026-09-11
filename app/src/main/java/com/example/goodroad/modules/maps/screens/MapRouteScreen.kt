@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -189,32 +190,102 @@ fun MapRouteScreen(
         }
     }
 
-    LaunchedEffect(routes) {
+    LaunchedEffect(routes, mapLibreMap, styleReady) {
         routes?.let { routeData ->
             mapLibreMap?.let { map ->
+
+                Log.d(
+                    "RouteSimplification",
+                    "Получены новые маршруты"
+                )
+
                 mapService.clearRouteLayers(map)
 
                 routeData.fast?.let { path ->
-                    val points = decodePoints(path.points).map { LatLng(it.latitude, it.longitude) }
-                    mapService.drawRouteWithSegments(map, points, path.obstacles, "fast")
+                    val points = decodePoints(path.points)
+                        .map {
+                            LatLng(
+                                it.latitude,
+                                it.longitude
+                            )
+                        }
+
+                    Log.d(
+                        "RouteSimplification",
+                        "fast: points=${points.size}, " +
+                                "obstacles=${path.obstacles.size}"
+                    )
+
+                    mapService.setRoute(
+                        map = map,
+                        points = points,
+                        obstacles = path.obstacles,
+                        routeType = "fast"
+                    )
                 }
 
                 routeData.balanced?.let { path ->
-                    val points = decodePoints(path.points).map { LatLng(it.latitude, it.longitude) }
-                    mapService.drawRouteWithSegments(map, points, path.obstacles, "balanced")
+                    val points = decodePoints(path.points)
+                        .map {
+                            LatLng(
+                                it.latitude,
+                                it.longitude
+                            )
+                        }
+
+                    Log.d(
+                        "RouteSimplification",
+                        "balanced: points=${points.size}, " +
+                                "obstacles=${path.obstacles.size}"
+                    )
+
+                    mapService.setRoute(
+                        map = map,
+                        points = points,
+                        obstacles = path.obstacles,
+                        routeType = "balanced"
+                    )
                 }
 
                 routeData.safe?.let { path ->
-                    val points = decodePoints(path.points).map { LatLng(it.latitude, it.longitude) }
-                    mapService.drawRouteWithSegments(map, points, path.obstacles, "safe")
+                    val points = decodePoints(path.points)
+                        .map {
+                            LatLng(
+                                it.latitude,
+                                it.longitude
+                            )
+                        }
+
+                    Log.d(
+                        "RouteSimplification",
+                        "safe: points=${points.size}, " +
+                                "obstacles=${path.obstacles.size}"
+                    )
+
+                    mapService.setRoute(
+                        map = map,
+                        points = points,
+                        obstacles = path.obstacles,
+                        routeType = "safe"
+                    )
                 }
 
                 routeData.fast?.let { path ->
                     val points = decodePoints(path.points)
+
                     if (points.isNotEmpty()) {
+
+                        Log.d(
+                            "RouteSimplification",
+                            "Перемещение камеры на начало fast-маршрута"
+                        )
+
                         map.animateCamera(
                             CameraUpdateFactory.newLatLngZoom(
-                                LatLng(points.first().latitude, points.first().longitude),
+                                LatLng(
+                                    points.first().latitude,
+                                    points.first().longitude
+                                ),
                                 14.0
                             ),
                             1000
@@ -222,6 +293,49 @@ fun MapRouteScreen(
                     }
                 }
             }
+        }
+    }
+
+    DisposableEffect(mapLibreMap, styleReady) {
+        val map = mapLibreMap
+            ?: return@DisposableEffect onDispose {}
+
+        val cameraListener = MapLibreMap.OnCameraIdleListener {
+
+            val zoom = map.cameraPosition.zoom
+
+            Log.d(
+                "RouteSimplification",
+                "Камера остановилась: zoom=$zoom"
+            )
+
+            mapService.updateDetailLevel(
+                map = map,
+                zoom = zoom
+            )
+        }
+
+        map.addOnCameraIdleListener(cameraListener)
+
+        val initialZoom = map.cameraPosition.zoom
+
+        Log.d(
+            "RouteSimplification",
+            "Инициализация уровня детализации: zoom=$initialZoom"
+        )
+
+        mapService.updateDetailLevel(
+            map = map,
+            zoom = initialZoom
+        )
+
+        onDispose {
+            map.removeOnCameraIdleListener(cameraListener)
+
+            Log.d(
+                "RouteSimplification",
+                "CameraIdleListener удалён"
+            )
         }
     }
 
