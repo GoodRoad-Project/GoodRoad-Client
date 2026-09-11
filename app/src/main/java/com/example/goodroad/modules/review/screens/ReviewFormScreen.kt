@@ -91,9 +91,9 @@ fun ReviewFormScreen(
     initialLatitude: String = "",
     initialLongitude: String = "",
     isLocationLocked: Boolean = false,
-    featureId: Long? = null,
     onBack: () -> Unit,
-    onSaved: () -> Unit
+    onSaved: () -> Unit,
+    taskTargetId: String? = null
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -658,7 +658,7 @@ fun ReviewFormScreen(
                             obstacles = obstacles,
                             comment = comment.trim().ifBlank { null },
                             photoUrls = photoUrls.filter { it.isNotBlank() },
-                            featureId = featureId
+                            taskTargetId = taskTargetId
                         )
 
                         sentToViewModel = true

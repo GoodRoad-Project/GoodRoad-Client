@@ -109,32 +109,4 @@ class TasksViewModel(
             }
         }
     }
-
-    fun completeTarget(taskId: String, targetId: String, onSuccess: () -> Unit = {}) {
-        viewModelScope.launch {
-            try {
-                repository.completeTarget(taskId, targetId)
-
-                val currentTasks = _tasks.value.toMutableList()
-                val taskIndex = currentTasks.indexOfFirst { it.id == taskId }
-                if (taskIndex != -1) {
-                    val task = currentTasks[taskIndex]
-                    val updatedTargets = task.targets.map { target ->
-                        if (target.id == targetId) target.copy(done = true) else target
-                    }
-                    val newCompletedCount = updatedTargets.count { it.done }
-                    val updatedTask = task.copy(
-                        targets = updatedTargets,
-                        completedCount = newCompletedCount
-                    )
-                    currentTasks[taskIndex] = updatedTask
-                    _tasks.value = currentTasks
-                }
-
-                onSuccess()
-            } catch (e: Exception) {
-                _error.value = mapTaskError(e)
-            }
-        }
-    }
 }

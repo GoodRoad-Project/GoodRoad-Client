@@ -307,7 +307,7 @@ fun HelpRequestCreateScreen(
             if (error != null) {
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    text = error,
+                    text = mapErrorToUserMessage(error),
                     color = MaterialTheme.colorScheme.error
                 )
             }
@@ -537,5 +537,22 @@ private fun isDateTimeInPast(dateStr: String, timeStr: String): String? {
         }
     } catch (_: Exception) {
         null
+    }
+}
+
+private fun mapErrorToUserMessage(error: String?): String {
+    val msg = error?.lowercase() ?: return "Произошла неизвестная ошибка"
+
+    return when {
+        msg.contains("timeout") -> "Сервер не отвечает. Попробуйте позже"
+        msg.contains("unable to resolve host") -> "Нет соединения с интернетом"
+        msg.contains("400") -> "Проверьте заполнение обязательных полей"
+        msg.contains("401") -> "Необходима повторная авторизация"
+        msg.contains("403") -> "У вас нет доступа к этой операции"
+        msg.contains("404") -> "Сервис временно недоступен"
+        msg.contains("500") -> "Ошибка сервера. Попробуйте позже"
+        msg.contains("validation") -> "Некоторые поля заполнены неверно"
+        msg.contains("illegal") -> "Проверьте введённые данные"
+        else -> "Не удалось отправить заявку. Попробуйте ещё раз"
     }
 }
