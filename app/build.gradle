@@ -18,7 +18,7 @@ android {
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
 
         buildConfigField "boolean", "MOCK_AUTH", "false"
-        buildConfigField "String", "GOODROAD_SERVER_URL", "\"http://127.0.0.1:8080/\""    }
+        buildConfigField "String", "GOODROAD_SERVER_URL", "\"http://51.250.7.178.nip.io:8080/\""    }
 
     buildTypes {
         release {

@@ -199,7 +199,6 @@ fun ReviewFormScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
-            UserDecor()
 
             Text(
                 text = if (isEdit) {
@@ -288,7 +287,7 @@ fun ReviewFormScreen(
                                 "поскольку отзыв создаётся для конкретной " +
                                 "цели задания. Местоположение уже задано " +
                                 "этой целью и должно оставаться неизменным.",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = TextPrimary
                     )
                 }
@@ -401,6 +400,7 @@ fun ReviewFormScreen(
                     }
 
                     if (selected) {
+
                         Column(
                             modifier = Modifier.padding(start = 6.dp)
                         ) {

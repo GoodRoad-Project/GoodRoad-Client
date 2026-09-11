@@ -34,4 +34,8 @@ class RewardsRepository(
     suspend fun getCurrentUserRewards(): UserRewardsResp {
         return api.getCurrentUserRewards()
     }
+
+    suspend fun deleteUserReward(purchaseId: String) {
+        api.deleteUserReward(purchaseId)
+    }
 }

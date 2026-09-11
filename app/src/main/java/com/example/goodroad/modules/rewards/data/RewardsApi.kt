@@ -1,6 +1,7 @@
 package com.example.goodroad.modules.rewards.data
 
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -32,4 +33,9 @@ interface RewardsApi {
 
     @GET("rewards/me")
     suspend fun getCurrentUserRewards(): UserRewardsResp
+
+    @DELETE("rewards/me/{purchaseId}")
+    suspend fun deleteUserReward(
+        @Path("purchaseId") purchaseId: String
+    )
 }

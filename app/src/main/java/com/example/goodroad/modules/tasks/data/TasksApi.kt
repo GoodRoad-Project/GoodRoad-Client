@@ -1,8 +1,8 @@
 package com.example.goodroad.modules.tasks.data
 
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
-import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface TasksApi {
@@ -17,9 +17,8 @@ interface TasksApi {
     @GET("tasks/completed")
     suspend fun getCompletedTasks(): List<CompletedTaskDto>
 
-    @POST("tasks/{taskId}/targets/{targetId}/complete")
-    suspend fun completeTarget(
-        @Path("taskId") taskId: String,
-        @Path("targetId") targetId: String
+    @POST("tasks/generation")
+    suspend fun generateTasks(
+        @Body request: TaskGenerationReq
     )
 }

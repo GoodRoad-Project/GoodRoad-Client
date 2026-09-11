@@ -13,10 +13,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.goodroad.data.network.location.LocationTracker
 import com.example.goodroad.modules.tasks.data.TaskViewDto
 import com.example.goodroad.modules.tasks.presentation.TasksViewModel
 import com.example.goodroad.ui.buttons.PrimaryButton
@@ -37,11 +39,23 @@ fun TasksScreen(
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
     val loading by viewModel.loading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val locationTracker = remember(context) { LocationTracker(context) }
 
     var selectedType by remember { mutableStateOf("REVIEW") }
+    var currentLatitude by remember { mutableStateOf<Double?>(null) }
+    var currentLongitude by remember { mutableStateOf<Double?>(null) }
 
     LaunchedEffect(selectedType) {
-        viewModel.loadTasks(activityType = selectedType)
+        val location = locationTracker.getCurrentLocation()
+        currentLatitude = location?.latitude
+        currentLongitude = location?.longitude
+
+        viewModel.loadTasks(
+            activityType = selectedType,
+            latitude = currentLatitude,
+            longitude = currentLongitude
+        )
     }
 
     Surface(
@@ -178,7 +192,9 @@ fun TasksScreen(
                             Button(
                                 onClick = {
                                     viewModel.loadTasks(
-                                        activityType = selectedType
+                                        activityType = selectedType,
+                                        latitude = currentLatitude,
+                                        longitude = currentLongitude
                                     )
                                 }
                             ) {
@@ -259,7 +275,7 @@ private fun TaskCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
-                enabled = isReview && !isCompleted
+                enabled = !isCompleted
             ) {
                 onClick()
             },
@@ -354,13 +370,10 @@ private fun TaskCard(
                 } else {
 
                     PrimaryButton(
-                        text = "Выполнено",
+                        text = "Открыть",
                         backgroundColor = SafeGreen,
                         modifier = Modifier.width(110.dp),
-                        onClick = {
-
-
-                        }
+                        onClick = onClick
                     )
                 }
             }

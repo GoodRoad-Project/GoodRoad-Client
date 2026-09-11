@@ -29,6 +29,11 @@ data class CompletedTaskDto(
     val createdAt: String
 )
 
+data class TaskGenerationReq(
+    val latitude: Double,
+    val longitude: Double
+)
+
 data class TaskTargetCreateReq(
     val targetType: String,
     val targetId: Long,

@@ -23,7 +23,7 @@ data class UpsertReviewReq(
     val obstacles: List<ReviewObstacle>,
     val comment: String? = null,
     val photoUrls: List<String> = emptyList(),
-    val featureId: Long? = null
+    val taskTargetId: String? = null
 )
 
 data class ReviewCardResp(

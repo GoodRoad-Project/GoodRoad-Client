@@ -63,6 +63,7 @@ enum class BottomTab {
 }
 
 enum class OverlayScreen {
+    NONE,
     EDIT_PROFILE,
     DELETE_PROFILE,
     SECURITY,
@@ -93,6 +94,7 @@ fun UserNav(
     onLogout: () -> Unit,
     onNavigateToReview: (String, Double, Double) -> Unit = { _, _, _ -> }
 ) {
+
     val userApi = ApiClient.userApi
     val reviewApi = ApiClient.reviewApi
     val obstacleApi = ApiClient.obstacleApi
@@ -241,6 +243,7 @@ fun UserNav(
             }
         }
     ) { padding ->
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -278,6 +281,7 @@ fun UserNav(
                         },
                         onVolunteerFeed = {
                             navigateTo(OverlayScreen.VOLUNTEER_FEED)
+                            selectedTaskTarget = null
                         },
                         onMyWards = {
                             navigateTo(OverlayScreen.VOLUNTEER_WARDS)
@@ -471,7 +475,8 @@ fun UserNav(
                             onSaved = {
                                 selectedTaskTarget = null
                                 goBack()
-                            }
+                            },
+                            taskTargetId = target.id
                         )
                     } else {
                         goBack()
@@ -513,7 +518,14 @@ fun UserNav(
                             task = task,
                             onTargetClick = { target ->
                                 selectedTaskTarget = target
-                                navigateTo(OverlayScreen.REVIEW_FORM_FROM_TASK)
+                                when (target.targetType) {
+                                    "OBSTACLE_FEATURE" -> {
+                                        navigateTo(OverlayScreen.REVIEW_FORM_FROM_TASK)
+                                    }
+                                    "HELP_REQUEST" -> {
+                                        navigateTo(OverlayScreen.VOLUNTEER_FEED)
+                                    }
+                                }
                             },
                             onBack = {
                                 selectedTask = null
@@ -527,6 +539,7 @@ fun UserNav(
                 }
 
                 null -> Unit
+                else -> {}
             }
         }
     }

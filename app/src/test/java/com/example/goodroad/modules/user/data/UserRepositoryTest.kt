@@ -29,7 +29,7 @@ class UserRepositoryTest {
         val view = settings(lastName = "Иванов")
         val api = FakeUserApi(updateResp = Response.success(view))
         val repository = UserRepository(api)
-        val req = UpdateUserReq(firstName = "Иван", lastName = "Иванов", phone = "+79990000001")
+        val req = UpdateUserReq(firstName = "Иван", lastName = "Иванов")
 
         val result = repository.updateCurrentUser(req)
 
@@ -75,6 +75,7 @@ class UserRepositoryTest {
     private class FakeUserApi(
         private val currentResp: Response<SettingsView> = Response.success(settings()),
         private val updateResp: Response<SettingsView> = Response.success(settings()),
+        private val changePhoneResp: Response<SettingsView> = Response.success(settings()),
         private val changePasswordResp: Response<Unit> = Response.success(Unit),
         private val avatarResp: Response<AvatarUploadResp> = Response.success(AvatarUploadResp("url")),
         private val deleteResp: Response<Unit> = Response.success(Unit)
@@ -89,7 +90,11 @@ class UserRepositoryTest {
             return updateResp
         }
 
-        override suspend fun changePassword(oldPassword: String, newPassword: String): Response<Unit> {
+        override suspend fun changePhone(req: ChangePhoneReq): Response<SettingsView> {
+            return changePhoneResp
+        }
+
+        override suspend fun changePassword(req: ChangePasswordReq): Response<Unit> {
             return changePasswordResp
         }
 
