@@ -767,6 +767,14 @@ private suspend fun resolveReviewAddress(
 
         } else {
 
+            val featureName = rawAddress.featureName
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+
+            val featureLooksLikeHouse = featureName
+                ?.matches(Regex("^\\d+[A-Za-zА-Яа-яЁё]?(?:[/-]\\d+[A-Za-zА-Яа-яЁё]?)?$"))
+                ?: false
+
             ReviewAddress(
                 country =
                     rawAddress.countryName
@@ -800,8 +808,7 @@ private suspend fun resolveReviewAddress(
                 street =
                     listOf(
                         rawAddress.thoroughfare,
-                        rawAddress.subLocality,
-                        rawAddress.featureName
+                        featureName?.takeUnless { featureLooksLikeHouse }
                     )
                         .firstNotBlank()
                         ?: baseAddress.street,
@@ -809,7 +816,8 @@ private suspend fun resolveReviewAddress(
                 house =
                     listOf(
                         rawAddress.subThoroughfare,
-                        rawAddress.premises
+                        rawAddress.premises,
+                        featureName?.takeIf { featureLooksLikeHouse }
                     )
                         .firstNotBlank()
                         ?: baseAddress.house,
