@@ -71,8 +71,7 @@ fun ReviewModerationScreen(
                 state = listState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = 24.dp, end = 24.dp, top = 24.dp)
-                    .padding(bottom = 80.dp),
+                    .padding(start = 24.dp, end = 24.dp, top = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
