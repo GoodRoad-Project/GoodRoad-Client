@@ -327,6 +327,32 @@ class MapService {
             distance <= 10.0
         }
 
+        Log.d(
+            "RouteObstacles",
+            "route=$routeType, obstacles=${obstacles.size}, " +
+                    "segmentStart=${start.latitude},${start.longitude}, " +
+                    "segmentEnd=${end.latitude},${end.longitude}"
+        )
+
+        obstacles.forEach { obstacle ->
+            val distance = distanceToSegment(
+                point = LatLng(
+                    obstacle.latitude,
+                    obstacle.longitude
+                ),
+                start = start,
+                end = end
+            )
+
+            Log.d(
+                "RouteObstacles",
+                "obstacle=${obstacle.id}, " +
+                        "type=${obstacle.type}, " +
+                        "severity=${obstacle.severity}, " +
+                        "distance=${distance}m"
+            )
+        }
+
         return when (routeType) {
 
             "fast" -> {
