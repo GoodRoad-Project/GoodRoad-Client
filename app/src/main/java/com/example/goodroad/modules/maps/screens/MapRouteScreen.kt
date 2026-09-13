@@ -49,6 +49,7 @@ import com.example.goodroad.data.obstacle.ObstacleRepository
 import com.example.goodroad.modules.maps.services.MapService
 import com.example.goodroad.ui.map.PlaceInfoBottomSheet
 import java.util.Locale
+import androidx.compose.ui.focus.onFocusChanged
 
 @Composable
 fun MapRouteScreen(
@@ -83,7 +84,10 @@ fun MapRouteScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val viewModelMessage by viewModel.message.collectAsState()
 
+    var startAddress by rememberSaveable { mutableStateOf("") }
     var address by rememberSaveable { mutableStateOf("") }
+
+    var showCurrentLocationOption by remember { mutableStateOf(false) }
 
     var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
     var styleReady by remember { mutableStateOf(false) }
@@ -188,6 +192,22 @@ fun MapRouteScreen(
                 )
             }
         }
+    }
+
+    LaunchedEffect(userLocation, mapLibreMap) {
+        val location = userLocation ?: return@LaunchedEffect
+        val map = mapLibreMap ?: return@LaunchedEffect
+
+        map.animateCamera(
+            CameraUpdateFactory.newLatLngZoom(
+                LatLng(
+                    location.latitude,
+                    location.longitude
+                ),
+                16.0
+            ),
+            1000
+        )
     }
 
     LaunchedEffect(routes, mapLibreMap, styleReady) {
@@ -351,6 +371,24 @@ fun MapRouteScreen(
                 return@launch
             }
 
+            if (startAddress == "Моё местонахождение") {
+                if (!viewModel.hasStartLocation()) {
+                    viewModel.getUserLocation()
+                    return@launch
+                }
+            } else if (startAddress.isNotBlank()) {
+                val startFound = viewModel.setStartAddress(startAddress)
+
+                if (!startFound) {
+                    return@launch
+                }
+            } else {
+                if (!viewModel.hasStartLocation()) {
+                    viewModel.getUserLocation()
+                    return@launch
+                }
+            }
+
             val addresses = withContext(Dispatchers.IO) {
                 try {
                     Geocoder(context, Locale.getDefault())
@@ -365,6 +403,7 @@ fun MapRouteScreen(
             }
 
             val destination = addresses[0]
+
             viewModel.buildRoute(
                 destination.latitude,
                 destination.longitude
@@ -386,29 +425,19 @@ fun MapRouteScreen(
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .padding(horizontal = 14.dp, vertical = 12.dp),
-
-            shadowElevation = 10.dp,
-
-            shape = RoundedCornerShape(22.dp),
-
-            color = SurfaceWarm
+            color = SurfaceWarm.copy(alpha = 0.92f),
+            shape = RoundedCornerShape(20.dp),
+            shadowElevation = 8.dp
         ) {
-
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 14.dp, vertical = 12.dp),
-
-                verticalAlignment = Alignment.CenterVertically,
-
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-
                 if (onBack != null) {
-
                     TextButton(
                         onClick = onBack,
-
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = UrbanBrown
                         )
@@ -418,63 +447,111 @@ fun MapRouteScreen(
                 }
 
                 OutlinedTextField(
-                    value = address,
-
-                    onValueChange = {
-                        address = it
-                    },
-
-                    modifier = Modifier.weight(1f),
-
+                    value = startAddress,
+                    onValueChange = { startAddress = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp)
+                        .onFocusChanged {
+                            showCurrentLocationOption = it.isFocused
+                        },
                     singleLine = true,
-
                     placeholder = {
-                        Text(
-                            "Введите адрес",
-                            color = TextSecondary
-                        )
+                        Text("Откуда", color = TextSecondary)
                     },
-
                     colors = OutlinedTextFieldDefaults.colors(
-
                         focusedContainerColor = WhiteSoft,
                         unfocusedContainerColor = WhiteSoft,
-
                         focusedBorderColor = UrbanBrown,
                         unfocusedBorderColor = BorderWarm,
-
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary,
-
                         cursorColor = UrbanBrown
                     ),
-
                     shape = RoundedCornerShape(16.dp)
                 )
 
-                Button(
-                    onClick = { searchAddressAndBuildRoute() },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = UrbanBrown,
-                        contentColor = WhiteSoft
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    contentPadding = PaddingValues(
-                        horizontal = 18.dp,
-                        vertical = 14.dp
-                    ),
-                    enabled = !isLoading
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = WhiteSoft,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text("Маршрут")
+                if (showCurrentLocationOption) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 18.dp),
+                        color = WhiteSoft,
+                        shape = RoundedCornerShape(12.dp),
+                        shadowElevation = 4.dp,
+                        onClick = {
+                            startAddress = "Моё местонахождение"
+                            viewModel.getUserLocation()
+                            showCurrentLocationOption = false
+                        }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Spacer(modifier = Modifier.width(10.dp))
+
+                            Text(
+                                text = "Моё местонахождение",
+                                color = TextPrimary,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
                 }
+
+                OutlinedTextField(
+                    value = address,
+                    onValueChange = { address = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp),
+                    singleLine = true,
+                    placeholder = {
+                        Text("Куда", color = TextSecondary)
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = WhiteSoft,
+                        unfocusedContainerColor = WhiteSoft,
+                        focusedBorderColor = UrbanBrown,
+                        unfocusedBorderColor = BorderWarm,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        cursorColor = UrbanBrown
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                )
+            }
+        }
+
+        Button(
+            onClick = { searchAddressAndBuildRoute() },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+                .offset(y = (-92).dp)
+                .height(50.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = UrbanBrown,
+                contentColor = WhiteSoft
+            ),
+            shape = RoundedCornerShape(16.dp),
+            contentPadding = PaddingValues(
+                horizontal = 28.dp,
+                vertical = 8.dp
+            ),
+            enabled = !isLoading
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = WhiteSoft,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text("Маршрут")
             }
         }
 
@@ -482,7 +559,7 @@ fun MapRouteScreen(
             Surface(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = 100.dp),
+                    .padding(top = 180.dp),
                 color = SurfaceWarm,
                 shadowElevation = 8.dp,
                 shape = RoundedCornerShape(18.dp)

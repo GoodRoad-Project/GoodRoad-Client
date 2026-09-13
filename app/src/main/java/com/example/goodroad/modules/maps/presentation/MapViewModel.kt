@@ -183,6 +183,37 @@ class MapViewModel(
         }
     }
 
+    suspend fun setStartAddress(address: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                if (address.isBlank()) {
+                    return@withContext false
+                }
+
+                val geocoder = Geocoder(context, Locale("ru"))
+                val addresses = geocoder.getFromLocationName(address, 1)
+
+                if (addresses.isNullOrEmpty()) {
+                    return@withContext false
+                }
+
+                val location = addresses[0]
+
+                startLat = location.latitude
+                startLon = location.longitude
+
+                true
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
+            }
+        }
+    }
+
+    fun hasStartLocation(): Boolean {
+        return startLat != 0.0 && startLon != 0.0
+    }
+
     fun getPlaceInfo(lat: Double, lon: Double) {
         viewModelScope.launch {
             try {
