@@ -301,7 +301,12 @@ fun HelpRequestCreateScreen(
                     )
                 },
                 error = commentError,
-                minLines = 2
+                minLines = 3,
+                hint = "Опишите подопечного: возраст, особенности здоровья и поведения, " +
+                        "нужна ли физическая помощь (сопровождение, подъём по лестнице), " +
+                        "есть ли животные, требуется ли специальный транспорт. " +
+                        "Так волонтёры поймут, справятся ли они с задачей."
+
             )
 
             if (error != null) {
@@ -373,7 +378,8 @@ private fun LineField(
     modifier: Modifier = Modifier,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    minLines: Int = 1
+    minLines: Int = 1,
+    hint: String? = null
 ) {
     TextField(
         value = value,
@@ -392,10 +398,14 @@ private fun LineField(
         visualTransformation = visualTransformation,
         isError = error != null,
         supportingText = {
-            error?.let {
-                Text(
-                    text = it,
+            when {
+                error != null -> Text(
+                    text = error,
                     color = AlertRed
+                )
+                hint != null -> Text(
+                    text = hint,
+                    color = UrbanBrown.copy(alpha = 0.7f)
                 )
             }
         },
