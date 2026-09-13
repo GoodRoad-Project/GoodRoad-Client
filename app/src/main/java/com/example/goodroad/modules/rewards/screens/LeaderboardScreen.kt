@@ -83,8 +83,6 @@ fun LeaderboardScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("❌", fontSize = 48.sp)
-                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = error,
                                 color = AlertRed
@@ -103,8 +101,6 @@ fun LeaderboardScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("🏆", fontSize = 48.sp)
-                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = "Пока нет участников",
                                 fontSize = 18.sp,
@@ -161,27 +157,32 @@ private fun LeaderboardItemView(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(16.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
                 modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (position <= 3) {
-                    Text(
-                        text = medalEmoji,
-                        fontSize = 28.sp
-                    )
-                } else {
-                    Text(
-                        text = "$position",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = UrbanBrown
-                    )
+                Box(
+                    modifier = Modifier.width(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (position <= 3) {
+                        Text(
+                            text = medalEmoji,
+                            fontSize = 28.sp
+                        )
+                    } else {
+                        Text(
+                            text = "$position",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = UrbanBrown
+                        )
+                    }
                 }
 
                 Column {

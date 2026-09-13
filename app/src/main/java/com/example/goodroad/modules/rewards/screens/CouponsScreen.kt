@@ -176,13 +176,6 @@ private fun EmptyCoupons() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "🎫",
-                fontSize = 64.sp
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
                 text = "У вас пока нет купонов",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Medium,
