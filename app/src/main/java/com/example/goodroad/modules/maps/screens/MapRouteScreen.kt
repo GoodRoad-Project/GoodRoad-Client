@@ -55,6 +55,8 @@ import androidx.compose.material.icons.filled.Route
 import org.maplibre.android.style.layers.Property
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 fun MapRouteScreen(
@@ -95,6 +97,8 @@ fun MapRouteScreen(
     var selectedRouteType by rememberSaveable { mutableStateOf<String?>(null) }
 
     var showStartField by rememberSaveable { mutableStateOf(false) }
+
+    var showInstruction by rememberSaveable { mutableStateOf(true) }
 
     var showCurrentLocationOption by remember { mutableStateOf(false) }
 
@@ -426,6 +430,61 @@ fun MapRouteScreen(
                 mapService.setSelectedRoute(map, selectedRouteType)
             }
         }
+    }
+
+    if (showInstruction) {
+        AlertDialog(
+            onDismissRequest = {
+                showInstruction = false
+            },
+            title = {
+                Text(
+                    text = "Памятка",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 450.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = """
+                Дорогой пользователь!
+
+                Перед началом использования карты ознакомьтесь с этой инструкцией.
+
+                При построении пути Вам будет предложено 3 вида маршрута: безопасный, сбалансированный и быстрый.
+
+                Быстрый маршрут не учитывает Ваши ограничения, а просто показывает обычный путь.
+
+                Сбалансированный маршрут покажет наиболее быстрый путь, в котором не будет непреодолимых для Вас препятствий.
+
+                Безопасный маршрут покажет Вам путь, в котором вообще не будет препятствий, вызывающих у Вас трудности.
+
+                На каждом пути, кроме безопасного, будут показаны препятствия, которые Вы выбрали в своём личном кабинете.
+
+                Жёлтый цвет означает слабую тяжесть, оранжевый — среднюю, а красный — высокую.
+
+                Мы надеемся, что Вам понравится наше приложение!
+
+                В добрый путь!
+            """.trimIndent(),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showInstruction = false
+                    }
+                ) {
+                    Text("Понятно")
+                }
+            }
+        )
     }
 
     Box(
