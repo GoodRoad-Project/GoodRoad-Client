@@ -20,6 +20,8 @@ class MapService {
 
     private val routes = mutableMapOf<String, RouteData>()
 
+    private var selectedRouteType: String? = null
+
     private var currentDetailLevel = -1
 
     private val detailTolerances = listOf(
@@ -58,6 +60,25 @@ class MapService {
         )
 
         drawRoutes(map)
+    }
+
+    fun setSelectedRoute(
+        map: MapLibreMap,
+        routeType: String?
+    ) {
+        selectedRouteType = routeType
+
+        map.getStyle { style ->
+            routes.keys.forEach { type ->
+                val visible = selectedRouteType == null || selectedRouteType == type
+
+                style.getLayer("route-layer-$type")?.setProperties(
+                    PropertyFactory.visibility(
+                        if (visible) "visible" else "none"
+                    )
+                )
+            }
+        }
     }
 
     private fun drawRoutes(map: MapLibreMap) {
@@ -151,7 +172,14 @@ class MapService {
                 PropertyFactory.lineWidth(6f),
                 PropertyFactory.lineOpacity(0.9f),
                 PropertyFactory.lineJoin("round"),
-                PropertyFactory.lineCap("round")
+                PropertyFactory.lineCap("round"),
+                PropertyFactory.visibility(
+                    if (selectedRouteType == null || selectedRouteType == routeType) {
+                        "visible"
+                    } else {
+                        "none"
+                    }
+                )
             )
         }
 

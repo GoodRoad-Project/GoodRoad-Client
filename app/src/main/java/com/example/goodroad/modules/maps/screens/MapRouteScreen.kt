@@ -50,6 +50,11 @@ import com.example.goodroad.modules.maps.services.MapService
 import com.example.goodroad.ui.map.PlaceInfoBottomSheet
 import java.util.Locale
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Route
+import org.maplibre.android.style.layers.Property
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
 
 @Composable
 fun MapRouteScreen(
@@ -86,6 +91,10 @@ fun MapRouteScreen(
 
     var startAddress by rememberSaveable { mutableStateOf("") }
     var address by rememberSaveable { mutableStateOf("") }
+
+    var selectedRouteType by rememberSaveable { mutableStateOf<String?>(null) }
+
+    var showStartField by rememberSaveable { mutableStateOf(false) }
 
     var showCurrentLocationOption by remember { mutableStateOf(false) }
 
@@ -371,14 +380,18 @@ fun MapRouteScreen(
                 return@launch
             }
 
-            if (startAddress == "Моё местонахождение") {
+            if (!showStartField) {
+                showStartField = true
+                return@launch
+            }
+
+            if (startAddress == "Моё местоположение") {
                 if (!viewModel.hasStartLocation()) {
                     viewModel.getUserLocation()
                     return@launch
                 }
             } else if (startAddress.isNotBlank()) {
                 val startFound = viewModel.setStartAddress(startAddress)
-
                 if (!startFound) {
                     return@launch
                 }
@@ -403,11 +416,15 @@ fun MapRouteScreen(
             }
 
             val destination = addresses[0]
+            viewModel.buildRoute(destination.latitude, destination.longitude)
+        }
+    }
 
-            viewModel.buildRoute(
-                destination.latitude,
-                destination.longitude
-            )
+    LaunchedEffect(selectedRouteType, mapLibreMap, styleReady) {
+        mapLibreMap?.let { map ->
+            if (styleReady) {
+                mapService.setSelectedRoute(map, selectedRouteType)
+            }
         }
     }
 
@@ -446,58 +463,58 @@ fun MapRouteScreen(
                     }
                 }
 
-                OutlinedTextField(
-                    value = startAddress,
-                    onValueChange = { startAddress = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 18.dp)
-                        .onFocusChanged {
-                            showCurrentLocationOption = it.isFocused
-                        },
-                    singleLine = true,
-                    placeholder = {
-                        Text("Откуда", color = TextSecondary)
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = WhiteSoft,
-                        unfocusedContainerColor = WhiteSoft,
-                        focusedBorderColor = UrbanBrown,
-                        unfocusedBorderColor = BorderWarm,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        cursorColor = UrbanBrown
-                    ),
-                    shape = RoundedCornerShape(16.dp)
-                )
-
-                if (showCurrentLocationOption) {
-                    Surface(
+                if (showStartField) {
+                    OutlinedTextField(
+                        value = startAddress,
+                        onValueChange = { startAddress = it },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 18.dp),
-                        color = WhiteSoft,
-                        shape = RoundedCornerShape(12.dp),
-                        shadowElevation = 4.dp,
-                        onClick = {
-                            startAddress = "Моё местонахождение"
-                            viewModel.getUserLocation()
-                            showCurrentLocationOption = false
-                        }
-                    ) {
-                        Row(
+                            .padding(horizontal = 18.dp)
+                            .onFocusChanged {
+                                showCurrentLocationOption = it.isFocused
+                            },
+                        singleLine = true,
+                        placeholder = {
+                            Text("Откуда", color = TextSecondary)
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = UrbanBrown,
+                            unfocusedBorderColor = TextSecondary,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            cursorColor = UrbanBrown
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+
+                    if (showCurrentLocationOption) {
+                        Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(horizontal = 18.dp),
+                            color = WhiteSoft,
+                            shape = RoundedCornerShape(12.dp),
+                            shadowElevation = 4.dp,
+                            onClick = {
+                                startAddress = "Моё местоположение"
+                                viewModel.getUserLocation()
+                                showCurrentLocationOption = false
+                            }
                         ) {
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Spacer(modifier = Modifier.width(10.dp))
 
-                            Text(
-                                text = "Моё местонахождение",
-                                color = TextPrimary,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                                Text(
+                                    "Моё местоположение",
+                                    color = TextPrimary,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
                         }
                     }
                 }
@@ -513,10 +530,8 @@ fun MapRouteScreen(
                         Text("Куда", color = TextSecondary)
                     },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = WhiteSoft,
-                        unfocusedContainerColor = WhiteSoft,
                         focusedBorderColor = UrbanBrown,
-                        unfocusedBorderColor = BorderWarm,
+                        unfocusedBorderColor = TextSecondary,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary,
                         cursorColor = UrbanBrown
@@ -531,7 +546,7 @@ fun MapRouteScreen(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
-                .offset(y = (-92).dp)
+                .offset(y = (-106).dp)
                 .height(50.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = UrbanBrown,
@@ -546,12 +561,16 @@ fun MapRouteScreen(
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(22.dp),
                     color = WhiteSoft,
                     strokeWidth = 2.dp
                 )
             } else {
-                Text("Маршрут")
+                Icon(
+                    imageVector = Icons.Default.Route,
+                    contentDescription = "Построить маршрут",
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
 
@@ -634,14 +653,25 @@ fun MapRouteScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable {
+                                selectedRouteType =
+                                    if (selectedRouteType == "fast") null else "fast"
+                            }
+                            .padding(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(16.dp)
-                                .background(Color(0xFF4F87C9), RoundedCornerShape(4.dp))
+                                .background(
+                                    Color(0xFF4F87C9),
+                                    RoundedCornerShape(4.dp)
+                                )
                         )
+
                         Text(
                             text = "Быстрый",
                             style = MaterialTheme.typography.bodySmall,
@@ -650,14 +680,25 @@ fun MapRouteScreen(
                     }
 
                     Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable {
+                                selectedRouteType =
+                                    if (selectedRouteType == "balanced") null else "balanced"
+                            }
+                            .padding(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(16.dp)
-                                .background(Color(0xFF8B7AC6), RoundedCornerShape(4.dp))
+                                .background(
+                                    Color(0xFF8B7AC6),
+                                    RoundedCornerShape(4.dp)
+                                )
                         )
+
                         Text(
                             text = "Сбалансированный",
                             style = MaterialTheme.typography.bodySmall,
@@ -672,14 +713,25 @@ fun MapRouteScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable {
+                                selectedRouteType =
+                                    if (selectedRouteType == "safe") null else "safe"
+                            }
+                            .padding(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(16.dp)
-                                .background(Color(0xFF6FAE8A), RoundedCornerShape(4.dp))
+                                .background(
+                                    Color(0xFF6FAE8A),
+                                    RoundedCornerShape(4.dp)
+                                )
                         )
+
                         Text(
                             text = "Безопасный",
                             style = MaterialTheme.typography.bodySmall,
