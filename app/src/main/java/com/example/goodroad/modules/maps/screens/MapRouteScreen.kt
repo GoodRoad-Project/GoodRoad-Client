@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -48,6 +49,14 @@ import com.example.goodroad.data.obstacle.ObstacleRepository
 import com.example.goodroad.modules.maps.services.MapService
 import com.example.goodroad.ui.map.PlaceInfoBottomSheet
 import java.util.Locale
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Route
+import org.maplibre.android.style.layers.Property
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 fun MapRouteScreen(
@@ -82,7 +91,16 @@ fun MapRouteScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val viewModelMessage by viewModel.message.collectAsState()
 
+    var startAddress by rememberSaveable { mutableStateOf("") }
     var address by rememberSaveable { mutableStateOf("") }
+
+    var selectedRouteType by rememberSaveable { mutableStateOf<String?>(null) }
+
+    var showStartField by rememberSaveable { mutableStateOf(false) }
+
+    var showInstruction by rememberSaveable { mutableStateOf(true) }
+
+    var showCurrentLocationOption by remember { mutableStateOf(false) }
 
     var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
     var styleReady by remember { mutableStateOf(false) }
@@ -189,32 +207,118 @@ fun MapRouteScreen(
         }
     }
 
-    LaunchedEffect(routes) {
+    LaunchedEffect(userLocation, mapLibreMap) {
+        val location = userLocation ?: return@LaunchedEffect
+        val map = mapLibreMap ?: return@LaunchedEffect
+
+        map.animateCamera(
+            CameraUpdateFactory.newLatLngZoom(
+                LatLng(
+                    location.latitude,
+                    location.longitude
+                ),
+                16.0
+            ),
+            1000
+        )
+    }
+
+    LaunchedEffect(routes, mapLibreMap, styleReady) {
         routes?.let { routeData ->
             mapLibreMap?.let { map ->
+
+                Log.d(
+                    "RouteSimplification",
+                    "Получены новые маршруты"
+                )
+
                 mapService.clearRouteLayers(map)
 
                 routeData.fast?.let { path ->
-                    val points = decodePoints(path.points).map { LatLng(it.latitude, it.longitude) }
-                    mapService.drawRouteWithSegments(map, points, path.obstacles, "fast")
+                    val points = decodePoints(path.points)
+                        .map {
+                            LatLng(
+                                it.latitude,
+                                it.longitude
+                            )
+                        }
+
+                    Log.d(
+                        "RouteSimplification",
+                        "fast: points=${points.size}, " +
+                                "obstacles=${path.obstacles.size}"
+                    )
+
+                    mapService.setRoute(
+                        map = map,
+                        points = points,
+                        obstacles = path.obstacles,
+                        routeType = "fast"
+                    )
                 }
 
                 routeData.balanced?.let { path ->
-                    val points = decodePoints(path.points).map { LatLng(it.latitude, it.longitude) }
-                    mapService.drawRouteWithSegments(map, points, path.obstacles, "balanced")
+                    val points = decodePoints(path.points)
+                        .map {
+                            LatLng(
+                                it.latitude,
+                                it.longitude
+                            )
+                        }
+
+                    Log.d(
+                        "RouteSimplification",
+                        "balanced: points=${points.size}, " +
+                                "obstacles=${path.obstacles.size}"
+                    )
+
+                    mapService.setRoute(
+                        map = map,
+                        points = points,
+                        obstacles = path.obstacles,
+                        routeType = "balanced"
+                    )
                 }
 
                 routeData.safe?.let { path ->
-                    val points = decodePoints(path.points).map { LatLng(it.latitude, it.longitude) }
-                    mapService.drawRouteWithSegments(map, points, path.obstacles, "safe")
+                    val points = decodePoints(path.points)
+                        .map {
+                            LatLng(
+                                it.latitude,
+                                it.longitude
+                            )
+                        }
+
+                    Log.d(
+                        "RouteSimplification",
+                        "safe: points=${points.size}, " +
+                                "obstacles=${path.obstacles.size}"
+                    )
+
+                    mapService.setRoute(
+                        map = map,
+                        points = points,
+                        obstacles = path.obstacles,
+                        routeType = "safe"
+                    )
                 }
 
                 routeData.fast?.let { path ->
                     val points = decodePoints(path.points)
+
                     if (points.isNotEmpty()) {
+
+                        Log.d(
+                            "RouteSimplification",
+                            "Перемещение камеры на начало fast-маршрута"
+                        )
+
                         map.animateCamera(
                             CameraUpdateFactory.newLatLngZoom(
-                                LatLng(points.first().latitude, points.first().longitude),
+                                LatLng(
+                                    points.first().latitude,
+                                    points.first().longitude
+                                ),
                                 14.0
                             ),
                             1000
@@ -222,6 +326,49 @@ fun MapRouteScreen(
                     }
                 }
             }
+        }
+    }
+
+    DisposableEffect(mapLibreMap, styleReady) {
+        val map = mapLibreMap
+            ?: return@DisposableEffect onDispose {}
+
+        val cameraListener = MapLibreMap.OnCameraIdleListener {
+
+            val zoom = map.cameraPosition.zoom
+
+            Log.d(
+                "RouteSimplification",
+                "Камера остановилась: zoom=$zoom"
+            )
+
+            mapService.updateDetailLevel(
+                map = map,
+                zoom = zoom
+            )
+        }
+
+        map.addOnCameraIdleListener(cameraListener)
+
+        val initialZoom = map.cameraPosition.zoom
+
+        Log.d(
+            "RouteSimplification",
+            "Инициализация уровня детализации: zoom=$initialZoom"
+        )
+
+        mapService.updateDetailLevel(
+            map = map,
+            zoom = initialZoom
+        )
+
+        onDispose {
+            map.removeOnCameraIdleListener(cameraListener)
+
+            Log.d(
+                "RouteSimplification",
+                "CameraIdleListener удалён"
+            )
         }
     }
 
@@ -235,6 +382,28 @@ fun MapRouteScreen(
         scope.launch {
             if (address.isBlank()) {
                 return@launch
+            }
+
+            if (!showStartField) {
+                showStartField = true
+                return@launch
+            }
+
+            if (startAddress == "Моё местоположение") {
+                if (!viewModel.hasStartLocation()) {
+                    viewModel.getUserLocation()
+                    return@launch
+                }
+            } else if (startAddress.isNotBlank()) {
+                val startFound = viewModel.setStartAddress(startAddress)
+                if (!startFound) {
+                    return@launch
+                }
+            } else {
+                if (!viewModel.hasStartLocation()) {
+                    viewModel.getUserLocation()
+                    return@launch
+                }
             }
 
             val addresses = withContext(Dispatchers.IO) {
@@ -251,11 +420,71 @@ fun MapRouteScreen(
             }
 
             val destination = addresses[0]
-            viewModel.buildRoute(
-                destination.latitude,
-                destination.longitude
-            )
+            viewModel.buildRoute(destination.latitude, destination.longitude)
         }
+    }
+
+    LaunchedEffect(selectedRouteType, mapLibreMap, styleReady) {
+        mapLibreMap?.let { map ->
+            if (styleReady) {
+                mapService.setSelectedRoute(map, selectedRouteType)
+            }
+        }
+    }
+
+    if (showInstruction) {
+        AlertDialog(
+            onDismissRequest = {
+                showInstruction = false
+            },
+            title = {
+                Text(
+                    text = "Памятка",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 450.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = """
+                Дорогой пользователь!
+
+                Перед началом использования карты ознакомьтесь с этой инструкцией.
+
+                При построении пути Вам будет предложено 3 вида маршрута: безопасный, сбалансированный и быстрый.
+
+                Быстрый маршрут не учитывает Ваши ограничения, а просто показывает обычный путь.
+
+                Сбалансированный маршрут покажет наиболее быстрый путь, в котором не будет непреодолимых для Вас препятствий.
+
+                Безопасный маршрут покажет Вам путь, в котором вообще не будет препятствий, вызывающих у Вас трудности.
+
+                На каждом пути, кроме безопасного, будут показаны препятствия, которые Вы выбрали в своём личном кабинете.
+
+                Жёлтый цвет означает слабую тяжесть, оранжевый — среднюю, а красный — высокую.
+
+                Мы надеемся, что Вам понравится наше приложение!
+
+                В добрый путь!
+            """.trimIndent(),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showInstruction = false
+                    }
+                ) {
+                    Text("Понятно")
+                }
+            }
+        )
     }
 
     Box(
@@ -272,29 +501,19 @@ fun MapRouteScreen(
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .padding(horizontal = 14.dp, vertical = 12.dp),
-
-            shadowElevation = 10.dp,
-
-            shape = RoundedCornerShape(22.dp),
-
-            color = SurfaceWarm
+            color = SurfaceWarm.copy(alpha = 0.92f),
+            shape = RoundedCornerShape(20.dp),
+            shadowElevation = 8.dp
         ) {
-
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 14.dp, vertical = 12.dp),
-
-                verticalAlignment = Alignment.CenterVertically,
-
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-
                 if (onBack != null) {
-
                     TextButton(
                         onClick = onBack,
-
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = UrbanBrown
                         )
@@ -303,64 +522,114 @@ fun MapRouteScreen(
                     }
                 }
 
-                OutlinedTextField(
-                    value = address,
+                if (showStartField) {
+                    OutlinedTextField(
+                        value = startAddress,
+                        onValueChange = { startAddress = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 18.dp)
+                            .onFocusChanged {
+                                showCurrentLocationOption = it.isFocused
+                            },
+                        singleLine = true,
+                        placeholder = {
+                            Text("Откуда", color = TextSecondary)
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = UrbanBrown,
+                            unfocusedBorderColor = TextSecondary,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            cursorColor = UrbanBrown
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    )
 
-                    onValueChange = {
-                        address = it
-                    },
-
-                    modifier = Modifier.weight(1f),
-
-                    singleLine = true,
-
-                    placeholder = {
-                        Text(
-                            "Введите адрес",
-                            color = TextSecondary
-                        )
-                    },
-
-                    colors = OutlinedTextFieldDefaults.colors(
-
-                        focusedContainerColor = WhiteSoft,
-                        unfocusedContainerColor = WhiteSoft,
-
-                        focusedBorderColor = UrbanBrown,
-                        unfocusedBorderColor = BorderWarm,
-
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-
-                        cursorColor = UrbanBrown
-                    ),
-
-                    shape = RoundedCornerShape(16.dp)
-                )
-
-                Button(
-                    onClick = { searchAddressAndBuildRoute() },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = UrbanBrown,
-                        contentColor = WhiteSoft
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    contentPadding = PaddingValues(
-                        horizontal = 18.dp,
-                        vertical = 14.dp
-                    ),
-                    enabled = !isLoading
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
+                    if (showCurrentLocationOption) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 18.dp),
                             color = WhiteSoft,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text("Маршрут")
+                            shape = RoundedCornerShape(12.dp),
+                            shadowElevation = 4.dp,
+                            onClick = {
+                                startAddress = "Моё местоположение"
+                                viewModel.getUserLocation()
+                                showCurrentLocationOption = false
+                            }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Spacer(modifier = Modifier.width(10.dp))
+
+                                Text(
+                                    "Моё местоположение",
+                                    color = TextPrimary,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
                     }
                 }
+
+                OutlinedTextField(
+                    value = address,
+                    onValueChange = { address = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp),
+                    singleLine = true,
+                    placeholder = {
+                        Text("Куда", color = TextSecondary)
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = UrbanBrown,
+                        unfocusedBorderColor = TextSecondary,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        cursorColor = UrbanBrown
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                )
+            }
+        }
+
+        Button(
+            onClick = { searchAddressAndBuildRoute() },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+                .offset(y = (-106).dp)
+                .height(50.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = UrbanBrown,
+                contentColor = WhiteSoft
+            ),
+            shape = RoundedCornerShape(16.dp),
+            contentPadding = PaddingValues(
+                horizontal = 28.dp,
+                vertical = 8.dp
+            ),
+            enabled = !isLoading
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(22.dp),
+                    color = WhiteSoft,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Default.Route,
+                    contentDescription = "Построить маршрут",
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
 
@@ -368,7 +637,7 @@ fun MapRouteScreen(
             Surface(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = 100.dp),
+                    .padding(top = 180.dp),
                 color = SurfaceWarm,
                 shadowElevation = 8.dp,
                 shape = RoundedCornerShape(18.dp)
@@ -443,14 +712,25 @@ fun MapRouteScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable {
+                                selectedRouteType =
+                                    if (selectedRouteType == "fast") null else "fast"
+                            }
+                            .padding(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(16.dp)
-                                .background(Color(0xFF4F87C9), RoundedCornerShape(4.dp))
+                                .background(
+                                    Color(0xFF4F87C9),
+                                    RoundedCornerShape(4.dp)
+                                )
                         )
+
                         Text(
                             text = "Быстрый",
                             style = MaterialTheme.typography.bodySmall,
@@ -459,14 +739,25 @@ fun MapRouteScreen(
                     }
 
                     Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable {
+                                selectedRouteType =
+                                    if (selectedRouteType == "balanced") null else "balanced"
+                            }
+                            .padding(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(16.dp)
-                                .background(Color(0xFF8B7AC6), RoundedCornerShape(4.dp))
+                                .background(
+                                    Color(0xFF8B7AC6),
+                                    RoundedCornerShape(4.dp)
+                                )
                         )
+
                         Text(
                             text = "Сбалансированный",
                             style = MaterialTheme.typography.bodySmall,
@@ -481,14 +772,25 @@ fun MapRouteScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable {
+                                selectedRouteType =
+                                    if (selectedRouteType == "safe") null else "safe"
+                            }
+                            .padding(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(16.dp)
-                                .background(Color(0xFF6FAE8A), RoundedCornerShape(4.dp))
+                                .background(
+                                    Color(0xFF6FAE8A),
+                                    RoundedCornerShape(4.dp)
+                                )
                         )
+
                         Text(
                             text = "Безопасный",
                             style = MaterialTheme.typography.bodySmall,
