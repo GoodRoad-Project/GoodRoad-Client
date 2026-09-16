@@ -98,18 +98,36 @@ fun MapRouteScreen(
 
     var showStartField by rememberSaveable { mutableStateOf(false) }
 
-    var showInstruction by rememberSaveable { mutableStateOf(true) }
+    var showInstruction by rememberSaveable { mutableStateOf(false) }
 
     var showCurrentLocationOption by remember { mutableStateOf(false) }
 
     var mapLibreMap by remember { mutableStateOf<MapLibreMap?>(null) }
     var styleReady by remember { mutableStateOf(false) }
 
+    var startAddressError by rememberSaveable { mutableStateOf(false) }
+    var addressError by rememberSaveable { mutableStateOf(false) }
+
     //var message by remember { mutableStateOf<String?>(null) }
     //var isLoadingMessage by remember { mutableStateOf(false) }
 
     var showPlaceInfo by remember { mutableStateOf(false) }
     val mapService = remember { MapService() }
+
+    val preferences = remember {
+        context.getSharedPreferences("goodroad_preferences", android.content.Context.MODE_PRIVATE)
+    }
+
+    LaunchedEffect(Unit) {
+        val instructionShown = preferences.getBoolean("instruction_shown", false)
+
+        if (!instructionShown) {
+            showInstruction = true
+            preferences.edit()
+                .putBoolean("instruction_shown", true)
+                .apply()
+        }
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -406,12 +424,13 @@ fun MapRouteScreen(
 
     fun searchAddressAndBuildRoute() {
         scope.launch {
-            if (address.isBlank()) {
-                return@launch
-            }
+            val startEmpty = startAddress.isBlank()
+            val addressEmpty = address.isBlank()
 
-            if (!showStartField) {
-                showStartField = true
+            startAddressError = startEmpty
+            addressError = addressEmpty
+
+            if (startEmpty || addressEmpty) {
                 return@launch
             }
 
@@ -420,14 +439,9 @@ fun MapRouteScreen(
                     viewModel.getUserLocation()
                     return@launch
                 }
-            } else if (startAddress.isNotBlank()) {
+            } else {
                 val startFound = viewModel.setStartAddress(startAddress)
                 if (!startFound) {
-                    return@launch
-                }
-            } else {
-                if (!viewModel.hasStartLocation()) {
-                    viewModel.getUserLocation()
                     return@launch
                 }
             }
@@ -477,6 +491,7 @@ fun MapRouteScreen(
             onDismissRequest = {
                 showInstruction = false
             },
+            containerColor = WhiteSoft,
             title = {
                 Text(
                     text = "Памятка",
@@ -565,16 +580,26 @@ fun MapRouteScreen(
                 if (showStartField) {
                     OutlinedTextField(
                         value = startAddress,
-                        onValueChange = { startAddress = it },
+                        onValueChange = {
+                            startAddress = it
+                            startAddressError = false
+                            showCurrentLocationOption = it.isBlank()
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 18.dp)
                             .onFocusChanged {
-                                showCurrentLocationOption = it.isFocused
+                                showCurrentLocationOption = it.isFocused && startAddress.isBlank()
                             },
                         singleLine = true,
                         placeholder = {
                             Text("Откуда", color = TextSecondary)
+                        },
+                        isError = startAddressError,
+                        supportingText = {
+                            if (startAddressError) {
+                                Text("Введите адрес отправления")
+                            }
                         },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = UrbanBrown,
@@ -620,13 +645,27 @@ fun MapRouteScreen(
 
                 OutlinedTextField(
                     value = address,
-                    onValueChange = { address = it },
+                    onValueChange = {
+                        address = it
+                        addressError = false
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 18.dp),
+                        .padding(horizontal = 18.dp)
+                        .onFocusChanged {
+                            if (it.isFocused) {
+                                showStartField = true
+                            }
+                        },
                     singleLine = true,
                     placeholder = {
                         Text("Куда", color = TextSecondary)
+                    },
+                    isError = addressError,
+                    supportingText = {
+                        if (addressError) {
+                            Text("Введите адрес назначения")
+                        }
                     },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = UrbanBrown,
@@ -677,7 +716,7 @@ fun MapRouteScreen(
             Surface(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = 180.dp),
+                    .padding(top = 200.dp),
                 color = SurfaceWarm,
                 shadowElevation = 8.dp,
                 shape = RoundedCornerShape(18.dp)
