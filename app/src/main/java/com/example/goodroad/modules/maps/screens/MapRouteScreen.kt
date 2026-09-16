@@ -106,6 +106,7 @@ fun MapRouteScreen(
     var styleReady by remember { mutableStateOf(false) }
 
     var startAddressError by rememberSaveable { mutableStateOf(false) }
+    var addressError by rememberSaveable { mutableStateOf(false) }
 
     //var message by remember { mutableStateOf<String?>(null) }
     //var isLoadingMessage by remember { mutableStateOf(false) }
@@ -423,12 +424,15 @@ fun MapRouteScreen(
 
     fun searchAddressAndBuildRoute() {
         scope.launch {
-            if (startAddress.isBlank()) {
-                startAddressError = true
+            val startEmpty = startAddress.isBlank()
+            val addressEmpty = address.isBlank()
+
+            startAddressError = startEmpty
+            addressError = addressEmpty
+
+            if (startEmpty || addressEmpty) {
                 return@launch
             }
-
-            startAddressError = false
 
             if (startAddress == "Моё местоположение") {
                 if (!viewModel.hasStartLocation()) {
@@ -487,6 +491,7 @@ fun MapRouteScreen(
             onDismissRequest = {
                 showInstruction = false
             },
+            containerColor = WhiteSoft,
             title = {
                 Text(
                     text = "Памятка",
@@ -640,7 +645,10 @@ fun MapRouteScreen(
 
                 OutlinedTextField(
                     value = address,
-                    onValueChange = { address = it },
+                    onValueChange = {
+                        address = it
+                        addressError = false
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 18.dp)
@@ -652,6 +660,12 @@ fun MapRouteScreen(
                     singleLine = true,
                     placeholder = {
                         Text("Куда", color = TextSecondary)
+                    },
+                    isError = addressError,
+                    supportingText = {
+                        if (addressError) {
+                            Text("Введите адрес назначения")
+                        }
                     },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = UrbanBrown,
@@ -702,7 +716,7 @@ fun MapRouteScreen(
             Surface(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = 180.dp),
+                    .padding(top = 200.dp),
                 color = SurfaceWarm,
                 shadowElevation = 8.dp,
                 shape = RoundedCornerShape(18.dp)
