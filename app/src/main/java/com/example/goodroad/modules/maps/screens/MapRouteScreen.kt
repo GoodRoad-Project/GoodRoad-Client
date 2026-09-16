@@ -378,6 +378,32 @@ fun MapRouteScreen(
         }
     }
 
+    fun parseCoordinates(value: String): Pair<Double, Double>? {
+        val normalized = value
+            .trim()
+            .replace(";", ",")
+            .replace(Regex("\\s+"), " ")
+
+        val parts = normalized.split(Regex("[, ]"))
+
+        if (parts.size != 2) {
+            return null
+        }
+
+        val latitude = parts[0].toDoubleOrNull() ?: return null
+        val longitude = parts[1].toDoubleOrNull() ?: return null
+
+        if (latitude !in -90.0..90.0) {
+            return null
+        }
+
+        if (longitude !in -180.0..180.0) {
+            return null
+        }
+
+        return latitude to longitude
+    }
+
     fun searchAddressAndBuildRoute() {
         scope.launch {
             if (address.isBlank()) {
@@ -406,6 +432,16 @@ fun MapRouteScreen(
                 }
             }
 
+            val coordinates = parseCoordinates(address)
+
+            if (coordinates != null) {
+                viewModel.buildRoute(
+                    coordinates.first,
+                    coordinates.second
+                )
+                return@launch
+            }
+
             val addresses = withContext(Dispatchers.IO) {
                 try {
                     Geocoder(context, Locale.getDefault())
@@ -420,7 +456,11 @@ fun MapRouteScreen(
             }
 
             val destination = addresses[0]
-            viewModel.buildRoute(destination.latitude, destination.longitude)
+
+            viewModel.buildRoute(
+                destination.latitude,
+                destination.longitude
+            )
         }
     }
 
