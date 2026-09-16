@@ -24,6 +24,7 @@ import coil.compose.AsyncImage
 import com.example.goodroad.data.place.PlaceInfoResponse
 import com.example.goodroad.ui.theme.*
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.ui.text.style.TextAlign
 
 private val obstacleTypeMap = mapOf(
     "STAIRS" to "Лестницы",
@@ -53,6 +54,7 @@ fun PlaceInfoBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(),
+        containerColor = BackgroundLight,
         shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
     ) {
         Column(
@@ -70,7 +72,7 @@ fun PlaceInfoBottomSheet(
                 Column {
                     if(isPlaceFound) {
                         Text(
-                            text = "📍 ${placeInfo.placeName ?: "Без названия"}",
+                            text = "${placeInfo.placeName ?: "Без названия"}",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = UrbanBrown
@@ -82,7 +84,7 @@ fun PlaceInfoBottomSheet(
                         )
                     } else {
                         Text(
-                            text = "📍 ${placeInfo.address ?: "Место на карте"}",
+                            text = "${placeInfo.address ?: "Место на карте"}",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = UrbanBrown
@@ -98,22 +100,27 @@ fun PlaceInfoBottomSheet(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text(
-                text = "📍 Координаты:",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = TextPrimary
-            )
-            Text(
-                text = "Широта: ${String.format("%.6f", placeInfo.latitude ?: 0.0)}",
-                fontSize = 13.sp,
-                color = UrbanBrown.copy(alpha = 0.7f)
-            )
-            Text(
-                text = "Долгота: ${String.format("%.6f", placeInfo.longitude ?: 0.0)}",
-                fontSize = 13.sp,
-                color = UrbanBrown.copy(alpha = 0.7f)
-            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = UrbanBrown.copy(alpha = 0.06f)
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp)
+                ) {
+                    Text(
+                        text = "Широта: ${String.format("%.6f", placeInfo.latitude ?: 0.0)}, Долгота: ${
+                            String.format("%.6f", placeInfo.longitude ?: 0.0)
+                        }",
+                        fontSize = 14.sp,
+                        color = TextPrimary,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -263,9 +270,12 @@ fun PlaceInfoBottomSheet(
                     )
                 } else {
                     Text(
-                        "Пока нет отзывов. Будьте первым!",
+                        text = "Пока нет отзывов. Будьте первым!",
                         color = UrbanBrown,
-                        modifier = Modifier.padding(vertical = 16.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        textAlign = TextAlign.Center
                     )
                 }
             }

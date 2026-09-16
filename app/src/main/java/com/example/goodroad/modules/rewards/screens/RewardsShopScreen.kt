@@ -267,8 +267,6 @@ fun RewardsShopScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("❌", fontSize = 48.sp)
-                                Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = error,
                                     color = MaterialTheme.colorScheme.error
@@ -287,8 +285,6 @@ fun RewardsShopScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("🎁", fontSize = 48.sp)
-                                Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = "Пока нет доступных наград",
                                     fontWeight = FontWeight.Medium,

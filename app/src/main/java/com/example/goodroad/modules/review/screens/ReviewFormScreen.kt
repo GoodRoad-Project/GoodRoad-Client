@@ -82,6 +82,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
+import androidx.compose.material.icons.filled.ArrowBack
 
 @Composable
 fun ReviewFormScreen(
@@ -200,15 +201,34 @@ fun ReviewFormScreen(
                 .padding(24.dp)
         ) {
 
-            Text(
-                text = if (isEdit) {
-                    "Редактирование отзыва"
-                } else {
-                    "Новый отзыв"
-                },
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary
-            )
+            UserDecor()
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (isEdit) {
+                        "Редактирование отзыва"
+                    } else {
+                        "Новый отзыв"
+                    },
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                IconButton(
+                    onClick = onBack
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = UrbanBrown
+                    )
+                }
+            }
 
             Spacer(Modifier.height(12.dp))
 
@@ -767,6 +787,14 @@ private suspend fun resolveReviewAddress(
 
         } else {
 
+            val featureName = rawAddress.featureName
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+
+            val featureLooksLikeHouse = featureName
+                ?.matches(Regex("^\\d+[A-Za-zА-Яа-яЁё]?(?:[/-]\\d+[A-Za-zА-Яа-яЁё]?)?$"))
+                ?: false
+
             ReviewAddress(
                 country =
                     rawAddress.countryName
@@ -800,8 +828,7 @@ private suspend fun resolveReviewAddress(
                 street =
                     listOf(
                         rawAddress.thoroughfare,
-                        rawAddress.subLocality,
-                        rawAddress.featureName
+                        featureName?.takeUnless { featureLooksLikeHouse }
                     )
                         .firstNotBlank()
                         ?: baseAddress.street,
@@ -809,7 +836,8 @@ private suspend fun resolveReviewAddress(
                 house =
                     listOf(
                         rawAddress.subThoroughfare,
-                        rawAddress.premises
+                        rawAddress.premises,
+                        featureName?.takeIf { featureLooksLikeHouse }
                     )
                         .firstNotBlank()
                         ?: baseAddress.house,
