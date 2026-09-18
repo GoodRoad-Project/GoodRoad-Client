@@ -9,6 +9,7 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
+import retrofit2.http.HTTP
 
 interface UserApi {
 
@@ -36,7 +37,7 @@ interface UserApi {
         @Part file: MultipartBody.Part
     ): Response<AvatarUploadResp>
 
-    @DELETE("/users")
+    @HTTP(method = "DELETE", path = "/users", hasBody = true)
     suspend fun deleteCurrentUser(
         @Body req: DeleteAccountReq
     ): Response<Unit>
