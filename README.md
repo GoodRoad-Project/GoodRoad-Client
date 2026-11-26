@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/preview.png" alt="GoodRoad banner" width="974">
+  <img src="images/new_preview.png" alt="GoodRoad banner" width="974">
 </p>
 
 ## Добропуть (Android Client)
