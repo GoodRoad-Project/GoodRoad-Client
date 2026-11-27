@@ -330,7 +330,7 @@ private fun StatusPopup(
     onDismiss: () -> Unit
 ) {
     val allStatuses = listOf(
-        "Новичок GoodRoad" to "0 - 99 ⭐",
+        "Новичок" to "0 - 99 ⭐",
         "Разведчик тротуаров" to "100 - 499 ⭐",
         "Проводник добра" to "500 - 999 ⭐",
         "Герой района" to "1000 - 1499 ⭐",
