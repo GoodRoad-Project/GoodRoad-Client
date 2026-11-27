@@ -93,28 +93,5 @@ fun UserDecor() {
                 )
             )
         }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.Top
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(BackgroundLight.copy(alpha = 0.92f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "GR",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
     }
 }

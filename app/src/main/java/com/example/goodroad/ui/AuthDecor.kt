@@ -146,20 +146,7 @@ fun AuthDecor() {
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.Top
         ) {
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(CircleShape)
-                    .background(BackgroundLight.copy(alpha = 0.92f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "GR",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+
         }
     }
 }
