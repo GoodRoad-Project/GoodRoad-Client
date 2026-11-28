@@ -46,7 +46,7 @@
 
 ## Детали запуска приложения
 
-Достаточно скачать приложение по <a href="https://github.com/GoodRoad-Project/GoodRoad-Client/releases/tag/goodroad-v1.0.0">ссылке</a>.
+Достаточно скачать приложение по <a href="https://github.com/GoodRoad-Project/GoodRoad-Client/releases/tag/goodroad-v1.0.2">ссылке</a>.
 
 ## Технологии клиента
 
